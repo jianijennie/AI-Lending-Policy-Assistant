@@ -263,9 +263,9 @@ Answer with Citation
 # 📈 Current Progress
 
 ```text
-██████████░░░░░░░░░░░░░░
+██░░░░░░░░░░░░░░
 
-40%
+20%
 ```
 
 ### Completed
@@ -370,7 +370,6 @@ Page 28
 | Role | Responsibility |
 |------|----------------|
 | Business | Policy Analysis, Taxonomy, Metadata |
-| Strategy | Product Design, UX, Benchmarking |
 | IT | Backend, Frontend, AI Integration |
 
 ---
