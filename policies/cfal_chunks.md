@@ -1,0 +1,295 @@
+# Capital Finance Australia Limited (CFAL) — Policy Chunks
+#
+# source        : cfal
+# documents     : CFAL Equipment Finance Credit Checklist (2022)
+#                 Equipment Finance Key Policies Q1 FY26
+#                 Equipment Finance Settlement Requirements Update (24 Feb 2025)
+# effective     : Q1 FY26 (policies); 24 Feb 2025 (settlement update)
+# licence       : Australian Credit Licence 393031
+# ABN           : 23 069 663 136
+# last_updated  : 2026-06-28
+# version       : 1.0
+#
+# UPDATE INSTRUCTIONS
+# ─────────────────────────────────────────────────────────────────
+# CFAL does not publish a public rate card. Rate chunks are not
+# included — contact the CFAL Credit Manager for indicative pricing.
+# When policy documents are updated:
+# 1. Update the affected chunk(s) only
+# 2. Bump `last_updated` and `version` in the file header
+# 3. Re-embed only the changed chunks
+# 4. Do NOT change chunk_id values
+
+---
+
+## chunk_id: cfal_eligibility
+**source:** cfal
+**topic:** eligibility_and_customer_requirements
+**intent:** ELIGIBILITY
+**policy_fields:** MIN_ABN, MIN_GST
+**trigger_words:** CFAL eligibility, Capital Finance eligibility, qualify CFAL, who can apply CFAL, ABN CFAL, GST CFAL, director guarantee CFAL, ATO CFAL, tax compliance CFAL, statutory obligations CFAL
+
+**Content:**
+
+CFAL finances commercial equipment only. All applicants must be commercial entities. There are no consumer (personal use) products.
+
+**Universal eligibility criteria (all transaction sizes):**
+- ABN registered for **≥ 2 years** and currently GST registered
+- Statutory lodgements and payments (tax, GST, employee entitlements) must be up to date — no payment arrangements in place
+- Where financial data is not obtained: verbal confirmation of compliance is required
+- All directors and individual guarantors must provide current Asset & Liability Statements
+- Signed Privacy Form required from ALL individuals
+- Full description of goods required
+- Reason of purchase required
+- Active and satisfactory credit bureau reports required
+
+**Directors and shareholders:**
+All company directors must guarantee the loan. Satisfactory credit bureau reports and ASIC searches required for all guarantors.
+
+**Existing exposure:** Level of existing CFAL exposure may trigger additional documentation requirements above stated thresholds.
+
+---
+
+## chunk_id: cfal_documentation_matrix
+**source:** cfal
+**topic:** documentation_requirements
+**intent:** DOCUMENTATION
+**policy_fields:** DOC_TYPE, MIN_ABN
+**trigger_words:** CFAL documents, Capital Finance documents, what do I need CFAL, financial statements CFAL, tax return CFAL, ATO portal CFAL, asset liability statement, commitment schedule, aged debtors, aged creditors, cash flow projection, succession plan, competitor list, documentation requirements CFAL
+
+**Content:**
+
+CFAL has no Low Doc option. Documentation requirements scale with transaction size. All financial statements must be no more than **18 months old** (profit & loss and balance sheet). Statements are required for all related companies and trusts — consolidated statements preferred.
+
+| Document | ≤ $250k | $250k–$500k | $500k–$1m | > $1m |
+|---------|:-------:|:-----------:|:---------:|:-----:|
+| Client information (name, address, DOB etc.) | ✓ | ✓ | ✓ | ✓ |
+| Brief background of business/directors | ✓ | — | — | — |
+| Detailed background of business/directors | — | ✓ | ✓ | ✓ |
+| ABN for 2 years + GST registered | ✓ | ✓ | ✓ | ✓ |
+| Details of succession planning | — | — | ✓ | ✓ |
+| List of major competitors & major clients | — | — | ✓ | ✓ |
+| Full description of goods | ✓ | ✓ | ✓ | ✓ |
+| Reason of purchase | ✓ | ✓ | ✓ | ✓ |
+| Signed Privacy Form from ALL individuals | ✓ | ✓ | ✓ | ✓ |
+| Last 2 years financial statements (P&L + Balance Sheet) | ✓ | ✓ | ✓ | ✓ |
+| Last 2 years tax returns — individuals and beneficiaries | ✓ | ✓ | ✓ | ✓ |
+| Last 3 years financial statements | — | — | ✓ | ✓ |
+| Interim/management accounts if year-end > 6 months old | — | — | ✓ | ✓ |
+| Current Asset & Liability Statement (all directors/guarantors) | ✓ | ✓ | ✓ | ✓ |
+| Commitment Schedule | ✓ | ✓ | ✓ | ✓ |
+| Current Tax Portal — Integrated Client Account (TFNs redacted) | — | ✓ | ✓ | ✓ |
+| Commentary on major movements in financials (≥ 10%) | — | — | ✓ | ✓ |
+| Cash flow projections (with assumptions) | — | — | — | ✓ |
+| Current Aged Debtor & Creditors Listing | — | — | ✓ | ✓ |
+
+**Note:** Matrix policies (Motor Vehicle, Small Ticket, Replacement, Roll-Over) may have different requirements. Refer to respective policy documentation.
+Contact your Credit Manager if any of the above requirements cannot be met.
+
+---
+
+## chunk_id: cfal_drivexpress_policy
+**source:** cfal
+**topic:** drivexpress_fast_track
+**intent:** ELIGIBILITY
+**policy_fields:** MAX_LOAN, PROPERTY_REQUIRED, MIN_ABN
+**trigger_words:** DriveXpress CFAL, fast track CFAL, simplified CFAL, DriveXpress Capital Finance, new to bank CFAL, existing client CFAL, CFAL quick approval, affordability declaration CFAL
+
+**Content:**
+
+CFAL operates the DriveXpress fast-track channel (shared with Westpac Group). No financial statements are required if all fast-track criteria are met.
+
+**Customer types and limits:**
+
+| Customer Type | Max Loan | Eligible Goods | Max DriveXpress Exposure |
+|--------------|---------|---------------|--------------------------|
+| New to Business Bank (owns residential property + min. income $75k p.a.) | $150k | A, B & C | $250k |
+| Existing Clients (12 months current WEF history OR finalised WEF contract within last 12 months OR existing Westpac business lending) | $200k (A) / $300k (B) / $500k (C) | A / B / C | $750k |
+
+**Asset categories:**
+
+| Category | Age Limit | Sale Types | Assets |
+|---------|----------|-----------|--------|
+| A | Up to 5 years old | Dealer & Private Seller | MV car (not taxi/hire/import/exotic; price ≤ $250k), Light Commercial < 4.5T GVM |
+| B | Up to 5 years old (cranes: up to 3 years) | Dealer only | Trucks > 4.5T, forklifts, telehandlers, boom/scissor/spider lifts, trailers, excavators, skid steers/wheel loaders, mobile/tight access cranes, backhoe loaders, graders, scrapers, dozers, rollers |
+| C | Up to 7 years old | Dealer only | Tractors, headers, harvesters, cotton pickers, balers, mower conditioners, ploughs, seeders, sprayers, spreaders, all-terrain vehicles, feed wagons |
+
+**DriveXpress criteria:**
+- > 2 years in business with valid ABN and currently GST registered
+- Statutory lodgements and payments (tax, GST, employee entitlements) up to date — no arrangements
+- All directors to guarantee loan and have satisfactory credit bureau reports
+- Borrower signs Affordability Declaration
+- Existing clients must be in good standing with no capping
+- DriveXpress Exposure = aggregate loan balances under this policy
+
+**If criteria not met:** Standard application required — last 2 years financials and 2 years directors' ITRs needed.
+
+---
+
+## chunk_id: cfal_rollover_policy
+**source:** cfal
+**topic:** rollover_policy
+**intent:** SPECIAL_PROGRAMS
+**policy_fields:** MAX_LOAN, MIN_ABN
+**trigger_words:** rollover CFAL, roll over Capital Finance, extend contract CFAL, existing contract CFAL, refinance CFAL, other financier rollover CFAL
+
+**Content:**
+
+The Rollover channel allows existing clients to extend or replace an existing equipment finance contract. **New-to-bank clients are not eligible.**
+
+**Loan limits:**
+
+| Original Funder | Max Loan | Eligible Goods |
+|----------------|---------|---------------|
+| Westpac / CFAL | $500k | All (A, B & C) |
+| Other financier (inspection required) | $250k | A & B (refer to DriveXpress) |
+
+**Rollover criteria:**
+- Borrower must have 12 months current WEF history OR finalised WEF contract within last 12 months
+- > 2 years in business with valid ABN and currently GST registered
+- Statutory obligations up to date; no payment arrangements
+- Satisfactory credit bureau and ASIC search
+- Contract being rolled must have been operating for > 12 months
+- Borrower/guarantor and security position must be the same as original contract
+- St.George Group EF residual values accepted
+
+---
+
+## chunk_id: cfal_replacement_policy
+**source:** cfal
+**topic:** replacement_policy
+**intent:** SPECIAL_PROGRAMS
+**policy_fields:** MAX_LOAN, MIN_ABN
+**trigger_words:** replacement CFAL, replace contract CFAL, asset swap CFAL, replace equipment CFAL, swap equipment CFAL, replace truck CFAL, Replacement policy Capital Finance
+
+**Content:**
+
+The Replacement channel allows borrowers to replace a finalised or near-finalised equipment finance contract with a new one for a different asset.
+
+**Loan limits:**
+
+| Customer Type | Max Loan | Eligible Goods |
+|--------------|---------|---------------|
+| New Clients (owns residential property) | $150k | A & B |
+| Existing Clients (12 months current WEF history or finalised EF contract within last 12 months) | $200k (A) / $650k (B & C) | A / B & C |
+
+**Additional Category B (Replacement only):**
+Trucks > 4.5T, trailers, forklifts/telehandlers, boom/scissor/spider lifts, backhoe loaders, dozers, tippers, dump trucks (heavy duty), excavators, graders, scrapers, skid steers/wheel loaders, mobile/tight access cranes and rollers — up to 7 years old (dealer only).
+
+**Additional Category C (Replacement only):**
+Government / school / local route buses (excludes charter) — up to 5 years old; up to **10-year loan term** (dealer only).
+
+**Replacement criteria:**
+- > 2 years in business with valid ABN and currently GST registered
+- Statutory obligations up to date; no payment arrangements
+- Borrower(s) and guarantor(s) have satisfactory credit bureau reports and ASIC search
+- Monthly repayments within **125% of payment being replaced** (new-to-bank)
+- Monthly repayments within **150% of payment being replaced** (existing customers)
+- Ability to replace multiple contracts with one or vice versa
+- Contract being replaced finalised within **last 6 months / on settlement**
+- Contract being replaced must have operated for **minimum 12 months** and conducted within arrangements
+- Borrower(s) and guarantor(s) same as, or additional to, original contract
+
+---
+
+## chunk_id: cfal_medical_policy
+**source:** cfal
+**topic:** medical_policy
+**intent:** SPECIAL_PROGRAMS
+**policy_fields:** MAX_LOAN, PROPERTY_REQUIRED
+**trigger_words:** medical CFAL, doctor CFAL, GP Capital Finance, dental CFAL, vet CFAL, allied health CFAL, medical equipment CFAL, medical specialist CFAL, health professional CFAL
+
+**Content:**
+
+CFAL operates a Medical specialist channel for healthcare professionals.
+
+**Eligible professions:**
+- Medical Specialist, GP, Dental and Vet (higher limits)
+- Allied Health Practitioners: Occupational Therapists, Optometrists, Osteopaths, Physiotherapists, Chiropractors, Audiologist, Pathology services, Podiatrist, Psychologist, Speech Pathologist
+- **Excluded:** Pharmacists
+
+**Loan limits:**
+
+| Asset Type | Medical Specialist / GP / Dental / Vet | Allied Health Practitioner |
+|-----------|--------------------------------------|--------------------------|
+| Motor vehicle (≤ 5 years old) | < $250,000 | < $150,000 |
+| New office equipment and fittings | < $150,000 | < $150,000 |
+| New medical equipment | < $350,000 | < $150,000 |
+| **Max cumulative approvals** | **< $500,000** | **< $250,000** |
+
+**Medical criteria:**
+- Borrower/Guarantor credit bureau satisfactory; > 2 years in business; GST registered
+- Statutory obligations up to date; no payment arrangements
+- New clients: must own residential property + minimum annual income $75k p.a.
+- Sale and hire back permitted where < 30 days past date of acquisition
+- Private sale permitted for motor vehicles
+- Signed Affordability Declaration required
+
+---
+
+## chunk_id: cfal_settlement
+**source:** cfal
+**topic:** settlement_requirements
+**intent:** SETTLEMENT
+**policy_fields:** PPSR
+**trigger_words:** settlement CFAL, PPSR CFAL, insurance CFAL, Certificate of Currency CFAL, CoC fleet CFAL, VIN CFAL, settle loan CFAL, what do I need to settle CFAL
+
+**Content:**
+
+**Standard settlement requirements:**
+- All payout documents submitted via QuickSell / DriveOnline
+- Completion of biometrics (link provided in approval confirmation)
+- Asset must be insured with CFAL / Westpac noted as an interested party; insurance details loaded in system
+- Tax invoice or private sale agreement
+- Fully signed loan documents (ink signature or e-sign)
+
+**Certificate of Currency (CoC) — assets above $150k:**
+- CoC required to confirm insurance details and must note the lender's interest
+- **Updated rule (effective 24 February 2025):** Where the CoC confirms a "fleet policy", there is no longer a requirement to include the specific asset VIN/serial number. Applies to motor vehicles only.
+
+**PPSR — Updated rule (effective 24 February 2025):**
+For motor vehicles with a VIN in buyback or private sale transactions:
+- PPSR company search over the private seller or customer is **no longer required**
+- Conditions: asset must have a VIN; a search on the day before or day of sale must show no other registration over that VIN
+- All other serial types (PIN, HIN, VH number etc.) follow the existing process
+
+---
+
+## chunk_id: cfal_exclusions
+**source:** cfal
+**topic:** exclusions_and_restrictions
+**intent:** EXCLUSIONS
+**policy_fields:** ASSET_AGE_MAX
+**trigger_words:** excluded CFAL, not eligible CFAL, novated lease CFAL, sale hireback CFAL, charter bus CFAL, minus equity CFAL, private sale restriction CFAL, very remote CFAL, repairable writeoff CFAL, exotic car CFAL
+
+**Content:**
+
+**Excluded loan structures:**
+- Novated leases
+- Sale and hirebacks (exception: Medical channel if < 30 days past acquisition)
+
+**Excluded vehicles/assets:**
+- Taxis and hire cars
+- Imported and exotic cars
+- Repairable write-offs
+- Charter buses (Replacement Category C accepts government/school/local route only)
+
+**Geographic exclusions:**
+- "Very Remote" areas per ABS 2021 Remoteness Area classification: not available
+- "Remote" areas: non-asset backed applications require 20% deposit
+
+**Private sale restrictions:**
+- Private sales for motor vehicles and light commercial vehicles < 4.5T GVM only
+- Not available for heavy equipment (Category B) or agriculture (Category C) in private sale
+
+**Trade-in restriction:**
+- No minus equity on trade-ins
+
+**If DriveXpress criteria not met:**
+- Standard application required
+- Last 2 years financials + 2 years directors' ITRs required
+- Requests not meeting all fast-track criteria (including where aggregate limits are exceeded) require a standard application
+
+**General note:**
+CFAL reserves the right to request additional information and decline any application. Final rates and pricing remain at the sole discretion of CFAL. This is to be used as a guide only — other conditions may apply on a case-by-case basis.
+
