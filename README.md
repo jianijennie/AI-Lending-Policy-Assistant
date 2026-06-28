@@ -252,11 +252,11 @@ Answer with Citation
 | Week 1 | ✅ Taxonomy Design |
 | Week 2 | ✅ Chunking |
 | Week 2 | ⏳ Metadata Design |
-| Week 3 | ⏳ Embedding |
-| Week 3 | ⏳ ChromaDB |
-| Week 4 | ⏳ GPT Integration |
-| Week 5 | ⏳ Frontend Development |
-| Week 6 | ⏳ Testing & Presentation |
+| Week 2 | ⏳ Embedding |
+| Week 2 | ⏳ ChromaDB |
+| Week 3 | ⏳ GPT Integration |
+| Week 3 | ⏳ Frontend Development |
+| Week 4 | ⏳ Testing & Presentation |
 
 ---
 
@@ -305,7 +305,7 @@ Compare ABN requirements across all lenders.
 
 Which lender is most suitable for this client?
 
-Explain why Pepper is recommended.
+Explain why Westpac is recommended.
 ```
 
 ---
