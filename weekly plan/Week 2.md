@@ -1,5 +1,14 @@
 # Week 2 Sprint Plan
 
+Chunk
+ ↓
+Metadata
+ ↓
+Embedding
+ ↓
+ChromaDB
+ ↓
+Semantic Search（find the relatable answer）
 ## Sprint Goal
 
 Build the first functional version of the AI knowledge base by transforming structured policy chunks into searchable vector embeddings.
