@@ -10,7 +10,7 @@ DATA_DIR = "C:/Projects/lifex-python/data/documents"
 CHROMA_DIR = "C:/Projects/chroma_db"
 
 EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
-LLM_MODEL = "llama-3.1-8b-instant"
+LLM_MODEL = "gpt-4o-mini"
 
 CHUNKS_DIR = "C:/Projects/lifex-python/data/chunks"
 METADATA_PATH = "C:/Projects/lifex-python/data/metadata/Metadata.csv"

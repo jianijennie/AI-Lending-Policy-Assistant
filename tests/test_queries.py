@@ -1,11 +1,13 @@
 import os
 import sys
-import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import openpyxl
 from src.query import query_policies
 from src.config import QUESTION_BANK_PATH
+
+MAX_WORKERS = 4
 
 def load_questions():
     wb = openpyxl.load_workbook(QUESTION_BANK_PATH)
@@ -55,7 +57,24 @@ def score_answer(answer: str, gold_answer: str, source_chunk_id: str, nodes):
     else:
         return 1
 
-def run_tests(max_questions=None):
+def _run_one(test):
+    try:
+        answer, nodes = query_policies(test["question"], verbose=False)
+        score = score_answer(
+            answer,
+            test["gold_answer"],
+            test["source_chunk_id"],
+            nodes
+        )
+        retrieved_chunks = [n.metadata.get('chunk_id', '') for n in nodes]
+        correct_source = test["source_chunk_id"] in retrieved_chunks
+        return {"test": test, "score": score, "correct_source": correct_source,
+                "answer": answer, "retrieved_chunks": retrieved_chunks, "error": None}
+    except Exception as e:
+        return {"test": test, "score": 1, "correct_source": False,
+                "answer": None, "retrieved_chunks": [], "error": str(e)}
+
+def run_tests(max_questions=None, max_workers=MAX_WORKERS):
     print("=" * 70)
     print("RETRIEVAL ACCURACY TEST SUITE")
     print("Project CMAP 2026 — Group 2")
@@ -65,54 +84,39 @@ def run_tests(max_questions=None):
     if max_questions:
         questions = questions[:max_questions]
 
+    outcomes = [None] * len(questions)
+    done = 0
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_idx = {executor.submit(_run_one, test): i for i, test in enumerate(questions)}
+        for future in as_completed(future_to_idx):
+            i = future_to_idx[future]
+            result = future.result()
+            outcomes[i] = result
+            done += 1
+            test = result["test"]
+            status = "ERROR" if result["error"] else ("PASS" if result["correct_source"] else "FAIL")
+            print(f"[{done}/{len(questions)}] [{test['id']}] {test['lender']} | "
+                  f"{test['category']} | {test['difficulty']} | score={result['score']} | "
+                  f"source={status}" + (f" | error={result['error']}" if result["error"] else ""),
+                  flush=True)
+
     scores = []
     source_hits = 0
     by_lender = {}
     by_category = {}
 
-    for i, test in enumerate(questions):
-        print(f"\nTest {i+1}/{len(questions)} [{test['id']}] "
-              f"{test['lender']} | {test['category']} | {test['difficulty']}")
-        print(f"Q: {test['question']}")
+    for result in outcomes:
+        test = result["test"]
+        scores.append(result["score"])
+        if result["correct_source"]:
+            source_hits += 1
 
-        try:
-            answer, nodes = query_policies(test["question"])
-            time.sleep(1)
-            score = score_answer(
-                answer,
-                test["gold_answer"],
-                test["source_chunk_id"],
-                nodes
-            )
+        lender = test["lender"]
+        by_lender.setdefault(lender, []).append(result["score"])
 
-            retrieved_chunks = [n.metadata.get('chunk_id', '') for n in nodes]
-            correct_source = test["source_chunk_id"] in retrieved_chunks
-
-            if correct_source:
-                source_hits += 1
-
-            scores.append(score)
-
-            # Track by lender
-            lender = test["lender"]
-            if lender not in by_lender:
-                by_lender[lender] = []
-            by_lender[lender].append(score)
-
-            # Track by category
-            cat = test["category"]
-            if cat not in by_category:
-                by_category[cat] = []
-            by_category[cat].append(score)
-
-            print(f"Source hit: {'PASS' if correct_source else 'FAIL'} "
-                  f"(expected: {test['source_chunk_id']})")
-
-        except Exception as e:
-            print(f"ERROR: {e}")
-            scores.append(1)
-
-        print("-" * 70)
+        cat = test["category"]
+        by_category.setdefault(cat, []).append(result["score"])
 
     # Summary
     total = len(scores)

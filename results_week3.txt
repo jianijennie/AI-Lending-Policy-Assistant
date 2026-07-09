@@ -1,0 +1,238 @@
+======================================================================
+RETRIEVAL ACCURACY TEST SUITE - WEEK 3 RESULTS
+Project CMAP 2026 - Group 2
+======================================================================
+
+IMPORTANT CAVEAT
+----------------------------------------------------------------------
+This run hit the Groq free-tier account's DAILY token cap (500,000
+TPD) partway through, after an earlier run (also against this
+account) had already consumed a large share of the daily budget.
+54 of 175 questions could not get an LLM response and are EXCLUDED
+from the scores below rather than counted as failures.
+
+The exclusions are NOT evenly distributed - they landed almost
+entirely on Metro and Flexi (the questions that happened to run
+last, after the quota was gone):
+  Resimac   : 23/25 scored, 2/25 excluded (quota)
+  BFS       : 25/25 scored, 0/25 excluded (quota)
+  Westpac   : 22/25 scored, 3/25 excluded (quota)
+  CFAL      : 23/25 scored, 2/25 excluded (quota)
+  Angle     : 22/25 scored, 3/25 excluded (quota)
+  Metro     : 2/25 scored, 23/25 excluded (quota)
+  Flexi     : 4/25 scored, 21/25 excluded (quota)
+
+=> Metro (2/25 scored) and Flexi (4/25 scored) sample sizes are too
+   small to be meaningful. Their per-lender averages below should
+   NOT be read as representative. Rerun the excluded questions
+   below once the daily quota resets.
+
+Excluded question IDs (54):
+  RES-17, RES-21, WBC-12, WBC-19, WBC-21, CFA-18, CFA-23, ANG-19, ANG-23, MET-02, MET-03, MET-04, ANG-25, MET-05, MET-06, MET-07, MET-08, MET-10, MET-11, MET-12, MET-13, MET-14, MET-15, MET-16, MET-17, MET-18, MET-19, MET-20, MET-21, MET-22, MET-23, MET-24, MET-25, FLX-01, FLX-02, FLX-03, FLX-04, FLX-06, FLX-08, FLX-09, FLX-05, FLX-12, FLX-13, FLX-15, FLX-16, FLX-17, FLX-18, FLX-11, FLX-19, FLX-20, FLX-21, FLX-23, FLX-24, FLX-25
+
+======================================================================
+RESULTS (valid / successfully-scored questions only)
+======================================================================
+Questions scored:     121 of 175 attempted (54 excluded, see above)
+Average score:        2.91/4
+Perfect scores (4/4): 48/121 (40%)
+Source hit rate:      82%
+
+By lender (of scored questions - see caveat above for N):
+  Resimac: avg 3.30/4 (23 questions)
+  BFS: avg 2.96/4 (25 questions)
+  Westpac: avg 3.23/4 (22 questions)
+  CFAL: avg 3.04/4 (23 questions)
+  Angle: avg 2.27/4 (22 questions)
+  Metro: avg 1.50/4 (2 questions)
+  Flexi: avg 2.00/4 (4 questions)
+
+By category:
+  ASSET_ELIGIBILITY: avg 2.89/4 (9 questions)
+  DOCUMENTATION: avg 3.18/4 (11 questions)
+  ELIGIBILITY: avg 3.05/4 (19 questions)
+  EXCLUSIONS: avg 3.36/4 (11 questions)
+  FEES: avg 2.33/4 (6 questions)
+  LOAN_LIMITS: avg 2.71/4 (14 questions)
+  PRICING: avg 3.00/4 (19 questions)
+  SETTLEMENT: avg 3.14/4 (7 questions)
+  SPECIAL_PROGRAMS: avg 2.60/4 (25 questions)
+======================================================================
+
+PER-QUESTION DETAIL
+----------------------------------------------------------------------
+[  1/175] [RES-01] Resimac   | ELIGIBILITY        | easy   | score=4 | PASS
+[  2/175] [RES-02] Resimac   | PRICING            | easy   | score=2 | PASS
+[  3/175] [RES-04] Resimac   | LOAN_LIMITS        | medium | score=4 | PASS
+[  4/175] [RES-03] Resimac   | PRICING            | medium | score=4 | PASS
+[  5/175] [RES-05] Resimac   | DOCUMENTATION      | medium | score=3 | PASS
+[  6/175] [RES-06] Resimac   | ASSET_ELIGIBILITY  | easy   | score=4 | PASS
+[  7/175] [RES-08] Resimac   | FEES               | medium | score=4 | PASS
+[  8/175] [RES-07] Resimac   | EXCLUSIONS         | easy   | score=2 | FAIL
+[  9/175] [RES-10] Resimac   | SETTLEMENT         | easy   | score=3 | PASS
+[ 10/175] [RES-11] Resimac   | ELIGIBILITY        | medium | score=4 | PASS
+[ 11/175] [RES-14] Resimac   | PRICING            | hard   | score=2 | PASS
+[ 12/175] [RES-12] Resimac   | LOAN_LIMITS        | medium | score=2 | PASS
+[ 13/175] [RES-16] Resimac   | ELIGIBILITY        | easy   | score=3 | PASS
+[ 14/175] [RES-15] Resimac   | LOAN_LIMITS        | medium | score=3 | PASS
+[ 15/175] [RES-18] Resimac   | DOCUMENTATION      | medium | score=4 | PASS
+[ 16/175] [RES-19] Resimac   | PRICING            | easy   | score=4 | PASS
+[ 17/175] [RES-20] Resimac   | ASSET_ELIGIBILITY  | medium | score=2 | FAIL
+[ 18/175] [RES-09] Resimac   | ELIGIBILITY        | medium | score=4 | PASS
+[ 19/175] [RES-22] Resimac   | EXCLUSIONS         | easy   | score=4 | PASS
+[ 20/175] [RES-23] Resimac   | PRICING            | easy   | score=4 | PASS
+[ 21/175] [RES-24] Resimac   | LOAN_LIMITS        | medium | score=2 | PASS
+[ 22/175] [RES-25] Resimac   | SETTLEMENT         | medium | score=4 | PASS
+[ 23/175] [BFS-01] BFS       | ELIGIBILITY        | easy   | score=2 | PASS
+[ 24/175] [BFS-02] BFS       | ELIGIBILITY        | medium | score=1 | FAIL
+[ 25/175] [BFS-03] BFS       | PRICING            | medium | score=3 | PASS
+[ 26/175] [BFS-04] BFS       | LOAN_LIMITS        | medium | score=3 | PASS
+[ 27/175] [BFS-05] BFS       | ASSET_ELIGIBILITY  | easy   | score=2 | PASS
+[ 28/175] [BFS-06] BFS       | EXCLUSIONS         | easy   | score=4 | PASS
+[ 29/175] [BFS-07] BFS       | ASSET_ELIGIBILITY  | medium | score=1 | FAIL
+[ 30/175] [BFS-08] BFS       | FEES               | medium | score=3 | PASS
+[ 31/175] [BFS-09] BFS       | ELIGIBILITY        | medium | score=4 | PASS
+[ 32/175] [BFS-10] BFS       | LOAN_LIMITS        | medium | score=4 | PASS
+[ 33/175] [BFS-11] BFS       | PRICING            | medium | score=3 | PASS
+[ 34/175] [BFS-12] BFS       | PRICING            | hard   | score=3 | PASS
+[ 35/175] [BFS-13] BFS       | FEES               | easy   | score=2 | PASS
+[ 36/175] [BFS-14] BFS       | ASSET_ELIGIBILITY  | medium | score=4 | PASS
+[ 37/175] [BFS-15] BFS       | DOCUMENTATION      | medium | score=1 | FAIL
+[ 38/175] [BFS-16] BFS       | ELIGIBILITY        | easy   | score=4 | PASS
+[ 39/175] [BFS-17] BFS       | LOAN_LIMITS        | easy   | score=2 | PASS
+[ 40/175] [BFS-18] BFS       | DOCUMENTATION      | medium | score=4 | PASS
+[ 41/175] [BFS-19] BFS       | PRICING            | medium | score=4 | PASS
+[ 42/175] [BFS-20] BFS       | ASSET_ELIGIBILITY  | easy   | score=2 | FAIL
+[ 43/175] [BFS-21] BFS       | ELIGIBILITY        | easy   | score=2 | FAIL
+[ 44/175] [BFS-22] BFS       | ASSET_ELIGIBILITY  | easy   | score=4 | PASS
+[ 45/175] [BFS-23] BFS       | LOAN_LIMITS        | medium | score=4 | PASS
+[ 46/175] [BFS-24] BFS       | EXCLUSIONS         | medium | score=4 | PASS
+[ 47/175] [BFS-25] BFS       | PRICING            | medium | score=4 | PASS
+[ 48/175] [WBC-01] Westpac   | ELIGIBILITY        | easy   | score=2 | PASS
+[ 49/175] [RES-13] Resimac   | ASSET_ELIGIBILITY  | medium | score=4 | PASS
+[ 50/175] [WBC-03] Westpac   | PRICING            | medium | score=3 | PASS
+[ 51/175] [WBC-04] Westpac   | SPECIAL_PROGRAMS   | medium | score=3 | PASS
+[ 52/175] [RES-17] Resimac   | EXCLUSIONS         | medium | score=1 | ERROR (quota)
+[ 53/175] [WBC-05] Westpac   | SPECIAL_PROGRAMS   | easy   | score=4 | PASS
+[ 54/175] [WBC-06] Westpac   | SPECIAL_PROGRAMS   | medium | score=3 | PASS
+[ 55/175] [WBC-08] Westpac   | SETTLEMENT         | hard   | score=4 | PASS
+[ 56/175] [RES-21] Resimac   | ELIGIBILITY        | easy   | score=1 | ERROR (quota)
+[ 57/175] [WBC-09] Westpac   | PRICING            | medium | score=3 | PASS
+[ 58/175] [WBC-11] Westpac   | PRICING            | medium | score=4 | PASS
+[ 59/175] [WBC-07] Westpac   | SPECIAL_PROGRAMS   | medium | score=3 | PASS
+[ 60/175] [WBC-13] Westpac   | SPECIAL_PROGRAMS   | hard   | score=3 | PASS
+[ 61/175] [WBC-14] Westpac   | PRICING            | medium | score=3 | PASS
+[ 62/175] [WBC-15] Westpac   | ELIGIBILITY        | medium | score=4 | PASS
+[ 63/175] [WBC-16] Westpac   | ELIGIBILITY        | easy   | score=2 | FAIL
+[ 64/175] [WBC-10] Westpac   | EXCLUSIONS         | medium | score=4 | PASS
+[ 65/175] [WBC-18] Westpac   | SETTLEMENT         | medium | score=3 | PASS
+[ 66/175] [WBC-02] Westpac   | LOAN_LIMITS        | medium | score=3 | PASS
+[ 67/175] [WBC-20] Westpac   | SPECIAL_PROGRAMS   | medium | score=3 | PASS
+[ 68/175] [WBC-17] Westpac   | LOAN_LIMITS        | medium | score=4 | PASS
+[ 69/175] [WBC-22] Westpac   | SPECIAL_PROGRAMS   | easy   | score=4 | PASS
+[ 70/175] [WBC-23] Westpac   | PRICING            | medium | score=3 | PASS
+[ 71/175] [WBC-24] Westpac   | EXCLUSIONS         | easy   | score=4 | PASS
+[ 72/175] [WBC-25] Westpac   | SPECIAL_PROGRAMS   | easy   | score=2 | PASS
+[ 73/175] [CFA-01] CFAL      | ELIGIBILITY        | easy   | score=4 | PASS
+[ 74/175] [CFA-02] CFAL      | DOCUMENTATION      | medium | score=4 | PASS
+[ 75/175] [CFA-03] CFAL      | ELIGIBILITY        | medium | score=1 | FAIL
+[ 76/175] [CFA-04] CFAL      | SPECIAL_PROGRAMS   | medium | score=3 | PASS
+[ 77/175] [CFA-05] CFAL      | SPECIAL_PROGRAMS   | medium | score=3 | PASS
+[ 78/175] [CFA-06] CFAL      | SPECIAL_PROGRAMS   | medium | score=2 | PASS
+[ 79/175] [CFA-07] CFAL      | SETTLEMENT         | hard   | score=2 | PASS
+[ 80/175] [CFA-08] CFAL      | EXCLUSIONS         | medium | score=4 | PASS
+[ 81/175] [CFA-09] CFAL      | SPECIAL_PROGRAMS   | hard   | score=4 | PASS
+[ 82/175] [CFA-10] CFAL      | ELIGIBILITY        | easy   | score=3 | PASS
+[ 83/175] [CFA-11] CFAL      | DOCUMENTATION      | hard   | score=4 | PASS
+[ 84/175] [CFA-12] CFAL      | LOAN_LIMITS        | medium | score=2 | PASS
+[ 85/175] [CFA-13] CFAL      | SPECIAL_PROGRAMS   | medium | score=3 | PASS
+[ 86/175] [CFA-14] CFAL      | SPECIAL_PROGRAMS   | medium | score=3 | PASS
+[ 87/175] [CFA-15] CFAL      | EXCLUSIONS         | medium | score=3 | PASS
+[ 88/175] [CFA-16] CFAL      | ELIGIBILITY        | medium | score=4 | PASS
+[ 89/175] [CFA-17] CFAL      | DOCUMENTATION      | medium | score=4 | PASS
+[ 90/175] [WBC-12] Westpac   | ASSET_ELIGIBILITY  | medium | score=1 | ERROR (quota)
+[ 91/175] [CFA-19] CFAL      | SETTLEMENT         | medium | score=2 | PASS
+[ 92/175] [CFA-20] CFAL      | SPECIAL_PROGRAMS   | medium | score=1 | FAIL
+[ 93/175] [CFA-21] CFAL      | ELIGIBILITY        | easy   | score=4 | PASS
+[ 94/175] [WBC-19] Westpac   | PRICING            | easy   | score=1 | ERROR (quota)
+[ 95/175] [CFA-22] CFAL      | ELIGIBILITY        | easy   | score=2 | FAIL
+[ 96/175] [CFA-24] CFAL      | SPECIAL_PROGRAMS   | easy   | score=4 | PASS
+[ 97/175] [CFA-25] CFAL      | DOCUMENTATION      | medium | score=4 | PASS
+[ 98/175] [ANG-01] Angle     | SPECIAL_PROGRAMS   | medium | score=4 | PASS
+[ 99/175] [ANG-02] Angle     | EXCLUSIONS         | easy   | score=4 | PASS
+[100/175] [WBC-21] Westpac   | ASSET_ELIGIBILITY  | easy   | score=1 | ERROR (quota)
+[101/175] [ANG-04] Angle     | SPECIAL_PROGRAMS   | medium | score=2 | FAIL
+[102/175] [ANG-03] Angle     | SPECIAL_PROGRAMS   | medium | score=1 | FAIL
+[103/175] [ANG-06] Angle     | FEES               | easy   | score=2 | PASS
+[104/175] [ANG-07] Angle     | LOAN_LIMITS        | medium | score=1 | FAIL
+[105/175] [ANG-08] Angle     | EXCLUSIONS         | easy   | score=2 | PASS
+[106/175] [ANG-09] Angle     | SETTLEMENT         | medium | score=4 | PASS
+[107/175] [ANG-05] Angle     | ELIGIBILITY        | easy   | score=4 | PASS
+[108/175] [ANG-11] Angle     | DOCUMENTATION      | medium | score=1 | FAIL
+[109/175] [ANG-12] Angle     | PRICING            | medium | score=1 | FAIL
+[110/175] [ANG-13] Angle     | SPECIAL_PROGRAMS   | medium | score=1 | FAIL
+[111/175] [ANG-14] Angle     | SPECIAL_PROGRAMS   | medium | score=2 | PASS
+[112/175] [ANG-15] Angle     | DOCUMENTATION      | hard   | score=4 | PASS
+[113/175] [ANG-16] Angle     | LOAN_LIMITS        | medium | score=2 | PASS
+[114/175] [ANG-17] Angle     | PRICING            | easy   | score=3 | PASS
+[115/175] [ANG-18] Angle     | DOCUMENTATION      | medium | score=2 | PASS
+[116/175] [ANG-10] Angle     | LOAN_LIMITS        | medium | score=2 | PASS
+[117/175] [ANG-20] Angle     | EXCLUSIONS         | medium | score=2 | PASS
+[118/175] [ANG-21] Angle     | SPECIAL_PROGRAMS   | easy   | score=1 | FAIL
+[119/175] [ANG-22] Angle     | SPECIAL_PROGRAMS   | easy   | score=4 | PASS
+[120/175] [CFA-18] CFAL      | ASSET_ELIGIBILITY  | medium | score=1 | ERROR (quota)
+[121/175] [ANG-24] Angle     | FEES               | easy   | score=1 | FAIL
+[122/175] [CFA-23] CFAL      | EXCLUSIONS         | easy   | score=1 | ERROR (quota)
+[123/175] [MET-01] Metro     | PRICING            | easy   | score=2 | PASS
+[124/175] [ANG-19] Angle     | ELIGIBILITY        | medium | score=1 | ERROR (quota)
+[125/175] [ANG-23] Angle     | SPECIAL_PROGRAMS   | medium | score=1 | ERROR (quota)
+[126/175] [MET-02] Metro     | PRICING            | medium | score=1 | ERROR (quota)
+[127/175] [MET-03] Metro     | SPECIAL_PROGRAMS   | medium | score=1 | ERROR (quota)
+[128/175] [MET-04] Metro     | LOAN_LIMITS        | medium | score=1 | ERROR (quota)
+[129/175] [ANG-25] Angle     | PRICING            | medium | score=1 | ERROR (quota)
+[130/175] [MET-05] Metro     | ASSET_ELIGIBILITY  | easy   | score=1 | ERROR (quota)
+[131/175] [MET-06] Metro     | SPECIAL_PROGRAMS   | medium | score=1 | ERROR (quota)
+[132/175] [MET-07] Metro     | ASSET_ELIGIBILITY  | medium | score=1 | ERROR (quota)
+[133/175] [MET-08] Metro     | SPECIAL_PROGRAMS   | medium | score=1 | ERROR (quota)
+[134/175] [MET-10] Metro     | EXCLUSIONS         | medium | score=1 | ERROR (quota)
+[135/175] [MET-11] Metro     | LOAN_LIMITS        | medium | score=1 | ERROR (quota)
+[136/175] [MET-12] Metro     | ASSET_ELIGIBILITY  | medium | score=1 | ERROR (quota)
+[137/175] [MET-09] Metro     | SPECIAL_PROGRAMS   | medium | score=1 | FAIL
+[138/175] [MET-13] Metro     | SPECIAL_PROGRAMS   | medium | score=1 | ERROR (quota)
+[139/175] [MET-14] Metro     | SPECIAL_PROGRAMS   | medium | score=1 | ERROR (quota)
+[140/175] [MET-15] Metro     | LOAN_LIMITS        | medium | score=1 | ERROR (quota)
+[141/175] [MET-16] Metro     | PRICING            | medium | score=1 | ERROR (quota)
+[142/175] [MET-17] Metro     | FEES               | easy   | score=1 | ERROR (quota)
+[143/175] [MET-18] Metro     | SPECIAL_PROGRAMS   | medium | score=1 | ERROR (quota)
+[144/175] [MET-19] Metro     | EXCLUSIONS         | medium | score=1 | ERROR (quota)
+[145/175] [MET-20] Metro     | ELIGIBILITY        | medium | score=1 | ERROR (quota)
+[146/175] [MET-21] Metro     | EXCLUSIONS         | easy   | score=1 | ERROR (quota)
+[147/175] [MET-22] Metro     | ASSET_ELIGIBILITY  | easy   | score=1 | ERROR (quota)
+[148/175] [MET-23] Metro     | SPECIAL_PROGRAMS   | medium | score=1 | ERROR (quota)
+[149/175] [MET-24] Metro     | SPECIAL_PROGRAMS   | medium | score=1 | ERROR (quota)
+[150/175] [MET-25] Metro     | LOAN_LIMITS        | medium | score=1 | ERROR (quota)
+[151/175] [FLX-01] Flexi     | PRICING            | medium | score=1 | ERROR (quota)
+[152/175] [FLX-02] Flexi     | ELIGIBILITY        | medium | score=1 | ERROR (quota)
+[153/175] [FLX-03] Flexi     | PRICING            | medium | score=1 | ERROR (quota)
+[154/175] [FLX-04] Flexi     | PRICING            | hard   | score=1 | ERROR (quota)
+[155/175] [FLX-06] Flexi     | ASSET_ELIGIBILITY  | easy   | score=1 | ERROR (quota)
+[156/175] [FLX-07] Flexi     | ASSET_ELIGIBILITY  | medium | score=3 | PASS
+[157/175] [FLX-08] Flexi     | SPECIAL_PROGRAMS   | medium | score=1 | ERROR (quota)
+[158/175] [FLX-09] Flexi     | SPECIAL_PROGRAMS   | hard   | score=1 | ERROR (quota)
+[159/175] [FLX-05] Flexi     | LOAN_LIMITS        | medium | score=1 | ERROR (quota)
+[160/175] [FLX-12] Flexi     | ASSET_ELIGIBILITY  | medium | score=1 | ERROR (quota)
+[161/175] [FLX-13] Flexi     | LOAN_LIMITS        | hard   | score=1 | ERROR (quota)
+[162/175] [FLX-10] Flexi     | FEES               | easy   | score=2 | PASS
+[163/175] [FLX-15] Flexi     | SPECIAL_PROGRAMS   | medium | score=1 | ERROR (quota)
+[164/175] [FLX-16] Flexi     | ELIGIBILITY        | medium | score=1 | ERROR (quota)
+[165/175] [FLX-17] Flexi     | ASSET_ELIGIBILITY  | medium | score=1 | ERROR (quota)
+[166/175] [FLX-18] Flexi     | LOAN_LIMITS        | medium | score=1 | ERROR (quota)
+[167/175] [FLX-14] Flexi     | SPECIAL_PROGRAMS   | medium | score=1 | FAIL
+[168/175] [FLX-11] Flexi     | FEES               | medium | score=1 | ERROR (quota)
+[169/175] [FLX-19] Flexi     | EXCLUSIONS         | medium | score=1 | ERROR (quota)
+[170/175] [FLX-20] Flexi     | SPECIAL_PROGRAMS   | medium | score=1 | ERROR (quota)
+[171/175] [FLX-21] Flexi     | ASSET_ELIGIBILITY  | easy   | score=1 | ERROR (quota)
+[172/175] [FLX-23] Flexi     | EXCLUSIONS         | medium | score=1 | ERROR (quota)
+[173/175] [FLX-24] Flexi     | PRICING            | medium | score=1 | ERROR (quota)
+[174/175] [FLX-25] Flexi     | ASSET_ELIGIBILITY  | medium | score=1 | ERROR (quota)
+[175/175] [FLX-22] Flexi     | PRICING            | easy   | score=2 | FAIL
