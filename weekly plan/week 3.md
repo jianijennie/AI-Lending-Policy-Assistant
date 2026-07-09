@@ -1,1 +1,74 @@
+# Week 3 Sprint Plan
+
+## Sprint Goal
+
+Build the first end-to-end Retrieval-Augmented Generation (RAG) chatbot by integrating the AI retrieval pipeline with GPT-4o, evaluating different RAG configurations, and designing an efficient policy update workflow.
+
+---
+
+# Team Responsibilities
+
+| Member             | Role                            | Tasks                                                                                                                                                                                               | Deliverables                                                                                     |
+| ------------------ | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Maksim**         | Finance & Evaluation Analyst    | Validate the Question Bank and Ground Truth dataset, define evaluation metrics, and assist with retrieval and answer quality testing.                                                               | Evaluation Dataset, Accuracy Report, RAG Comparison Results                                      |
+| **Jiani**          | UX, Product & Quality Analyst   | Design the complete chat experience, improve source citation display, create loading/error states, and document the user journey. Assist in analysing usability and presenting evaluation results.  | Updated Figma Prototype, User Flow, UI Improvements, Evaluation Dashboard                        |
+| **Sameep**         | AI / RAG Engineer               | Integrate GPT-4o with the retrieval pipeline, optimise prompt templates, evaluate different RAG configurations (Top-K, chunk size, metadata filtering), and implement incremental document updates. | End-to-End RAG Pipeline, Prompt Templates, RAG Evaluation Results, Incremental Update Workflow   |
+| **Samyak & Umair** | Full-Stack / Platform Engineers | Connect the frontend with the backend APIs, integrate the chat interface with the RAG pipeline, implement source citation display, and support document upload and retrieval.                       | Working Chat Application, Integrated APIs, Source Citation Support, Frontend–Backend Integration |
+
+---
+
+# Sprint Milestones
+
+* [ ] Integrate GPT-4o with the retrieval pipeline
+* [ ] Build the first end-to-end RAG chatbot
+* [ ] Implement source citation in AI responses
+* [ ] Evaluate different RAG configurations (e.g. Top-K, Prompt, Metadata Filtering)
+* [ ] Compare cost, response accuracy, and response time
+* [ ] Implement incremental policy updates without rebuilding the entire knowledge base
+
+---
+
+# Week 3 Deliverables
+
+| Category           | Deliverable                               |
+| ------------------ | ----------------------------------------- |
+| AI Pipeline        | End-to-End RAG Chatbot                    |
+| Prompt Engineering | Prompt Templates                          |
+| Evaluation         | Accuracy, Response Time & Cost Comparison |
+| Source Attribution | Citation Support                          |
+| Knowledge Base     | Incremental Update Workflow               |
+| Frontend           | Functional Chat Interface                 |
+| Backend            | Integrated Retrieval & GPT API            |
+
+---
+
+# RAG Evaluation Plan
+
+The team will compare different RAG configurations to identify the best balance between response quality, latency, and cost.
+
+| Configuration                | Evaluation Criteria                |
+| ---------------------------- | ---------------------------------- |
+| Top-K Retrieval (3 / 5 / 10) | Accuracy, Response Time, Cost      |
+| Prompt Templates             | Answer Quality, Hallucination Rate |
+| Metadata Filtering           | Retrieval Precision                |
+| Incremental Updates          | Update Speed, Scalability          |
+
+---
+
+# Success Criteria
+
+By the end of Week 3, the team should have:
+
+* A fully functional end-to-end RAG chatbot.
+* GPT-4o successfully integrated with the retrieval pipeline.
+* Accurate responses with source citation.
+* Evaluation results comparing different RAG configurations.
+* A documented strategy balancing accuracy, response time, and API cost.
+* A workflow that supports incremental policy updates without rebuilding the entire vector database.
+
+---
+
+## Next Sprint Preview (Week 4)
+
+Focus on refining the user experience, expanding chatbot functionality, improving retrieval performance, and preparing the system for user testing and demonstration.
 
