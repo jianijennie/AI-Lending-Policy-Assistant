@@ -1,0 +1,412 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);font-size:15px;color:var(--color-text-primary)}
+.app{display:flex;height:620px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;background:var(--color-background-primary)}
+.sidebar{width:200px;min-width:200px;border-right:0.5px solid var(--color-border-tertiary);display:flex;flex-direction:column;background:var(--color-background-secondary)}
+.sidebar-logo{padding:16px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.sidebar-logo .logo-badge{font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--color-text-secondary);text-transform:uppercase}
+.sidebar-logo h2{font-size:15px;font-weight:500;color:var(--color-text-primary);margin-top:2px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 16px;font-size:13px;cursor:pointer;color:var(--color-text-secondary);border-left:2px solid transparent;transition:all .15s}
+.nav-item:hover{background:var(--color-background-primary);color:var(--color-text-primary)}
+.nav-item.active{color:var(--color-text-primary);background:var(--color-background-primary);border-left:2px solid #185FA5;font-weight:500}
+.nav-item i{font-size:16px;opacity:.7}
+.nav-item.active i{opacity:1}
+.nav-section{padding:12px 16px 6px;font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.06em}
+.docs-count{display:flex;align-items:center;justify-content:space-between;padding:8px 16px 6px;font-size:12px;color:var(--color-text-tertiary)}
+.doc-chip{display:flex;align-items:center;gap:7px;padding:6px 16px;font-size:12px;color:var(--color-text-secondary);cursor:pointer}
+.doc-chip:hover{color:var(--color-text-primary)}
+.doc-chip i{font-size:14px;opacity:.6}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.panel{display:none;flex-direction:column;height:100%;overflow:hidden}
+.panel.active{display:flex}
+.panel-header{padding:16px 20px 14px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between}
+.panel-header h3{font-size:15px;font-weight:500}
+.panel-header .subtitle{font-size:12px;color:var(--color-text-secondary);margin-top:2px}
+.qa-body{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px}
+.msg{max-width:90%}
+.msg.user{align-self:flex-end}
+.msg.ai{align-self:flex-start}
+.msg-bubble{padding:10px 14px;border-radius:var(--border-radius-lg);font-size:13px;line-height:1.6}
+.msg.user .msg-bubble{background:#185FA5;color:#E6F1FB}
+.msg.ai .msg-bubble{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary)}
+.msg-meta{font-size:11px;color:var(--color-text-tertiary);margin-top:4px;display:flex;gap:8px;align-items:center}
+.msg.user .msg-meta{justify-content:flex-end}
+.source-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 7px;border-radius:4px;background:var(--color-background-info);color:var(--color-text-info);border:0.5px solid var(--color-border-info);margin-top:6px;margin-right:4px}
+.qa-footer{padding:12px 20px;border-top:0.5px solid var(--color-border-tertiary);display:flex;gap:8px}
+.qa-footer input{flex:1;padding:9px 12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;background:var(--color-background-secondary);color:var(--color-text-primary)}
+.qa-footer input:focus{outline:none;border-color:#185FA5}
+.btn{padding:9px 14px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;transition:all .15s}
+.btn:hover{background:var(--color-background-tertiary)}
+.btn.primary{background:#185FA5;color:#E6F1FB;border-color:#185FA5}
+.btn.primary:hover{background:#0C447C}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn.danger{color:var(--color-text-danger);border-color:var(--color-border-danger)}
+.btn.success{color:var(--color-text-success);border-color:var(--color-border-success)}
+.suggestions{display:flex;flex-wrap:wrap;gap:6px;padding:0 20px 12px}
+.sug-btn{font-size:11px;padding:5px 10px;border:0.5px solid var(--color-border-secondary);border-radius:20px;background:var(--color-background-secondary);color:var(--color-text-secondary);cursor:pointer;transition:all .15s}
+.sug-btn:hover{background:var(--color-background-tertiary);color:var(--color-text-primary)}
+.library-body{flex:1;overflow-y:auto;padding:0}
+.lib-entry{padding:14px 20px;border-bottom:0.5px solid var(--color-border-tertiary);cursor:pointer;transition:background .12s}
+.lib-entry:hover{background:var(--color-background-secondary)}
+.lib-q{font-size:13px;font-weight:500;margin-bottom:4px;display:flex;align-items:flex-start;gap:8px}
+.lib-a{font-size:12px;color:var(--color-text-secondary);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lib-tags{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
+.tag{font-size:11px;padding:2px 7px;border-radius:4px}
+.tag.lender{background:var(--color-background-info);color:var(--color-text-info)}
+.tag.status-approved{background:var(--color-background-success);color:var(--color-text-success)}
+.tag.status-pending{background:var(--color-background-warning);color:var(--color-text-warning)}
+.tag.status-edited{background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-secondary)}
+.badge{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;font-size:10px;font-weight:500;background:#185FA5;color:#E6F1FB;flex-shrink:0}
+.review-item{padding:16px 20px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.review-q{font-size:13px;font-weight:500;margin-bottom:6px}
+.review-a{font-size:12px;color:var(--color-text-secondary);line-height:1.6;background:var(--color-background-secondary);padding:10px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);margin-bottom:8px}
+.review-actions{display:flex;gap:6px;align-items:center}
+.review-edit{width:100%;padding:8px 10px;font-size:12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);resize:vertical;min-height:60px;display:none;margin-bottom:6px;font-family:var(--font-sans)}
+.upload-zone{border:1.5px dashed var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:28px;text-align:center;margin:16px 20px;cursor:pointer;transition:border-color .15s}
+.upload-zone:hover{border-color:#185FA5}
+.upload-zone i{font-size:28px;color:var(--color-text-tertiary);display:block;margin-bottom:8px}
+.upload-zone p{font-size:13px;color:var(--color-text-secondary)}
+.doc-list{padding:0 20px}
+.doc-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px}
+.doc-item i{font-size:18px;color:#185FA5}
+.doc-info{flex:1}
+.doc-name{font-weight:500;font-size:13px}
+.doc-meta{font-size:11px;color:var(--color-text-tertiary);margin-top:1px}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px 20px}
+.stat-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px}
+.stat-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.stat-val{font-size:22px;font-weight:500}
+.typing{display:flex;gap:4px;align-items:center;padding:12px 14px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--color-text-tertiary);animation:blink 1.2s infinite}
+.dot:nth-child(2){animation-delay:.2s}
+.dot:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
+.empty-state{text-align:center;padding:40px 20px;color:var(--color-text-secondary);font-size:13px}
+.empty-state i{font-size:32px;opacity:.3;display:block;margin-bottom:10px}
+.tab-bar{display:flex;border-bottom:0.5px solid var(--color-border-tertiary);padding:0 20px}
+.tab{padding:10px 14px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;color:var(--color-text-secondary);margin-bottom:-0.5px;transition:all .15s}
+.tab:hover{color:var(--color-text-primary)}
+.tab.active{color:var(--color-text-primary);border-bottom-color:#185FA5;font-weight:500}
+.inline-toast{position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:var(--color-background-primary);border:0.5px solid var(--color-border-success);border-radius:var(--border-radius-md);padding:8px 14px;font-size:12px;color:var(--color-text-success);display:none;white-space:nowrap;z-index:10}
+</style>
+
+<h2 class="sr-only">CMAP 2026 – Lender Policy Q&A System with answer library and review interface</h2>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-badge">Project CMAP</div>
+      <h2>Policy Q&A</h2>
+    </div>
+    <div class="nav-section">Workspace</div>
+    <div class="nav-item active" onclick="switchPanel('qa')"><i class="ti ti-message-circle" aria-hidden="true"></i>Ask a question</div>
+    <div class="nav-item" onclick="switchPanel('library')"><i class="ti ti-books" aria-hidden="true"></i>Answer library</div>
+    <div class="nav-item" onclick="switchPanel('review')"><i class="ti ti-shield-check" aria-hidden="true"></i>Review queue <span style="margin-left:auto;background:#185FA5;color:#E6F1FB;font-size:10px;padding:1px 6px;border-radius:10px;">2</span></div>
+    <div class="nav-section">Documents</div>
+    <div class="doc-chip"><i class="ti ti-file-text" aria-hidden="true"></i>BFS Product Guide</div>
+    <div class="doc-chip"><i class="ti ti-file-text" aria-hidden="true"></i>Westpac Key Policies</div>
+    <div class="doc-chip"><i class="ti ti-file-text" aria-hidden="true"></i>Resimac Rates Guide</div>
+    <div class="nav-item" onclick="switchPanel('docs')" style="margin-top:auto"><i class="ti ti-upload" aria-hidden="true"></i>Manage docs</div>
+  </div>
+
+  <div class="main">
+
+    <!-- Q&A PANEL -->
+    <div class="panel active" id="panel-qa">
+      <div class="panel-header">
+        <div>
+          <h3>Ask a policy question</h3>
+          <div class="subtitle">Answers grounded in uploaded lender documents</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn sm" onclick="clearChat()"><i class="ti ti-trash" aria-hidden="true"></i>Clear</button>
+        </div>
+      </div>
+      <div class="qa-body" id="chat-body">
+        <div class="msg ai">
+          <div class="msg-bubble">Hello! I can answer questions about <strong>Branded Financial Services</strong>, <strong>Westpac Equipment Finance</strong>, and <strong>Resimac Asset Finance</strong> based on the uploaded policy documents. What would you like to know?</div>
+        </div>
+      </div>
+      <div class="suggestions" id="sug-bar">
+        <button class="sug-btn" onclick="askSuggestion(this)">BFS min CCR score for Tier 2?</button>
+        <button class="sug-btn" onclick="askSuggestion(this)">Resimac rates for used motor vehicles?</button>
+        <button class="sug-btn" onclick="askSuggestion(this)">Westpac DriveXpress max loan?</button>
+        <button class="sug-btn" onclick="askSuggestion(this)">BFS commercial loan exclusions?</button>
+      </div>
+      <div class="qa-footer">
+        <input type="text" id="qa-input" placeholder="e.g. What is the max loan size for BFS Prime loans?" onkeydown="if(event.key==='Enter')sendQuestion()">
+        <button class="btn primary" onclick="sendQuestion()"><i class="ti ti-send" aria-hidden="true"></i>Ask</button>
+      </div>
+    </div>
+
+    <!-- LIBRARY PANEL -->
+    <div class="panel" id="panel-library">
+      <div class="panel-header">
+        <div>
+          <h3>Answer library</h3>
+          <div class="subtitle">Previously approved answers — reused for consistency</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <input type="text" id="lib-search" placeholder="Search..." style="padding:6px 10px;font-size:12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);width:160px" oninput="filterLibrary()">
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab active" onclick="filterByStatus('all',this)">All <span style="font-size:11px;color:var(--color-text-tertiary)" id="count-all"></span></div>
+        <div class="tab" onclick="filterByStatus('approved',this)">Approved</div>
+        <div class="tab" onclick="filterByStatus('pending',this)">Pending</div>
+        <div class="tab" onclick="filterByStatus('edited',this)">Edited</div>
+      </div>
+      <div class="library-body" id="library-body"></div>
+    </div>
+
+    <!-- REVIEW PANEL -->
+    <div class="panel" id="panel-review">
+      <div class="panel-header">
+        <div>
+          <h3>Review queue</h3>
+          <div class="subtitle">Approve, edit or reject AI-generated answers before publishing</div>
+        </div>
+      </div>
+      <div class="library-body" id="review-body"></div>
+    </div>
+
+    <!-- DOCS PANEL -->
+    <div class="panel" id="panel-docs">
+      <div class="panel-header">
+        <div>
+          <h3>Policy documents</h3>
+          <div class="subtitle">Uploaded lender guides used for grounding answers</div>
+        </div>
+        <button class="btn sm primary"><i class="ti ti-upload" aria-hidden="true"></i>Upload</button>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">Documents</div><div class="stat-val">3</div></div>
+        <div class="stat-card"><div class="stat-label">Questions answered</div><div class="stat-val" id="stat-qa">0</div></div>
+        <div class="stat-card"><div class="stat-label">Library entries</div><div class="stat-val" id="stat-lib">0</div></div>
+      </div>
+      <div class="doc-list">
+        <div class="doc-item"><i class="ti ti-file-text" aria-hidden="true"></i><div class="doc-info"><div class="doc-name">BFS_Product_Guide_260701_Broker.pdf</div><div class="doc-meta">Branded Financial Services · 7 pages · Effective 1 Jul 2026</div></div><button class="btn sm"><i class="ti ti-trash" aria-hidden="true"></i></button></div>
+        <div class="doc-item"><i class="ti ti-file-text" aria-hidden="true"></i><div class="doc-info"><div class="doc-name">Key_Financial_Policies_Q1FY26.pdf</div><div class="doc-meta">Westpac Equipment Finance · 4 pages · Q1 FY26</div></div><button class="btn sm"><i class="ti ti-trash" aria-hidden="true"></i></button></div>
+        <div class="doc-item"><i class="ti ti-file-text" aria-hidden="true"></i><div class="doc-info"><div class="doc-name">Resimac-Commercial_Asset_Finance_Rates.pdf</div><div class="doc-meta">Resimac Asset Finance · 9 pages · Effective 27 Mar 2026</div></div><button class="btn sm"><i class="ti ti-trash" aria-hidden="true"></i></button></div>
+      </div>
+      <div class="upload-zone" style="margin-top:12px"><i class="ti ti-cloud-upload" aria-hidden="true"></i><p>Drag and drop a new lender PDF, or click to browse</p></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const LENDER_DOCS = {
+  'BFS': 'BFS Product Guide (Jul 2026)',
+  'Westpac': 'Westpac Key Policies (Q1FY26)',
+  'Resimac': 'Resimac Asset Finance Guide (Mar 2026)'
+};
+
+const KB = [
+  {q:"What is the minimum CCR score for BFS Tier 2?",a:"The minimum Experian CCR score for BFS Prime Tier 2 is 600, applying to the primary borrower or guarantor. This tier covers both consumer and commercial loans at standard pricing.",lender:"BFS",section:"Pricing Table, p.1",status:"approved"},
+  {q:"What are the BFS commercial base rates for new vehicles?",a:"For BFS Prime, the commercial base rate for New and Demo vehicles is 7.60% (Ultra Prime), with Tier 1 at 8.25%, Tier 2 at 8.50%, Tier 3 at 10.15%, and Tier 4 at 11.50%. The maximum rate across all tiers is 17.15%.",lender:"BFS",section:"Commercial Pricing, p.1",status:"approved"},
+  {q:"What is the maximum loan size for BFS Prime standard loans?",a:"BFS Prime standard loans range from $5,000 to $250,000. Private sale loans are capped at $150,000. High value loans between $250,000–$400,000 are available for Ultra Prime to Tier 2 on a case-by-case basis, requiring a minimum 20% deposit and asset-backed applicants only.",lender:"BFS",section:"Loan Size, p.2",status:"approved"},
+  {q:"What is the Westpac DriveXpress maximum loan for a new business client?",a:"For a client new to Westpac Business Bank who owns residential property and has a minimum annual income of $75k, the maximum DriveXpress loan is $150,000 across eligible goods A, B & C, with a maximum total DriveXpress exposure of $250,000.",lender:"Westpac",section:"DriveXpress table, p.1",status:"pending"},
+  {q:"What are the Resimac interest rates for motor vehicles under 3 years?",a:"Resimac charges 7.64% p.a. for PremiumPLUS clients and 7.89% p.a. for Premium, Standard, and Basic clients for motor vehicles under 3 years old. A 25bps discount is included in the PremiumPLUS rate.",lender:"Resimac",section:"Interest Rates, p.4",status:"pending"},
+  {q:"What does BFS exclude from loans?",a:"BFS explicitly excludes: debt consolidation, cash raising, top-up loans, sale and buyback, sale and leaseback, and mid-term refinancing. Licences with interlock conditions are also not accepted.",lender:"BFS",section:"Loan Exclusions, p.3",status:"approved"},
+  {q:"What are BFS consumer pricing maximum rates for used 2017–2021 vehicles?",a:"BFS consumer maximum rates for used 2017–2021 vehicles are: Tier 1: 10.35%, Tier 2: 11.35%, Tier 3: 12.25%, Tier 4: 13.70%. Ultra Prime is 9.15% flat across all used categories (2022–2026). The overall maximum rate cap is 17.15%.",lender:"BFS",section:"Consumer Pricing, p.1",status:"edited"},
+];
+
+let chatHistory = [];
+let qaCount = 0;
+let libFilter = {text:'', status:'all'};
+let reviewEdits = {};
+
+function switchPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if(name==='library') renderLibrary();
+  if(name==='review') renderReview();
+  if(name==='docs') updateStats();
+}
+
+function sendQuestion() {
+  const input = document.getElementById('qa-input');
+  const q = input.value.trim();
+  if(!q) return;
+  input.value = '';
+  document.getElementById('sug-bar').style.display = 'none';
+  addMsg('user', q);
+  const typing = addTyping();
+  setTimeout(() => {
+    typing.remove();
+    const ans = generateAnswer(q);
+    addMsg('ai', ans.text, ans.lender, ans.section);
+    if(ans.lender) {
+      KB.push({q:q, a:ans.text, lender:ans.lender, section:ans.section, status:'pending'});
+    }
+    qaCount++;
+    updateStats();
+  }, 1400);
+}
+
+function generateAnswer(q) {
+  const ql = q.toLowerCase();
+  for(const entry of KB) {
+    if(similarity(ql, entry.q.toLowerCase()) > 0.35) {
+      return {text: entry.a + '\n\n[Retrieved from answer library – previously approved]', lender: entry.lender, section: entry.section};
+    }
+  }
+  if(ql.includes('bfs') || ql.includes('branded') || ql.includes('ccr') || ql.includes('tier')) {
+    return {text:"Based on the BFS Product Guide (effective 1 July 2026), the answer depends on the specific tier and product type. BFS Prime ranges from Ultra Prime (CCR 960+) through Tier 4 (CCR 400+), with BFS Plus available for scores from 400. Please refer to the specific pricing section for exact rates or use one of the suggested questions above.", lender:"BFS", section:"Product Guide, p.1–3"};
+  }
+  if(ql.includes('resimac') || ql.includes('electric') || ql.includes('primary asset')) {
+    return {text:"According to the Resimac Commercial Asset Finance Guide (effective 27 March 2026), Resimac uses four customer tiers: PremiumPLUS, Premium, Standard, and Basic, based on ABN and GST registration duration. Interest rates vary by asset category and tier. A 2% risk loading applies to private sales, classic cars, assets ≥16 years at end of term, and prime movers.", lender:"Resimac", section:"Interest Rates & Customer Tiers, p.2–4"};
+  }
+  if(ql.includes('westpac') || ql.includes('drivexpress') || ql.includes('rollover') || ql.includes('medical')) {
+    return {text:"The Westpac Equipment Finance Key Policies (Q1FY26) cover three fast-track programs: DriveXpress, Rollover, and Replacement, plus a Medical program. Each has distinct loan limits by customer type (New vs Existing Clients), eligible good categories (A, B, C), and criteria around ABN age, GST registration, and director guarantees.", lender:"Westpac", section:"Key Policies, p.1–3"};
+  }
+  return {text:"I couldn't find a precise match in the uploaded policy documents for that query. Try rephrasing, or ask about a specific lender (BFS, Westpac, or Resimac) and topic like rates, CCR scores, loan sizes, or documentation requirements.", lender:null, section:null};
+}
+
+function similarity(a,b) {
+  const wa = new Set(a.split(/\W+/).filter(w=>w.length>3));
+  const wb = new Set(b.split(/\W+/).filter(w=>w.length>3));
+  let common=0; wa.forEach(w=>{if(wb.has(w))common++});
+  return common / Math.max(wa.size,wb.size,1);
+}
+
+function addMsg(role, text, lender, section) {
+  const body = document.getElementById('chat-body');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  const lines = text.replace(/\n/g,'<br>');
+  let sources = '';
+  if(lender) {
+    sources = `<div style="margin-top:8px"><span class="source-tag"><i class="ti ti-book" aria-hidden="true" style="font-size:11px"></i>${lender}</span><span class="source-tag"><i class="ti ti-map-pin" aria-hidden="true" style="font-size:11px"></i>${section}</span></div>`;
+  }
+  div.innerHTML = `<div class="msg-bubble">${lines}${sources}</div><div class="msg-meta">${role==='user'?'You':'Policy engine'} · just now${role==='ai'&&lender?'<button class="btn sm" onclick="saveToLibrary()" style="padding:3px 8px;font-size:11px;margin-left:4px"><i class=\"ti ti-bookmark\" aria-hidden=\"true\"></i>Save</button>':''}</div>`;
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+  return div;
+}
+
+function addTyping() {
+  const body = document.getElementById('chat-body');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.innerHTML = '<div class="msg-bubble"><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>';
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+  return div;
+}
+
+function saveToLibrary() {
+  switchPanel('library');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.nav-item')[1].classList.add('active');
+  renderLibrary();
+}
+
+function clearChat() {
+  document.getElementById('chat-body').innerHTML = '<div class="msg ai"><div class="msg-bubble">Chat cleared. Ask me a new question about BFS, Westpac, or Resimac policies.</div></div>';
+  document.getElementById('sug-bar').style.display = 'flex';
+}
+
+function askSuggestion(el) {
+  document.getElementById('qa-input').value = el.textContent;
+  sendQuestion();
+}
+
+function renderLibrary() {
+  const body = document.getElementById('library-body');
+  const txt = (document.getElementById('lib-search')||{}).value||'';
+  const status = libFilter.status;
+  let entries = KB.filter(e => {
+    const matchTxt = !txt || e.q.toLowerCase().includes(txt.toLowerCase()) || e.a.toLowerCase().includes(txt.toLowerCase()) || e.lender.toLowerCase().includes(txt.toLowerCase());
+    const matchStatus = status==='all' || e.status===status;
+    return matchTxt && matchStatus;
+  });
+  document.getElementById('count-all').textContent = `(${KB.length})`;
+  if(!entries.length) { body.innerHTML = '<div class="empty-state"><i class="ti ti-books" aria-hidden="true"></i>No entries match your filter.</div>'; return; }
+  body.innerHTML = entries.map((e,i) => `
+    <div class="lib-entry" onclick="expandEntry(${i})">
+      <div class="lib-q"><span class="badge">${e.lender[0]}</span>${e.q}</div>
+      <div class="lib-a">${e.a}</div>
+      <div class="lib-tags">
+        <span class="tag lender">${e.lender}</span>
+        <span class="tag lender" style="background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary)">${e.section}</span>
+        <span class="tag status-${e.status}">${e.status}</span>
+      </div>
+    </div>`).join('');
+}
+
+function filterLibrary() { renderLibrary(); }
+function filterByStatus(s, el) {
+  libFilter.status = s;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderLibrary();
+}
+function expandEntry(i) {}
+
+function renderReview() {
+  const pending = KB.filter(e => e.status === 'pending');
+  const body = document.getElementById('review-body');
+  if(!pending.length) { body.innerHTML = '<div class="empty-state"><i class="ti ti-shield-check" aria-hidden="true"></i>No items pending review.</div>'; return; }
+  body.innerHTML = pending.map((e,i) => `
+    <div class="review-item" id="rev-${i}">
+      <div class="review-q">${e.q}</div>
+      <div class="lib-tags" style="margin-bottom:8px"><span class="tag lender">${e.lender}</span><span class="tag lender" style="background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary)">${e.section}</span></div>
+      <div class="review-a" id="ans-${i}">${e.a}</div>
+      <textarea class="review-edit" id="edit-${i}" placeholder="Edit answer...">${e.a}</textarea>
+      <div class="review-actions">
+        <button class="btn sm success" onclick="approveEntry(${i})"><i class="ti ti-check" aria-hidden="true"></i>Approve</button>
+        <button class="btn sm" onclick="toggleEdit(${i})"><i class="ti ti-edit" aria-hidden="true"></i>Edit</button>
+        <button class="btn sm danger" onclick="rejectEntry(${i})"><i class="ti ti-x" aria-hidden="true"></i>Reject</button>
+        <span style="font-size:11px;color:var(--color-text-tertiary);margin-left:auto" id="rev-status-${i}"></span>
+      </div>
+    </div>`).join('');
+}
+
+function approveEntry(i) {
+  const pending = KB.filter(e => e.status === 'pending');
+  const entry = pending[i];
+  const edited = document.getElementById('edit-'+i).value;
+  entry.a = edited || entry.a;
+  entry.status = 'approved';
+  document.getElementById('rev-status-'+i).textContent = '✓ Approved';
+  document.getElementById('rev-status-'+i).style.color = 'var(--color-text-success)';
+  setTimeout(()=>renderReview(), 900);
+}
+
+function toggleEdit(i) {
+  const ea = document.getElementById('edit-'+i);
+  const ans = document.getElementById('ans-'+i);
+  if(ea.style.display==='none'||!ea.style.display) {
+    ea.style.display = 'block';
+    ans.style.display = 'none';
+  } else {
+    const newA = ea.value;
+    ans.textContent = newA;
+    ea.style.display = 'none';
+    ans.style.display = 'block';
+  }
+}
+
+function rejectEntry(i) {
+  const pending = KB.filter(e => e.status === 'pending');
+  const idx = KB.indexOf(pending[i]);
+  if(idx>-1) KB.splice(idx,1);
+  document.getElementById('rev-status-'+i).textContent = '✗ Rejected';
+  document.getElementById('rev-status-'+i).style.color = 'var(--color-text-danger)';
+  setTimeout(()=>renderReview(), 900);
+}
+
+function updateStats() {
+  const s = document.getElementById('stat-qa');
+  const l = document.getElementById('stat-lib');
+  if(s) s.textContent = qaCount;
+  if(l) l.textContent = KB.length;
+}
+
+updateStats();
+</script>

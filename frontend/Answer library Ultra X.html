@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMAP 2026 — Answer Library</title>
+<style>
+  :root {
+    --blue-50: #E6F1FB; --blue-100: #B5D4F4; --blue-600: #185FA5; --blue-800: #0C447C; --blue-900: #042C53;
+    --teal-50: #E1F5EE; --teal-600: #0F6E56; --teal-800: #085041;
+    --amber-50: #FAEEDA; --amber-600: #BA7517; --amber-800: #633806;
+    --coral-50: #FAECE7; --coral-600: #993C1D; --coral-800: #712B13;
+    --gray-50: #F5F4F1; --gray-100: #E8E7E3; --gray-200: #D3D1C7; --gray-400: #888780; --gray-600: #5F5E5A; --gray-800: #2C2C2A;
+    --green-50: #EAF3DE; --green-600: #3B6D11; --green-800: #27500A;
+    --red-50: #FCEBEB; --red-600: #A32D2D; --red-800: #791F1F;
+    --bg: #FAFAF8;
+    --surface: #FFFFFF;
+    --border: rgba(0,0,0,0.09);
+    --border-strong: rgba(0,0,0,0.16);
+    --text: #1A1A18;
+    --text-2: #5F5E5A;
+    --text-3: #888780;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 0 0 0.5px rgba(0,0,0,0.07);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, 'Inter', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── Layout ── */
+  .shell { display: flex; height: 100vh; overflow: hidden; }
+
+  .sidebar {
+    width: 220px; min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ── Sidebar ── */
+  .logo {
+    padding: 18px 18px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-eyebrow { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); font-weight: 500; }
+  .logo-name { font-size: 15px; font-weight: 600; color: var(--text); margin-top: 2px; letter-spacing: -.01em; }
+
+  .nav { padding: 10px 0; flex: 1; }
+  .nav-label { font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); font-weight: 500; padding: 10px 18px 5px; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 8px 18px; font-size: 13px; cursor: pointer;
+    color: var(--text-2); border-left: 2px solid transparent;
+    transition: all .12s; user-select: none;
+  }
+  .nav-item:hover { background: var(--gray-50); color: var(--text); }
+  .nav-item.active { color: var(--blue-600); background: var(--blue-50); border-left-color: var(--blue-600); font-weight: 500; }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .nav-badge {
+    margin-left: auto; font-size: 10px; font-weight: 600;
+    background: var(--blue-600); color: #fff;
+    padding: 1px 6px; border-radius: 10px;
+  }
+
+  .sidebar-footer { padding: 14px 18px; border-top: 1px solid var(--border); }
+  .stats-mini { display: flex; flex-direction: column; gap: 6px; }
+  .stat-mini-row { display: flex; justify-content: space-between; font-size: 12px; }
+  .stat-mini-label { color: var(--text-3); }
+  .stat-mini-val { font-weight: 500; color: var(--text); }
+
+  /* ── Top bar ── */
+  .topbar {
+    padding: 14px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .topbar-title { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -.01em; }
+  .topbar-sub { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+
+  /* ── Search + Filter bar ── */
+  .filterbar {
+    padding: 12px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+
+  .search-wrap {
+    position: relative; flex: 1; min-width: 200px;
+  }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--text-3); pointer-events: none; }
+  .search-input {
+    width: 100%; padding: 8px 10px 8px 32px;
+    border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    background: var(--gray-50); font-size: 13px; color: var(--text);
+    outline: none; transition: border-color .15s, background .15s;
+  }
+  .search-input:focus { background: #fff; border-color: var(--blue-600); box-shadow: 0 0 0 3px rgba(24,95,165,.1); }
+  .search-input::placeholder { color: var(--text-3); }
+
+  .filter-group { display: flex; gap: 4px; }
+
+  .filter-btn {
+    padding: 7px 12px; font-size: 12px; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--text-2);
+    transition: all .12s; white-space: nowrap;
+  }
+  .filter-btn:hover { background: var(--gray-50); color: var(--text); }
+  .filter-btn.active { background: var(--blue-50); color: var(--blue-600); border-color: var(--blue-100); font-weight: 600; }
+
+  .select-filter {
+    padding: 7px 10px; font-size: 12px; cursor: pointer;
+    border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--text-2); outline: none;
+  }
+  .select-filter:focus { border-color: var(--blue-600); }
+
+  .sort-btn {
+    display: flex; align-items: center; gap: 5px;
+    padding: 7px 10px; font-size: 12px; cursor: pointer;
+    border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--text-2);
+    transition: all .12s;
+  }
+  .sort-btn:hover { background: var(--gray-50); }
+  .sort-btn svg { width: 13px; height: 13px; }
+
+  /* ── Content area ── */
+  .content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+  .results-meta { font-size: 12px; color: var(--text-3); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+
+  /* ── Library cards ── */
+  .entry-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+    transition: box-shadow .15s, border-color .15s;
+    overflow: hidden;
+  }
+  .entry-card:hover { box-shadow: var(--shadow); border-color: var(--border-strong); }
+
+  .entry-header {
+    padding: 14px 16px 10px;
+    display: flex; align-items: flex-start; gap: 12px; cursor: pointer;
+  }
+
+  .lender-dot {
+    width: 28px; height: 28px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+  }
+
+  .entry-q { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; line-height: 1.4; }
+  .entry-preview { font-size: 12px; color: var(--text-2); margin-top: 3px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .entry-meta {
+    padding: 0 16px 12px 56px;
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 500; padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .pill-blue { background: var(--blue-50); color: var(--blue-800); }
+  .pill-teal { background: var(--teal-50); color: var(--teal-800); }
+  .pill-amber { background: var(--amber-50); color: var(--amber-800); }
+  .pill-coral { background: var(--coral-50); color: var(--coral-800); }
+  .pill-gray { background: var(--gray-100); color: var(--gray-800); }
+  .pill-green { background: var(--green-50); color: var(--green-800); }
+  .pill-red { background: var(--red-50); color: var(--red-800); }
+
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+  .entry-body { display: none; padding: 12px 16px 14px 56px; border-top: 1px solid var(--border); background: var(--gray-50); }
+  .entry-body.open { display: block; }
+  .entry-answer { font-size: 13px; color: var(--text); line-height: 1.7; }
+
+  .entry-actions { display: flex; gap: 6px; margin-top: 12px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 12px; font-size: 12px; font-weight: 500; cursor: pointer;
+    border-radius: var(--radius-sm); border: 1px solid var(--border-strong);
+    background: var(--surface); color: var(--text-2);
+    transition: all .12s;
+  }
+  .btn:hover { background: var(--gray-50); color: var(--text); }
+  .btn svg { width: 13px; height: 13px; }
+  .btn-primary { background: var(--blue-600); color: #fff; border-color: var(--blue-600); }
+  .btn-primary:hover { background: var(--blue-800); }
+  .btn-danger { color: var(--red-600); border-color: rgba(163,45,45,.2); }
+  .btn-danger:hover { background: var(--red-50); }
+  .btn-success { color: var(--green-600); border-color: rgba(59,109,17,.2); }
+  .btn-success:hover { background: var(--green-50); }
+
+  /* ── Review panel ── */
+  .review-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+
+  .review-header { padding: 16px 18px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 12px; }
+  .review-q { font-size: 13px; font-weight: 500; flex: 1; }
+
+  .review-section { padding: 14px 18px; }
+  .review-label { font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; }
+  .review-answer-box {
+    background: var(--gray-50); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 12px 14px; font-size: 13px; color: var(--text); line-height: 1.7;
+  }
+
+  .edit-textarea {
+    width: 100%; min-height: 90px; padding: 10px 12px;
+    border: 1px solid var(--blue-600); border-radius: var(--radius-sm);
+    font-size: 13px; font-family: inherit; color: var(--text);
+    background: #fff; resize: vertical; outline: none;
+    box-shadow: 0 0 0 3px rgba(24,95,165,.1);
+    display: none; line-height: 1.7;
+  }
+
+  .review-footer { padding: 12px 18px 16px; display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--border); background: var(--gray-50); }
+
+  .review-note-input {
+    flex: 1; padding: 7px 10px; border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm); font-size: 12px; font-family: inherit;
+    color: var(--text); background: #fff; outline: none;
+  }
+  .review-note-input:focus { border-color: var(--blue-600); }
+  .review-note-input::placeholder { color: var(--text-3); }
+
+  .done-banner {
+    display: none; text-align: center; padding: 48px 24px;
+    color: var(--text-2); font-size: 13px;
+  }
+  .done-banner svg { width: 40px; height: 40px; color: var(--green-600); margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; }
+
+  /* ── Add entry modal ── */
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35); z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: var(--radius);
+    width: 560px; max-width: 94vw; box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    overflow: hidden;
+  }
+  .modal-header { padding: 18px 20px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-size: 14px; font-weight: 600; }
+  .modal-close { background: none; border: none; cursor: pointer; color: var(--text-3); display: flex; align-items: center; padding: 4px; border-radius: 4px; }
+  .modal-close:hover { background: var(--gray-100); color: var(--text); }
+  .modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--text-2); }
+  .form-input, .form-select, .form-textarea {
+    padding: 8px 10px; border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm); font-size: 13px; font-family: inherit;
+    color: var(--text); background: var(--gray-50); outline: none;
+    transition: border-color .15s, background .15s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    background: #fff; border-color: var(--blue-600);
+    box-shadow: 0 0 0 3px rgba(24,95,165,.1);
+  }
+  .form-textarea { min-height: 80px; resize: vertical; line-height: 1.6; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; background: var(--gray-50); }
+
+  /* ── Empty state ── */
+  .empty { text-align: center; padding: 60px 20px; color: var(--text-2); }
+  .empty svg { width: 36px; height: 36px; color: var(--gray-200); margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; }
+  .empty-title { font-size: 14px; font-weight: 500; color: var(--text-2); margin-bottom: 4px; }
+  .empty-sub { font-size: 12px; color: var(--text-3); }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 200;
+    background: var(--gray-800); color: #fff;
+    padding: 10px 16px; border-radius: var(--radius-sm);
+    font-size: 13px; display: flex; align-items: center; gap: 8px;
+    opacity: 0; transform: translateY(8px); pointer-events: none;
+    transition: opacity .2s, transform .2s;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast svg { width: 15px; height: 15px; }
+
+  /* ── History panel ── */
+  .history-entry {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .history-q { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+  .history-versions { display: flex; flex-direction: column; gap: 8px; }
+  .version-row { display: flex; gap: 10px; align-items: flex-start; font-size: 12px; }
+  .version-num { font-size: 10px; font-weight: 600; background: var(--gray-100); color: var(--gray-600); padding: 1px 6px; border-radius: 4px; flex-shrink: 0; margin-top: 1px; }
+  .version-text { color: var(--text-2); flex: 1; line-height: 1.5; }
+  .version-meta { font-size: 11px; color: var(--text-3); flex-shrink: 0; }
+
+  /* scroll */
+  .content::-webkit-scrollbar { width: 5px; }
+  .content::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-eyebrow">Project CMAP 2026</div>
+      <div class="logo-name">Answer Library</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">Workspace</div>
+      <div class="nav-item active" data-panel="library" onclick="switchPanel(this,'library')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Library
+      </div>
+      <div class="nav-item" data-panel="review" onclick="switchPanel(this,'review')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Review queue
+        <span class="nav-badge" id="review-badge">0</span>
+      </div>
+      <div class="nav-item" data-panel="history" onclick="switchPanel(this,'history')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Edit history
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="stats-mini">
+        <div class="stat-mini-row"><span class="stat-mini-label">Total entries</span><span class="stat-mini-val" id="stat-total">0</span></div>
+        <div class="stat-mini-row"><span class="stat-mini-label">Approved</span><span class="stat-mini-val" id="stat-approved">0</span></div>
+        <div class="stat-mini-row"><span class="stat-mini-label">Pending review</span><span class="stat-mini-val" id="stat-pending">0</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- LIBRARY PANEL -->
+    <div id="panel-library">
+      <div class="topbar">
+        <div style="flex:1">
+          <div class="topbar-title">Answer library</div>
+          <div class="topbar-sub">Approved policy answers — reused for consistency across all queries</div>
+        </div>
+        <button class="btn btn-primary" onclick="openAddModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add entry
+        </button>
+      </div>
+
+      <div class="filterbar">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" type="text" id="search-input" placeholder="Search questions, answers, or lender names…" oninput="renderLibrary()">
+        </div>
+        <div class="filter-group" id="status-filters">
+          <button class="filter-btn active" data-status="all" onclick="setStatusFilter(this)">All</button>
+          <button class="filter-btn" data-status="approved" onclick="setStatusFilter(this)">Approved</button>
+          <button class="filter-btn" data-status="pending" onclick="setStatusFilter(this)">Pending</button>
+          <button class="filter-btn" data-status="edited" onclick="setStatusFilter(this)">Edited</button>
+          <button class="filter-btn" data-status="rejected" onclick="setStatusFilter(this)">Rejected</button>
+        </div>
+        <select class="select-filter" id="lender-filter" onchange="renderLibrary()">
+          <option value="all">All lenders</option>
+          <option value="BFS">BFS</option>
+          <option value="Westpac">Westpac</option>
+          <option value="Resimac">Resimac</option>
+        </select>
+        <button class="sort-btn" onclick="toggleSort()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="sort-icon"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
+          <span id="sort-label">Newest</span>
+        </button>
+      </div>
+
+      <div class="content" id="library-content">
+        <div class="results-meta">
+          <span id="results-count"></span>
+          <span id="reuse-hint" style="display:none; color:var(--blue-600); font-weight:500"></span>
+        </div>
+        <div id="library-list"></div>
+      </div>
+    </div>
+
+    <!-- REVIEW PANEL -->
+    <div id="panel-review" style="display:none; display:flex; flex-direction:column; flex:1; overflow:hidden; display:none">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">Review queue</div>
+          <div class="topbar-sub">Approve, edit, or reject AI-generated answers before they enter the library</div>
+        </div>
+      </div>
+      <div class="content" id="review-content">
+        <div id="review-list"></div>
+        <div class="done-banner" id="done-banner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <div style="font-size:15px; font-weight:600; color:var(--text); margin-bottom:4px">Queue is clear</div>
+          All pending answers have been reviewed. New AI-generated answers will appear here.
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY PANEL -->
+    <div id="panel-history" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">Edit history</div>
+          <div class="topbar-sub">Full version trail for every answer that has been edited</div>
+        </div>
+      </div>
+      <div class="content" id="history-content">
+        <div id="history-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ADD ENTRY MODAL -->
+<div class="modal-backdrop" id="add-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Add library entry</span>
+      <button class="modal-close" onclick="closeAddModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Question</label>
+        <input class="form-input" id="new-q" type="text" placeholder="e.g. What is the minimum CCR score for BFS Tier 2?">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Answer</label>
+        <textarea class="form-textarea" id="new-a" placeholder="Full policy-grounded answer…"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Lender</label>
+          <select class="form-select" id="new-lender">
+            <option value="BFS">BFS</option>
+            <option value="Westpac">Westpac</option>
+            <option value="Resimac">Resimac</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Source section</label>
+          <input class="form-input" id="new-section" type="text" placeholder="e.g. Pricing Table, p.1">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="new-status">
+            <option value="approved">Approved</option>
+            <option value="pending">Pending review</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tags (comma separated)</label>
+          <input class="form-input" id="new-tags" type="text" placeholder="e.g. rates, CCR, commercial">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAddModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addEntry()">Save entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-msg">Saved</span>
+</div>
+
+<script>
+const LENDER_COLORS = {
+  BFS: { bg: '#E6F1FB', color: '#0C447C', label: 'BFS' },
+  Westpac: { bg: '#E1F5EE', color: '#085041', label: 'WBC' },
+  Resimac: { bg: '#FAECE7', color: '#712B13', label: 'RES' }
+};
+
+const STATUS_STYLE = {
+  approved: { cls: 'pill-green', dot: '#3B6D11', label: 'Approved' },
+  pending:  { cls: 'pill-amber', dot: '#BA7517', label: 'Pending' },
+  edited:   { cls: 'pill-blue',  dot: '#185FA5', label: 'Edited' },
+  rejected: { cls: 'pill-red',   dot: '#A32D2D', label: 'Rejected' }
+};
+
+let sortAsc = false;
+let activeStatus = 'all';
+let editHistory = {};
+
+let library = [
+  { id: 1, q: "What is the minimum CCR score for BFS Tier 2?", a: "The minimum Experian CCR score for BFS Prime Tier 2 is 600, applying to the primary borrower or guarantor. This tier covers both consumer and commercial loans at standard pricing.", lender: "BFS", section: "Pricing Table, p.1", status: "approved", tags: ["CCR", "tiers", "credit score"], ts: Date.now() - 86400000*5, uses: 12 },
+  { id: 2, q: "What are the BFS commercial base rates for new and demo vehicles?", a: "BFS commercial base rates for New and Demo vehicles: Ultra Prime 7.60%, Tier 1 8.25%, Tier 2 8.50%, Tier 3 10.15%, Tier 4 11.50%. The overall maximum rate across all tiers is 17.15%.", lender: "BFS", section: "Commercial Pricing, p.1", status: "approved", tags: ["rates", "commercial", "new vehicle"], ts: Date.now() - 86400000*4, uses: 8 },
+  { id: 3, q: "What is the maximum loan size for BFS Prime standard loans?", a: "BFS Prime standard loans range from $5,000 to $250,000. Private sale loans are capped at $150,000. High value loans ($250,000–$400,000) are available for Ultra Prime to Tier 2 on a case-by-case basis, requiring minimum 20% deposit and asset-backed applicants only.", lender: "BFS", section: "Loan Size, p.2", status: "approved", tags: ["loan size", "high value", "private sale"], ts: Date.now() - 86400000*3, uses: 6 },
+  { id: 4, q: "What does BFS exclude from loans entirely?", a: "BFS explicitly excludes: debt consolidation, cash raising, top-up loans, sale and buyback, sale and leaseback, and mid-term refinancing. Licences with interlock conditions are also not accepted.", lender: "BFS", section: "Loan Exclusions, p.3", status: "approved", tags: ["exclusions", "eligibility"], ts: Date.now() - 86400000*2, uses: 4 },
+  { id: 5, q: "What is the Westpac DriveXpress maximum loan for a new business client?", a: "For a client new to Westpac Business Bank who owns residential property and has a minimum annual income of $75k, the maximum DriveXpress loan is $150,000 across eligible goods A, B & C, with a maximum total DriveXpress exposure of $250,000.", lender: "Westpac", section: "DriveXpress table, p.1", status: "pending", tags: ["DriveXpress", "loan limits", "new client"], ts: Date.now() - 86400000*1, uses: 0 },
+  { id: 6, q: "What are Resimac's interest rates for motor vehicles under 3 years?", a: "Resimac charges 7.64% p.a. for PremiumPLUS clients and 7.89% p.a. for Premium, Standard, and Basic clients on motor vehicles under 3 years old. A 25bps discount is already embedded in the PremiumPLUS rate.", lender: "Resimac", section: "Interest Rates, p.4", status: "pending", tags: ["rates", "motor vehicle", "PremiumPLUS"], ts: Date.now() - 3600000*5, uses: 0 },
+  { id: 7, q: "BFS consumer pricing for used 2017–2021 vehicles — what are the max rates?", a: "BFS consumer maximum rates for used 2017–2021 vehicles are: Tier 1 10.35%, Tier 2 11.35%, Tier 3 12.25%, Tier 4 13.70%. Ultra Prime applies a flat 9.15% across used 2022–2026 vehicles. The overall maximum rate cap is 17.15%.", lender: "BFS", section: "Consumer Pricing, p.1", status: "edited", tags: ["rates", "consumer", "used vehicle"], ts: Date.now() - 3600000*2, uses: 3 },
+  { id: 8, q: "What assets does Resimac classify as tertiary — and why does it matter?", a: "Resimac's tertiary asset category includes audio visual equipment, conveyors, wine/beer processing equipment, skip bins, medical lasers, testing & calibration equipment, and detachable GPS units. Tertiary assets attract the highest rates (14.09% PremiumPLUS, 14.34% all others) and have no Low Doc pathway available.", lender: "Resimac", section: "Asset Categories, p.7", status: "approved", tags: ["asset categories", "tertiary", "rates"], ts: Date.now() - 3600000*8, uses: 2 },
+  { id: 9, q: "Does Westpac allow private sales under the DriveXpress program?", a: "Yes, but only for Motor Vehicles (Category A) — specifically passenger cars and light commercial vehicles under 4.5T GVM. Private sales are not permitted for Category B or C assets (heavy machinery, farm equipment) which require dealer purchases only.", lender: "Westpac", section: "Exclusions & Notes, p.3", status: "approved", tags: ["private sale", "DriveXpress", "eligibility"], ts: Date.now() - 3600000*12, uses: 5 },
+];
+
+let nextId = 10;
+
+function lenderDot(lender) {
+  const l = LENDER_COLORS[lender] || { bg: '#F1EFE8', color: '#444', label: '?' };
+  return `<div class="lender-dot" style="background:${l.bg};color:${l.color}">${l.label}</div>`;
+}
+
+function statusPill(status) {
+  const s = STATUS_STYLE[status] || { cls: 'pill-gray', dot: '#888', label: status };
+  return `<span class="pill ${s.cls}"><span class="status-dot" style="background:${s.dot}"></span>${s.label}</span>`;
+}
+
+function tagPills(tags) {
+  return (tags || []).map(t => `<span class="pill pill-gray">${t}</span>`).join('');
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return 'just now';
+  if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+  if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
+  return Math.floor(diff/86400000) + 'd ago';
+}
+
+function renderLibrary() {
+  const q = document.getElementById('search-input').value.toLowerCase().trim();
+  const lender = document.getElementById('lender-filter').value;
+  let entries = [...library];
+
+  if (activeStatus !== 'all') entries = entries.filter(e => e.status === activeStatus);
+  if (lender !== 'all') entries = entries.filter(e => e.lender === lender);
+  if (q) entries = entries.filter(e =>
+    e.q.toLowerCase().includes(q) ||
+    e.a.toLowerCase().includes(q) ||
+    e.lender.toLowerCase().includes(q) ||
+    (e.tags||[]).some(t => t.toLowerCase().includes(q))
+  );
+
+  entries.sort((a,b) => sortAsc ? a.ts - b.ts : b.ts - a.ts);
+
+  const countEl = document.getElementById('results-count');
+  countEl.textContent = `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}`;
+
+  const reuseEl = document.getElementById('reuse-hint');
+  const totalUses = entries.reduce((s,e) => s + (e.uses||0), 0);
+  if (totalUses > 0) { reuseEl.style.display = ''; reuseEl.textContent = `↺ ${totalUses} answers reused from library`; }
+  else { reuseEl.style.display = 'none'; }
+
+  const list = document.getElementById('library-list');
+  if (!entries.length) {
+    list.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><div class="empty-title">No entries match</div><div class="empty-sub">Try a different search or filter</div></div>`;
+    return;
+  }
+
+  list.innerHTML = entries.map(e => `
+  <div class="entry-card" id="card-${e.id}">
+    <div class="entry-header" onclick="toggleEntry(${e.id})">
+      ${lenderDot(e.lender)}
+      <div style="flex:1; min-width:0">
+        <div class="entry-q">${e.q}</div>
+        <div class="entry-preview">${e.a}</div>
+      </div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:var(--text-3);flex-shrink:0;transition:transform .15s" id="chevron-${e.id}"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="entry-meta">
+      ${statusPill(e.status)}
+      <span class="pill pill-gray">${e.lender}</span>
+      <span class="pill pill-gray" style="font-size:10px">${e.section}</span>
+      ${tagPills(e.tags)}
+      <span style="margin-left:auto; font-size:11px; color:var(--text-3)">${e.uses > 0 ? '↺ used '+e.uses+'×  · ' : ''}${timeAgo(e.ts)}</span>
+    </div>
+    <div class="entry-body" id="body-${e.id}">
+      <div class="entry-answer">${e.a}</div>
+      <div class="entry-actions">
+        <button class="btn" onclick="startEdit(${e.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit answer</button>
+        <button class="btn" onclick="copyEntry(${e.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+        ${e.status !== 'approved' ? `<button class="btn btn-success" onclick="approveEntry(${e.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Approve</button>` : ''}
+        <button class="btn btn-danger" onclick="deleteEntry(${e.id})" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Remove</button>
+      </div>
+    </div>
+  </div>`).join('');
+
+  updateSidebar();
+}
+
+function toggleEntry(id) {
+  const body = document.getElementById('body-'+id);
+  const chev = document.getElementById('chevron-'+id);
+  const open = body.classList.contains('open');
+  document.querySelectorAll('.entry-body.open').forEach(b => { b.classList.remove('open'); });
+  document.querySelectorAll('[id^="chevron-"]').forEach(c => c.style.transform = '');
+  if (!open) { body.classList.add('open'); chev.style.transform = 'rotate(180deg)'; }
+}
+
+function startEdit(id) {
+  const entry = library.find(e => e.id === id);
+  if (!entry) return;
+  const body = document.getElementById('body-'+id);
+  const ansDiv = body.querySelector('.entry-answer');
+  const existing = body.querySelector('.edit-area');
+  if (existing) { existing.remove(); ansDiv.style.display = ''; return; }
+
+  ansDiv.style.display = 'none';
+  const wrap = document.createElement('div');
+  wrap.className = 'edit-area';
+  wrap.innerHTML = `<textarea class="edit-textarea" id="edit-ta-${id}" style="display:block; width:100%; min-height:80px; padding:10px 12px; border:1px solid var(--blue-600); border-radius:var(--radius-sm); font-size:13px; font-family:inherit; color:var(--text); background:#fff; resize:vertical; outline:none; box-shadow:0 0 0 3px rgba(24,95,165,.1); line-height:1.7; margin-bottom:8px">${entry.a}</textarea>
+  <div style="display:flex;gap:6px">
+    <button class="btn btn-primary" onclick="saveEdit(${id})">Save changes</button>
+    <button class="btn" onclick="cancelEdit(${id})">Cancel</button>
+  </div>`;
+  body.insertBefore(wrap, body.querySelector('.entry-actions'));
+}
+
+function cancelEdit(id) {
+  const body = document.getElementById('body-'+id);
+  const ea = body.querySelector('.edit-area');
+  if (ea) ea.remove();
+  body.querySelector('.entry-answer').style.display = '';
+}
+
+function saveEdit(id) {
+  const entry = library.find(e => e.id === id);
+  if (!entry) return;
+  const newA = document.getElementById('edit-ta-'+id).value.trim();
+  if (!newA) return;
+
+  if (!editHistory[id]) editHistory[id] = [];
+  editHistory[id].push({ v: editHistory[id].length + 1, text: entry.a, ts: Date.now() });
+
+  entry.a = newA;
+  entry.status = 'edited';
+  entry.ts = Date.now();
+  cancelEdit(id);
+  renderLibrary();
+  showToast('Answer updated and marked as edited');
+}
+
+function approveEntry(id) {
+  const entry = library.find(e => e.id === id);
+  if (entry) { entry.status = 'approved'; entry.ts = Date.now(); }
+  renderLibrary();
+  renderReview();
+  showToast('Entry approved and added to library');
+}
+
+function deleteEntry(id) {
+  library = library.filter(e => e.id !== id);
+  renderLibrary();
+  renderReview();
+  showToast('Entry removed');
+}
+
+function copyEntry(id) {
+  const entry = library.find(e => e.id === id);
+  if (!entry) return;
+  const txt = `Q: ${entry.q}\nA: ${entry.a}\nSource: ${entry.lender} — ${entry.section}`;
+  navigator.clipboard.writeText(txt).then(() => showToast('Copied to clipboard'));
+}
+
+function setStatusFilter(btn) {
+  document.querySelectorAll('#status-filters .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeStatus = btn.dataset.status;
+  renderLibrary();
+}
+
+function toggleSort() {
+  sortAsc = !sortAsc;
+  document.getElementById('sort-label').textContent = sortAsc ? 'Oldest' : 'Newest';
+  renderLibrary();
+}
+
+function openAddModal() {
+  document.getElementById('add-modal').classList.add('open');
+  document.getElementById('new-q').focus();
+}
+function closeAddModal() { document.getElementById('add-modal').classList.remove('open'); }
+
+function addEntry() {
+  const q = document.getElementById('new-q').value.trim();
+  const a = document.getElementById('new-a').value.trim();
+  const lender = document.getElementById('new-lender').value;
+  const section = document.getElementById('new-section').value.trim();
+  const status = document.getElementById('new-status').value;
+  const tagsRaw = document.getElementById('new-tags').value.trim();
+  if (!q || !a) return;
+  const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+  library.unshift({ id: nextId++, q, a, lender, section, status, tags, ts: Date.now(), uses: 0 });
+  closeAddModal();
+  ['new-q','new-a','new-section','new-tags'].forEach(id => document.getElementById(id).value = '');
+  renderLibrary();
+  renderReview();
+  showToast('Entry added to library');
+}
+
+/* ── REVIEW PANEL ── */
+function renderReview() {
+  const pending = library.filter(e => e.status === 'pending');
+  document.getElementById('review-badge').textContent = pending.length;
+
+  const list = document.getElementById('review-list');
+  const banner = document.getElementById('done-banner');
+
+  if (!pending.length) {
+    list.innerHTML = '';
+    banner.style.display = 'block';
+    updateSidebar();
+    return;
+  }
+  banner.style.display = 'none';
+
+  list.innerHTML = pending.map(e => `
+  <div class="review-card" id="rev-${e.id}">
+    <div class="review-header">
+      ${lenderDot(e.lender)}
+      <div style="flex:1">
+        <div class="review-q">${e.q}</div>
+        <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap">
+          <span class="pill pill-amber"><span class="status-dot" style="background:#BA7517"></span>Pending review</span>
+          <span class="pill pill-gray">${e.lender}</span>
+          <span class="pill pill-gray" style="font-size:10px">${e.section}</span>
+          ${tagPills(e.tags)}
+        </div>
+      </div>
+    </div>
+    <div class="review-section">
+      <div class="review-label">AI-generated answer</div>
+      <div class="review-answer-box" id="rev-ans-${e.id}">${e.a}</div>
+      <textarea class="edit-textarea" id="rev-edit-${e.id}" placeholder="Edit the answer before approving…">${e.a}</textarea>
+    </div>
+    <div class="review-footer">
+      <input class="review-note-input" id="rev-note-${e.id}" type="text" placeholder="Optional reviewer note (e.g. verified against p.2 of BFS guide)">
+      <button class="btn" onclick="toggleReviewEdit(${e.id})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit
+      </button>
+      <button class="btn btn-danger" onclick="rejectReview(${e.id})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Reject
+      </button>
+      <button class="btn btn-primary" onclick="approveReview(${e.id})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><polyline points="20 6 9 17 4 12"/></svg>
+        Approve
+      </button>
+    </div>
+  </div>`).join('');
+
+  updateSidebar();
+}
+
+function toggleReviewEdit(id) {
+  const ansBox = document.getElementById('rev-ans-'+id);
+  const ta = document.getElementById('rev-edit-'+id);
+  const isEditing = ta.style.display === 'block';
+  if (isEditing) {
+    ansBox.style.display = '';
+    ansBox.textContent = ta.value;
+    ta.style.display = 'none';
+  } else {
+    ta.style.display = 'block';
+    ansBox.style.display = 'none';
+    ta.focus();
+  }
+}
+
+function approveReview(id) {
+  const entry = library.find(e => e.id === id);
+  if (!entry) return;
+  const ta = document.getElementById('rev-edit-'+id);
+  const note = document.getElementById('rev-note-'+id)?.value?.trim();
+  const editedAnswer = ta && ta.style.display === 'block' ? ta.value.trim() : null;
+
+  if (editedAnswer && editedAnswer !== entry.a) {
+    if (!editHistory[id]) editHistory[id] = [];
+    editHistory[id].push({ v: editHistory[id].length + 1, text: entry.a, ts: Date.now(), note });
+    entry.a = editedAnswer;
+    entry.status = 'edited';
+  } else {
+    entry.status = 'approved';
+  }
+  entry.ts = Date.now();
+  const card = document.getElementById('rev-'+id);
+  if (card) { card.style.opacity = '.4'; card.style.pointerEvents = 'none'; }
+  setTimeout(() => { renderReview(); renderLibrary(); }, 600);
+  showToast(editedAnswer ? 'Answer edited and approved' : 'Answer approved');
+}
+
+function rejectReview(id) {
+  const entry = library.find(e => e.id === id);
+  if (entry) entry.status = 'rejected';
+  const card = document.getElementById('rev-'+id);
+  if (card) { card.style.opacity = '.4'; card.style.pointerEvents = 'none'; }
+  setTimeout(() => { renderReview(); renderLibrary(); }, 600);
+  showToast('Answer rejected');
+}
+
+/* ── HISTORY PANEL ── */
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  const entries = library.filter(e => editHistory[e.id] && editHistory[e.id].length > 0);
+  if (!entries.length) {
+    list.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><div class="empty-title">No edits yet</div><div class="empty-sub">Edited answers will appear here with a full version trail</div></div>`;
+    return;
+  }
+  list.innerHTML = entries.map(e => {
+    const hist = editHistory[e.id] || [];
+    const versions = [...hist, { v: hist.length + 1, text: e.a, ts: e.ts, note: 'Current version' }];
+    return `<div class="history-entry">
+      <div class="history-q">${lenderDot(e.lender)} <span style="vertical-align:middle;margin-left:8px;font-size:13px;font-weight:500">${e.q}</span></div>
+      <div class="history-versions" style="margin-top:10px; padding-left:4px; border-left:2px solid var(--gray-100)">
+        ${versions.reverse().map(v => `
+          <div class="version-row" style="padding-left:12px">
+            <span class="version-num">v${v.v}</span>
+            <span class="version-text">${v.text}${v.note ? `<span style="color:var(--text-3);display:block;font-size:11px;margin-top:2px">${v.note}</span>` : ''}</span>
+            <span class="version-meta">${timeAgo(v.ts)}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Shared ── */
+function switchPanel(navEl, panel) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  navEl.classList.add('active');
+  document.getElementById('panel-library').style.display = panel === 'library' ? 'flex' : 'none';
+  document.getElementById('panel-review').style.display = panel === 'review' ? 'flex' : 'none';
+  document.getElementById('panel-history').style.display = panel === 'history' ? 'flex' : 'none';
+  if (panel === 'review') renderReview();
+  if (panel === 'history') renderHistory();
+  if (panel === 'library') document.getElementById('panel-library').style.flexDirection = 'column';
+}
+
+function updateSidebar() {
+  const total = library.length;
+  const approved = library.filter(e => e.status === 'approved' || e.status === 'edited').length;
+  const pending = library.filter(e => e.status === 'pending').length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-approved').textContent = approved;
+  document.getElementById('stat-pending').textContent = pending;
+  document.getElementById('review-badge').textContent = pending;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+document.getElementById('add-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAddModal(); });
+
+document.getElementById('panel-library').style.display = 'flex';
+document.getElementById('panel-library').style.flexDirection = 'column';
+document.getElementById('panel-review').style.display = 'none';
+document.getElementById('panel-history').style.display = 'none';
+
+renderLibrary();
+renderReview();
+</script>
+</body>
+</html>
