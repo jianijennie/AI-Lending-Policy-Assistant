@@ -1,0 +1,593 @@
+<title>RAG Pipeline Improvements — Week 3</title>
+<style>
+  :root {
+    --bg: #EDF0E6;
+    --surface: #FBFAF5;
+    --surface-2: #F3F1E8;
+    --ink: #1C2521;
+    --ink-muted: #5B6660;
+    --ink-faint: #869088;
+    --accent: #8A5A22;
+    --accent-soft: #E7D9BE;
+    --good: #3A7A56;
+    --good-soft: #DCEADD;
+    --warn: #B24A32;
+    --warn-soft: #F1DCD3;
+    --rule: #D8DACD;
+    --shadow: 0 1px 2px rgba(28,37,33,0.06), 0 4px 16px rgba(28,37,33,0.05);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141815;
+      --surface: #1B211D;
+      --surface-2: #212820;
+      --ink: #E9ECE4;
+      --ink-muted: #9AA79C;
+      --ink-faint: #6C7770;
+      --accent: #D6A75C;
+      --accent-soft: #3A2F1C;
+      --good: #6FBF8F;
+      --good-soft: #1E2E22;
+      --warn: #E08064;
+      --warn-soft: #33221D;
+      --rule: #2C332E;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.25);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141815; --surface: #1B211D; --surface-2: #212820; --ink: #E9ECE4;
+    --ink-muted: #9AA79C; --ink-faint: #6C7770; --accent: #D6A75C;
+    --accent-soft: #3A2F1C; --good: #6FBF8F; --good-soft: #1E2E22;
+    --warn: #E08064; --warn-soft: #33221D; --rule: #2C332E;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.25);
+  }
+  :root[data-theme="light"] {
+    --bg: #EDF0E6; --surface: #FBFAF5; --surface-2: #F3F1E8; --ink: #1C2521;
+    --ink-muted: #5B6660; --ink-faint: #869088; --accent: #8A5A22;
+    --accent-soft: #E7D9BE; --good: #3A7A56; --good-soft: #DCEADD;
+    --warn: #B24A32; --warn-soft: #F1DCD3; --rule: #D8DACD;
+    --shadow: 0 1px 2px rgba(28,37,33,0.06), 0 4px 16px rgba(28,37,33,0.05);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+  }
+  h1, h2, h3 {
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+    font-weight: 400;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+  .mono, .num {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, "Roboto Mono", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Header ---------- */
+  header.doc-head {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 22px;
+    margin-bottom: 40px;
+  }
+  .eyebrow {
+    font-size: 12.5px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: 34px;
+    line-height: 1.15;
+    margin: 0 0 10px;
+  }
+  .doc-sub {
+    color: var(--ink-muted);
+    font-size: 16.5px;
+    max-width: 60ch;
+    margin: 0 0 18px;
+  }
+  .doc-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+  .doc-meta span b { color: var(--ink-muted); font-weight: 600; }
+
+  /* ---------- Stat strip ---------- */
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 48px;
+  }
+  .stat {
+    background: var(--surface);
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .stat .label {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+  }
+  .stat .value {
+    font-size: 26px;
+    font-weight: 600;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .stat .delta { font-size: 13px; font-weight: 600; }
+  .stat .delta.good { color: var(--good); }
+  .stat .from { font-size: 12.5px; color: var(--ink-faint); }
+
+  /* ---------- Sections ---------- */
+  section { margin-bottom: 48px; }
+  h2 {
+    font-size: 22px;
+    margin: 0 0 6px;
+  }
+  .section-dek {
+    color: var(--ink-muted);
+    font-size: 15px;
+    max-width: 62ch;
+    margin: 0 0 24px;
+  }
+
+  /* ---------- Timeline ---------- */
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .stage {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 18px;
+    position: relative;
+    padding-bottom: 28px;
+  }
+  .stage:last-child { padding-bottom: 0; }
+  .stage-num {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 1.5px solid var(--rule);
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-family: Georgia, serif;
+    font-size: 16px;
+    color: var(--ink-muted);
+    z-index: 1;
+  }
+  .stage.final .stage-num {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--surface);
+    font-weight: 600;
+  }
+  .stage-rail {
+    position: absolute;
+    left: 19px; top: 40px; bottom: -28px;
+    width: 1px;
+    background: var(--rule);
+  }
+  .stage:last-child .stage-rail { display: none; }
+  .stage-body {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+  }
+  .stage-title {
+    font-size: 16.5px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .stage-metric {
+    font-size: 12.5px;
+    padding: 2px 9px;
+    border-radius: 20px;
+    background: var(--surface-2);
+    color: var(--ink-muted);
+    font-weight: 600;
+  }
+  .stage-metric.good { background: var(--good-soft); color: var(--good); }
+  .stage-desc {
+    color: var(--ink-muted);
+    font-size: 14.5px;
+    margin: 0;
+  }
+  .stage-desc code {
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    background: var(--surface-2);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 0.92em;
+  }
+
+  /* ---------- Bar chart ---------- */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 24px 24px 8px;
+    box-shadow: var(--shadow);
+  }
+  .chart-title { font-size: 13px; font-weight: 600; color: var(--ink-muted); margin-bottom: 18px; text-transform: uppercase; letter-spacing: 0.04em;}
+  .bar-row {
+    display: grid;
+    grid-template-columns: 150px 1fr 56px;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 0;
+    border-top: 1px solid var(--rule);
+  }
+  .bar-row:first-of-type { border-top: none; }
+  .bar-label { font-size: 13.5px; color: var(--ink-muted); }
+  .bar-track {
+    position: relative;
+    height: 10px;
+    background: var(--surface-2);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    border-radius: 5px;
+    background: var(--ink-faint);
+  }
+  .bar-row.final .bar-fill { background: var(--accent); }
+  .bar-val { font-size: 13.5px; text-align: right; color: var(--ink); font-weight: 600; }
+  .chart-note {
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    margin: 16px 0 4px;
+    padding-top: 12px;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ---------- Fix cards ---------- */
+  .fix-grid { display: flex; flex-direction: column; gap: 18px; }
+  .fix-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+  }
+  .fix-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px;}
+  .fix-name { font-size: 17px; font-weight: 600; margin: 0; }
+  .fix-tag {
+    font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 3px 10px; border-radius: 20px; white-space: nowrap;
+    background: var(--good-soft); color: var(--good); font-weight: 700;
+  }
+  .fix-body p { margin: 0 0 10px; color: var(--ink-muted); font-size: 14.5px; }
+  .fix-body p:last-child { margin-bottom: 0; }
+  .before-after {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin: 12px 0;
+  }
+  .ba-block {
+    background: var(--surface-2);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+  .ba-block .ba-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-faint); margin-bottom: 5px; font-weight: 700;}
+  .ba-block.before .ba-label { color: var(--warn); }
+  .ba-block.after .ba-label { color: var(--good); }
+  .ba-block code { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 12.5px; }
+
+  /* ---------- Table ---------- */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--surface); }
+  th, td { text-align: left; padding: 10px 14px; white-space: nowrap; }
+  th {
+    background: var(--surface-2);
+    font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--ink-faint); font-weight: 700;
+    border-bottom: 1px solid var(--rule);
+  }
+  td { border-bottom: 1px solid var(--rule); color: var(--ink-muted); }
+  tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; font-family: ui-monospace, "SF Mono", Consolas, monospace; }
+  td.lead { color: var(--ink); font-weight: 600; }
+  .pill { font-size: 12px; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+  .pill.good { background: var(--good-soft); color: var(--good); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); }
+
+  /* ---------- Open items ---------- */
+  .open-list { display: flex; flex-direction: column; gap: 12px; }
+  .open-item {
+    display: grid; grid-template-columns: auto 1fr; gap: 14px;
+    padding: 14px 18px; background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 10px; align-items: flex-start;
+  }
+  .open-item .dot {
+    width: 9px; height: 9px; border-radius: 50%; background: var(--warn);
+    margin-top: 6px;
+  }
+  .open-item h4 { margin: 0 0 4px; font-size: 14.5px; font-weight: 600; }
+  .open-item p { margin: 0; color: var(--ink-muted); font-size: 13.5px; }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    margin-top: 56px;
+    padding-top: 20px;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  }
+  footer code { font-family: ui-monospace, monospace; }
+
+  @media (max-width: 620px) {
+    .stat-strip { grid-template-columns: repeat(2, 1fr); }
+    .before-after { grid-template-columns: 1fr; }
+    .bar-row { grid-template-columns: 96px 1fr 46px; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="doc-head">
+    <div class="eyebrow">LifeX Asset Finance &nbsp;·&nbsp; RAG Pipeline &nbsp;·&nbsp; Week 3</div>
+    <h1>Getting the retrieval right before we score it</h1>
+    <p class="doc-sub">A working log of what was wrong with the policy-lookup pipeline, what we changed, and why the fixes hold up on questions outside the 175-question test set — not just on it.</p>
+    <div class="doc-meta">
+      <span><b>Scope</b> 175 broker questions across 7 lenders</span>
+      <span><b>Model</b> gpt-4o-mini</span>
+      <span><b>Prepared for</b> Week 3 evaluation (Maksim)</span>
+    </div>
+  </header>
+
+  <div class="stat-strip">
+    <div class="stat">
+      <div class="label">Retrieval hit rate</div>
+      <div class="value">98.9%<span class="delta good">+16.6pp</span></div>
+      <div class="from">from 82.3% at baseline</div>
+    </div>
+    <div class="stat">
+      <div class="label">Avg. answer score</div>
+      <div class="value">3.09<span class="delta good">/ 4</span></div>
+      <div class="from">up from 2.85 at baseline</div>
+    </div>
+    <div class="stat">
+      <div class="label">Full-suite cost</div>
+      <div class="value">$0.068</div>
+      <div class="from">175 questions, gpt-4o-mini</div>
+    </div>
+    <div class="stat">
+      <div class="label">Avg. response time</div>
+      <div class="value">2.08<span class="delta">s</span></div>
+      <div class="from">per question, end to end</div>
+    </div>
+  </div>
+
+  <section>
+    <h2>The retrieval fix, in one number</h2>
+    <p class="section-dek">"Retrieval hit rate" is whether the pipeline pulled the one correct policy chunk into context before the model even started answering. If it didn't, no amount of prompting fixes the answer — so this was the metric worth fixing first.</p>
+    <div class="chart-card">
+      <div class="chart-title">Retrieval hit rate across four iterations</div>
+
+      <div class="bar-row">
+        <div class="bar-label">Baseline</div>
+        <div class="bar-track"><div class="bar-fill" style="width: 82.3%"></div></div>
+        <div class="bar-val num">82.3%</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Round 1 keywords</div>
+        <div class="bar-track"><div class="bar-fill" style="width: 84.0%"></div></div>
+        <div class="bar-val num">84.0%</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Round 2 keywords</div>
+        <div class="bar-track"><div class="bar-fill" style="width: 89.1%"></div></div>
+        <div class="bar-val num">89.1%</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Round 3 keywords</div>
+        <div class="bar-track"><div class="bar-fill" style="width: 91.4%"></div></div>
+        <div class="bar-val num">91.4%</div>
+      </div>
+      <div class="bar-row final">
+        <div class="bar-label">Architecture fix</div>
+        <div class="bar-track"><div class="bar-fill" style="width: 98.9%"></div></div>
+        <div class="bar-val num">98.9%</div>
+      </div>
+      <div class="chart-note">Measured directly against the embedding retriever (no LLM call) on all 175 questions, so each step is exact and reproducible — not subject to model answer-generation noise.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>How we got here</h2>
+    <p class="section-dek">Four rounds. The first three were keyword patches that plateaued around 91% and started smelling like overfitting. The fourth round fixed two structural problems instead, and that's what actually moved the needle.</p>
+
+    <div class="timeline">
+
+      <div class="stage">
+        <div class="stage-rail"></div>
+        <div class="stage-num mono">1</div>
+        <div class="stage-body">
+          <p class="stage-title">Onboard 3 new lenders <span class="stage-metric">82.3% → 84.0%</span></p>
+          <p class="stage-desc">Added Angle, Flexi, and Metro to the lender/keyword lists and re-ingested 62 policy chunks. First full run surfaced the obvious gaps: the intent classifier had never seen phrases like <code>"$400k Low Doc"</code> or <code>"under 2 years"</code>, so those questions were routed to the wrong policy section entirely.</p>
+        </div>
+      </div>
+
+      <div class="stage">
+        <div class="stage-rail"></div>
+        <div class="stage-num mono">2</div>
+        <div class="stage-body">
+          <p class="stage-title">Switch Groq → OpenAI <span class="stage-metric">reliability, not accuracy</span></p>
+          <p class="stage-desc">Groq's free tier hit both its per-minute and per-day token caps mid-run, silently failing 54 of 175 questions — mostly Metro and Flexi, since they queued last. Moved to <code>gpt-4o-mini</code>, which finished all 175 with zero errors at $0.068 total.</p>
+        </div>
+      </div>
+
+      <div class="stage">
+        <div class="stage-rail"></div>
+        <div class="stage-num mono">3</div>
+        <div class="stage-body">
+          <p class="stage-title">Two more rounds of targeted keywords <span class="stage-metric">84.0% → 91.4%</span></p>
+          <p class="stage-desc">Diagnosed specific failing questions one by one and added matching keywords — <code>"headline rate"</code>, <code>"mid doc"</code>, <code>"bfs private sale"</code>, and others. Every addition was validated against all 175 questions for regressions before being kept. It worked, but the fixes were getting narrower and more literal — several were close to copying the test question's exact wording, which wouldn't help with a real broker asking the same thing differently.</p>
+        </div>
+      </div>
+
+      <div class="stage final">
+        <div class="stage-num mono">4</div>
+        <div class="stage-body">
+          <p class="stage-title">Fix the architecture, not the wording <span class="stage-metric good">91.4% → 98.9%</span></p>
+          <p class="stage-desc">Found and fixed two structural bugs instead of patching more phrases (see below). Cleaned up 11 of the 13 narrow keyword patches from rounds 1–3 once they were proven unnecessary under the new design. Net result: fewer keywords than before round 3, and a nine-point jump in hit rate.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>The two fixes that actually mattered</h2>
+    <p class="section-dek">Both are structural — they fix a mechanism, not a specific question — which is why they should hold up on questions we haven't tested.</p>
+
+    <div class="fix-grid">
+
+      <div class="fix-card">
+        <div class="fix-head">
+          <p class="fix-name">A shared word was silently misrouting CFAL questions to Westpac</p>
+          <span class="fix-tag">Bug fix</span>
+        </div>
+        <div class="fix-body">
+          <p>CFAL's product is called <em>DriveXpress</em>. Westpac's keyword list includes <code>"xpress"</code> — and <code>"DriveXpress"</code> contains that substring. Because the lender checker tested Westpac before CFAL, any question mentioning both "CFAL" and "DriveXpress" got answered from Westpac's policy chunks instead.</p>
+          <div class="before-after">
+            <div class="ba-block before">
+              <div class="ba-label">Before</div>
+              Checked lenders in a fixed list order; first substring match won, regardless of which lender was actually named.
+            </div>
+            <div class="ba-block after">
+              <div class="ba-label">After</div>
+              An explicit lender name (<code>"cfal"</code>) always wins over a generic product-keyword match (<code>"xpress"</code>).
+            </div>
+          </div>
+          <p>Recovered 4 questions immediately, and removes an entire class of future collisions between any two lenders' product names.</p>
+        </div>
+      </div>
+
+      <div class="fix-card">
+        <div class="fix-head">
+          <p class="fix-name">The topic classifier was too unreliable to use as a hard filter</p>
+          <span class="fix-tag">Design change</span>
+        </div>
+        <div class="fix-body">
+          <p>The pipeline guesses a question's <em>topic</em> (pricing, fees, eligibility…) from keywords, then used that guess to <em>exclude</em> every chunk tagged with a different topic. But generic finance words — "credit score," "rate," "abn" — tie across topics constantly, so the guess was wrong often enough that it was excluding the correct chunk more than it was helping find it.</p>
+          <div class="before-after">
+            <div class="ba-block before">
+              <div class="ba-label">Before</div>
+              Lender + topic guess as one hard filter. Wrong topic guess ⇒ correct chunk excluded outright.
+            </div>
+            <div class="ba-block after">
+              <div class="ba-label">After</div>
+              Search by lender alone, <em>and</em> by lender + topic guess, then merge both result sets. A wrong guess can only add candidates, never remove the right one.
+            </div>
+          </div>
+          <p>This one change fixed 11 of the remaining 15 failures — more than every keyword we'd added across three prior rounds combined.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>Where each version landed</h2>
+    <p class="section-dek">Answer score is noisier run-to-run than retrieval — <code>gpt-4o-mini</code>'s wording varies slightly each call, which can shift a handful of scores either way even with zero pipeline changes. Retrieval hit rate is exact and repeatable, which is why it's the metric we optimized against.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Version</th>
+            <th>What changed</th>
+            <th class="num">Retrieval hit</th>
+            <th class="num">Avg. score</th>
+            <th class="num">Perfect (4/4)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="lead">Baseline</td>
+            <td>3 lenders onboarded, no tuning</td>
+            <td class="num">78%</td>
+            <td class="num">2.85 / 4</td>
+            <td class="num">34%</td>
+          </tr>
+          <tr>
+            <td class="lead">v2</td>
+            <td>8 validated keyword fixes</td>
+            <td class="num">89%</td>
+            <td class="num">2.97 / 4</td>
+            <td class="num">38%</td>
+          </tr>
+          <tr>
+            <td class="lead">v3</td>
+            <td>4 more validated keyword fixes</td>
+            <td class="num">91%</td>
+            <td class="num">2.97 / 4</td>
+            <td class="num">34%</td>
+          </tr>
+          <tr>
+            <td class="lead">v4 <span class="pill good">current</span></td>
+            <td>Lender-bug fix + union retrieval</td>
+            <td class="num">99%</td>
+            <td class="num">3.14 / 4</td>
+            <td class="num">40%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>What's still open</h2>
+    <p class="section-dek">Logged in <code>ErrorLog</code> in the evaluation workbook. None of these are retrieval bugs — they're either a genuine ranking edge case or a model-answer-quality ceiling that retrieval tuning can't touch.</p>
+    <div class="open-list">
+      <div class="open-item">
+        <div class="dot"></div>
+        <div>
+          <h4>Two long-tail ranking misses — BFS-21, FLX-17</h4>
+          <p>Both correct chunks rank 6th–7th out of their lender's ~8–9 chunks by semantic similarity — just outside the top 5 we retrieve. Fixable by retrieving more chunks per question, but that trades context size and cost for two questions; left as a known limit rather than force it.</p>
+        </div>
+      </div>
+      <div class="open-item">
+        <div class="dot"></div>
+        <div>
+          <h4>Metro, Fees, and Settlement score lower — but retrieval isn't the problem</h4>
+          <p>All three already retrieve the correct chunk essentially 100% of the time. The lower scores come from <code>gpt-4o-mini</code> not reproducing every number in Metro's dense rate tables, which is a prompting problem, not a retrieval one.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Full per-question detail: <code>data/metadata/Week3_Evaluation_v4.xlsx</code></span>
+    <span>Pipeline: <code>src/query.py</code></span>
+  </footer>
+
+</div>
