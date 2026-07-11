@@ -397,7 +397,7 @@ const AVG_OUT    = 175;
 const API_COST   = (AVG_IN * IN_PER_1K + AVG_OUT * OUT_PER_1K) / 1000;
 
 // ── Real FastAPI backend ──────────────────────────────────────────
-const API_BASE = 'http://localhost:8000';
+const API_BASE = 'https://frying-june-evict.ngrok-free.dev';
 
 // Map API lender codes → HTML display names
 const LENDER_MAP = {
@@ -663,7 +663,7 @@ function sendQ() {
 
     fetch(API_BASE + '/query', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
       body: JSON.stringify({ question: questionWithLender })
     })
     .then(r => {
@@ -822,7 +822,7 @@ function approveEntry(id) {
   // Save validated answer to FastAPI answer library
   fetch(API_BASE + '/answer-library/save', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
     body: JSON.stringify({
       question: e.q,
       answer: e.a,
@@ -878,7 +878,8 @@ function updateAll() {
   document.getElementById('strip-saved').textContent=`$${session.saved.toFixed(4)} saved`;
   document.getElementById('strip-rate').textContent=total>0?`${Math.round(session.hits/total*100)}%`:'—';
   const cached=KB.filter(e=>e.status==='cached').length;
-  document.getElementById('cache-sz').textContent=cached;
+  const cacheSzEl=document.getElementById('cache-sz');
+  if(cacheSzEl) cacheSzEl.textContent=cached;
   if(session.saved>0){document.getElementById('savings-chip').style.display='flex';document.getElementById('chip-txt').textContent=`$${session.saved.toFixed(4)} saved`;}
   document.getElementById('lib-badge').textContent=KB.length;
   document.getElementById('rev-badge').textContent=KB.filter(e=>e.status==='pending').length;
@@ -889,7 +890,7 @@ function updateInfoBar(isHit, loading=false) {
   const dot=document.getElementById('info-dot'), txt=document.getElementById('info-txt');
   if(loading){dot.className='info-dot miss';txt.innerHTML='Searching across 26 documents…';return;}
   if(isHit){dot.className='info-dot';txt.innerHTML='Last query: <strong>cache hit</strong> — returned instantly at $0';}
-  else{dot.className='info-dot miss';txt.innerHTML='Last query: <strong>API call</strong> — answer added to library for future reuse';setTimeout(()=>{dot.className='info-dot';txt.innerHTML=`Ready · <strong>${KB.filter(e=>e.status==='cached').length}</strong> answers cached across all 6 lenders`;},3200);}
+  else{dot.className='info-dot miss';txt.innerHTML='Last query: <strong>API call</strong> — answer added to library for future reuse';setTimeout(()=>{dot.className='info-dot';txt.innerHTML=`Ready · <strong id="cache-sz">${KB.filter(e=>e.status==='cached').length}</strong> answers cached across all 6 lenders`;},3200);}
 }
 
 // ── Nav / filters ─────────────────────────────────────────────────
