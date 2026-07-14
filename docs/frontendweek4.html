@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMAP 2026 — Policy Q&A Engine</title>
+<style>
+:root {
+  --ink:    #0D1117;
+  --ink2:   #3D4451;
+  --ink3:   #7A8394;
+  --rule:   #E2E5EA;
+  --rule2:  #C8CDD6;
+  --bg:     #F4F6F9;
+  --surf:   #FFFFFF;
+  --acc:    #1A56DB;
+  --acc2:   #1044B0;
+  --acc-lt: #E8F0FE;
+  --grn:    #0C7240;
+  --grn-lt: #DCFCE7;
+  --amb:    #92400E;
+  --amb-lt: #FEF3C7;
+  --red:    #991B1B;
+  --red-lt: #FEE2E2;
+  --r:      8px;
+  --r-sm:   5px;
+  --sh:     0 1px 3px rgba(0,0,0,.07), 0 0 0 1px rgba(0,0,0,.05);
+  --sh-md:  0 4px 16px rgba(0,0,0,.10), 0 0 0 1px rgba(0,0,0,.04);
+}
+/* Lender brand colors */
+--angle-c: #C0007A; --angle-lt: #FCE4F3;
+--bfs-c: #185FA5; --bfs-lt: #E6F1FB;
+--cfal-c: #5B1F8A; --cfal-lt: #F0E8FA;
+--flexi-c: #D4500A; --flexi-lt: #FEF0E6;
+--metro-c: #1665C1; --metro-lt: #E6F0FB;
+--resimac-c: #0F6E8C; --resimac-lt: #E0F2F7;
+--westpac-c: #C01414; --westpac-lt: #FEE2E2;
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;background:var(--bg);color:var(--ink);font-size:13px;line-height:1.5}
+
+/* ── Shell ── */
+.shell{display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+.sidebar{width:218px;min-width:218px;background:var(--ink);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-top{padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.logo-eye{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);font-weight:600;margin-bottom:3px}
+.logo-name{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.02em;line-height:1.2}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.35);margin-top:3px}
+
+.nav{flex:1;overflow-y:auto;padding:8px 0}
+.nav::-webkit-scrollbar{width:3px}
+.nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1)}
+.nav-sec{font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.28);padding:10px 16px 4px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 16px;font-size:12px;cursor:pointer;color:rgba(255,255,255,.5);border-left:2px solid transparent;transition:all .12s;user-select:none}
+.nav-item:hover{color:rgba(255,255,255,.8);background:rgba(255,255,255,.05)}
+.nav-item.active{color:#fff;background:rgba(255,255,255,.09);border-left-color:#4D9EFF;font-weight:500}
+.nav-item svg{width:13px;height:13px;flex-shrink:0;opacity:.65}
+.nav-item.active svg{opacity:1}
+.nav-badge{margin-left:auto;font-size:9px;font-weight:700;background:#4D9EFF;color:#0D1117;padding:1px 5px;border-radius:8px}
+.lender-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+.sidebar-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07)}
+.mini-stat{display:flex;justify-content:space-between;padding:2px 0;font-size:10px}
+.mini-label{color:rgba(255,255,255,.3)}
+.mini-val{color:rgba(255,255,255,.65);font-weight:500}
+.savings-label{font-size:10px;color:#4ADE80;font-weight:600;margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.06);text-align:center}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.panel{display:none;flex-direction:column;flex:1;overflow:hidden}
+.panel.active{display:flex}
+
+/* ── Top bar ── */
+.topbar{background:var(--surf);border-bottom:1px solid var(--rule);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.topbar-title{font-size:13px;font-weight:600;color:var(--ink)}
+.topbar-sub{font-size:11px;color:var(--ink3);margin-top:1px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:7px}
+
+/* ── Info bar ── */
+.infobar{background:var(--surf);border-bottom:1px solid var(--rule);padding:6px 20px;display:flex;align-items:center;gap:12px;font-size:11px;color:var(--ink2);flex-shrink:0}
+.info-dot{width:7px;height:7px;border-radius:50%;background:var(--grn);box-shadow:0 0 0 2px var(--grn-lt);flex-shrink:0}
+.info-dot.miss{background:#F59E0B;box-shadow:0 0 0 2px var(--amb-lt)}
+.cache-chip{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--grn);background:var(--grn-lt);padding:2px 8px;border-radius:20px}
+
+/* ── Lender filter bar ── */
+.lender-bar{background:var(--surf);border-bottom:1px solid var(--rule);padding:8px 20px;display:flex;align-items:center;gap:6px;flex-shrink:0;overflow-x:auto}
+.lender-btn{display:flex;align-items:center;gap:5px;padding:4px 10px;font-size:11px;font-weight:500;border-radius:20px;border:1px solid var(--rule2);background:var(--surf);color:var(--ink2);cursor:pointer;white-space:nowrap;transition:all .12s}
+.lender-btn:hover{border-color:var(--acc);color:var(--acc)}
+.lender-btn.active{color:#fff;border-color:transparent}
+.lender-btn .dot{width:6px;height:6px;border-radius:50%}
+/* lender active states */
+.lender-btn[data-l="ALL"].active{background:var(--ink)}
+.lender-btn[data-l="Angle"].active{background:#C0007A}
+.lender-btn[data-l="BFS"].active{background:#185FA5}
+.lender-btn[data-l="Capital Finance"].active{background:#5B1F8A}
+.lender-btn[data-l="flexicommercial"].active{background:#D4500A}
+.lender-btn[data-l="Metro Finance"].active{background:#1665C1}
+.lender-btn[data-l="Resimac"].active{background:#0F6E8C}
+.lender-btn[data-l="Westpac"].active{background:#C01414}
+
+/* ── Chat ── */
+.chat-body{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.chat-body::-webkit-scrollbar{width:4px}
+.chat-body::-webkit-scrollbar-thumb{background:var(--rule2);border-radius:2px}
+
+.msg{display:flex;gap:9px;max-width:88%}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.msg.ai{align-self:flex-start}
+.avatar{width:24px;height:24px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;margin-top:2px}
+.msg.user .avatar{background:var(--acc);color:#fff}
+.msg.ai .avatar{background:linear-gradient(135deg,#1A56DB,#0D1117);color:#fff}
+.msg-wrap{display:flex;flex-direction:column;gap:4px}
+.bubble{padding:9px 12px;border-radius:var(--r);font-size:12.5px;line-height:1.65}
+.msg.user .bubble{background:var(--acc);color:#E8F0FE;border-bottom-right-radius:2px}
+.msg.ai .bubble{background:var(--surf);border:1px solid var(--rule);color:var(--ink);border-bottom-left-radius:2px;box-shadow:var(--sh)}
+
+.hit-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--grn);background:var(--grn-lt);padding:2px 7px;border-radius:4px;border:1px solid rgba(12,114,64,.15);align-self:flex-start}
+.miss-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--amb);background:var(--amb-lt);padding:2px 7px;border-radius:4px;border:1px solid rgba(146,64,14,.15);align-self:flex-start}
+.source-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.src-chip{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;display:inline-flex;align-items:center;gap:3px;border:1px solid rgba(0,0,0,.06)}
+.meta-row{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--ink3)}
+.cost-hit{color:var(--grn);font-weight:600}
+.cost-api{color:#B45309;font-weight:600}
+
+/* typing */
+.typing{display:flex;gap:4px;align-items:center;padding:3px 0}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--ink3);animation:pulse 1.3s ease-in-out infinite}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,80%,100%{opacity:.25;transform:scale(.85)}40%{opacity:1;transform:scale(1)}}
+
+/* suggestions */
+.sug-wrap{padding:0 20px 12px;display:flex;flex-wrap:wrap;gap:5px;flex-shrink:0}
+.sug{font-size:11px;padding:5px 10px;border-radius:20px;border:1px solid var(--rule2);background:var(--surf);color:var(--ink2);cursor:pointer;transition:all .12s;white-space:nowrap}
+.sug:hover{border-color:var(--acc);color:var(--acc);background:var(--acc-lt)}
+
+/* cost strip */
+.cost-strip{padding:5px 20px;border-top:1px solid var(--rule);background:var(--bg);display:flex;align-items:center;gap:10px;font-size:10px;color:var(--ink3);flex-shrink:0}
+.cpill{padding:2px 7px;border-radius:4px;font-weight:600;font-size:10px}
+.cpill-spent{background:var(--red-lt);color:var(--red)}
+.cpill-saved{background:var(--grn-lt);color:var(--grn)}
+
+/* input */
+.input-row{border-top:1px solid var(--rule);background:var(--surf);padding:10px 16px;display:flex;gap:8px;align-items:flex-end;flex-shrink:0}
+textarea#qa-in{flex:1;padding:8px 11px;border:1px solid var(--rule2);border-radius:var(--r);font-size:12.5px;font-family:inherit;color:var(--ink);background:var(--bg);outline:none;resize:none;height:38px;max-height:110px;line-height:1.5;transition:border-color .15s,box-shadow .15s}
+textarea#qa-in:focus{border-color:var(--acc);background:#fff;box-shadow:0 0 0 3px rgba(26,86,219,.1)}
+textarea#qa-in::placeholder{color:var(--ink3)}
+.send-btn{width:34px;height:34px;border-radius:var(--r-sm);border:none;background:var(--acc);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .12s;align-self:flex-end}
+.send-btn:hover{background:var(--acc2)}
+.send-btn:disabled{background:var(--rule2);cursor:not-allowed}
+.send-btn svg{width:14px;height:14px}
+
+/* ── Library panel ── */
+.lib-topbar{padding:10px 20px;background:var(--surf);border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.lib-search-wrap{position:relative;flex:1}
+.lib-search-wrap svg{position:absolute;left:8px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--ink3);pointer-events:none}
+.lib-search{width:100%;padding:6px 9px 6px 27px;border:1px solid var(--rule2);border-radius:var(--r-sm);font-size:12px;color:var(--ink);background:var(--bg);outline:none}
+.lib-search:focus{border-color:var(--acc);background:#fff}
+.fpill{padding:5px 10px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--rule2);border-radius:20px;background:var(--surf);color:var(--ink2);transition:all .12s;white-space:nowrap}
+.fpill:hover{border-color:var(--acc);color:var(--acc)}
+.fpill.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+.lib-body{flex:1;overflow-y:auto}
+.lib-body::-webkit-scrollbar{width:4px}
+.lib-body::-webkit-scrollbar-thumb{background:var(--rule2);border-radius:2px}
+.lib-row{padding:12px 20px;border-bottom:1px solid var(--rule);display:flex;gap:10px;cursor:pointer;transition:background .1s}
+.lib-row:hover{background:var(--bg)}
+.lib-ldot{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-top:1px}
+.lib-main{flex:1;min-width:0}
+.lib-q{font-size:12.5px;font-weight:500;color:var(--ink);margin-bottom:3px}
+.lib-a{font-size:11.5px;color:var(--ink2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lib-tags{display:flex;align-items:center;gap:4px;margin-top:5px;flex-wrap:wrap}
+.tag{font-size:10px;padding:1px 6px;border-radius:4px;font-weight:500}
+.tag-cached{background:var(--grn-lt);color:var(--grn)}
+.tag-pending{background:var(--amb-lt);color:var(--amb)}
+.tag-section{background:var(--bg);color:var(--ink3);border:1px solid var(--rule)}
+.lib-meta{font-size:10px;color:var(--ink3);margin-left:auto;white-space:nowrap}
+.lib-empty{text-align:center;padding:50px 20px;color:var(--ink3);font-size:12px}
+
+/* ── Review panel ── */
+.rev-card{background:var(--surf);border:1px solid var(--rule);border-radius:var(--r);margin:14px 20px;overflow:hidden}
+.rev-header{padding:14px 16px 10px;border-bottom:1px solid var(--rule);display:flex;gap:10px;align-items:flex-start}
+.rev-q{font-size:12.5px;font-weight:500;flex:1}
+.rev-body{padding:12px 16px}
+.rev-lbl{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.rev-answer{background:var(--bg);border:1px solid var(--rule);border-radius:var(--r-sm);padding:10px 12px;font-size:12px;line-height:1.65;color:var(--ink)}
+.rev-edit-ta{width:100%;min-height:75px;padding:9px 11px;border:1px solid var(--acc);border-radius:var(--r-sm);font-size:12px;font-family:inherit;color:var(--ink);background:#fff;resize:vertical;outline:none;box-shadow:0 0 0 3px rgba(26,86,219,.1);line-height:1.65;display:none}
+.rev-footer{padding:10px 16px 14px;display:flex;align-items:center;gap:6px;background:var(--bg);border-top:1px solid var(--rule)}
+.rev-note{flex:1;padding:6px 9px;border:1px solid var(--rule2);border-radius:var(--r-sm);font-size:11.5px;font-family:inherit;color:var(--ink);background:#fff;outline:none}
+.rev-note::placeholder{color:var(--ink3)}
+.rev-empty{text-align:center;padding:50px 20px;color:var(--ink3);font-size:12px}
+.rev-empty svg{width:30px;height:30px;margin-bottom:10px;opacity:.25;display:block;margin-left:auto;margin-right:auto}
+
+/* ── Cost panel ── */
+.cost-body{flex:1;overflow-y:auto;padding:18px 20px}
+.cost-body::-webkit-scrollbar{width:4px}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.kpi{background:var(--surf);border:1px solid var(--rule);border-radius:var(--r);padding:14px}
+.kpi-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);font-weight:600;margin-bottom:5px}
+.kpi-val{font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.kpi-sub{font-size:10px;color:var(--ink3);margin-top:2px}
+.kpi.hl{background:var(--ink);border-color:var(--ink)}
+.kpi.hl .kpi-lbl{color:rgba(255,255,255,.4)}
+.kpi.hl .kpi-val{color:#4ADE80}
+.kpi.hl .kpi-sub{color:rgba(255,255,255,.35)}
+.sec-hd{font-size:11px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:9px}
+.bar-chart{background:var(--surf);border:1px solid var(--rule);border-radius:var(--r);padding:14px;margin-bottom:18px}
+.bar-r{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.bar-r:last-child{margin-bottom:0}
+.bar-lbl{font-size:11px;color:var(--ink2);min-width:95px}
+.bar-track{flex:1;background:var(--bg);border-radius:4px;height:7px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.bar-fill.g{background:linear-gradient(90deg,#4ADE80,#16A34A)}
+.bar-fill.a{background:linear-gradient(90deg,#FCD34D,#D97706)}
+.bar-v{font-size:11px;font-weight:600;color:var(--ink2);min-width:28px;text-align:right}
+.log-table{width:100%;border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;background:var(--surf)}
+.log-table th{background:var(--ink);color:rgba(255,255,255,.65);font-size:10px;font-weight:600;padding:7px 11px;text-align:left;letter-spacing:.04em;text-transform:uppercase}
+.log-table td{font-size:11px;padding:8px 11px;color:var(--ink2);border-bottom:1px solid var(--rule);vertical-align:top}
+.log-table tr:last-child td{border-bottom:none}
+.log-table tr:nth-child(even) td{background:var(--bg)}
+.badge-hit{font-size:10px;font-weight:600;color:var(--grn);background:var(--grn-lt);padding:2px 6px;border-radius:4px;white-space:nowrap}
+.badge-api{font-size:10px;font-weight:600;color:var(--amb);background:var(--amb-lt);padding:2px 6px;border-radius:4px;white-space:nowrap}
+
+/* ── Shared buttons ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;font-size:11.5px;font-weight:500;cursor:pointer;border-radius:var(--r-sm);border:1px solid var(--rule2);background:var(--surf);color:var(--ink2);transition:all .12s}
+.btn:hover{background:var(--bg);color:var(--ink)}
+.btn svg{width:12px;height:12px}
+.btn-sm{padding:4px 8px;font-size:10.5px}
+.btn-pri{background:var(--acc);color:#fff;border-color:var(--acc)}
+.btn-pri:hover{background:var(--acc2);border-color:var(--acc2)}
+.btn-ok{color:var(--grn);border-color:rgba(12,114,64,.2)}
+.btn-ok:hover{background:var(--grn-lt)}
+.btn-del{color:var(--red);border-color:rgba(153,27,27,.2)}
+.btn-del:hover{background:var(--red-lt)}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:18px;right:18px;z-index:999;background:var(--ink);color:#fff;padding:8px 13px;border-radius:var(--r-sm);font-size:12px;display:flex;align-items:center;gap:7px;opacity:0;transform:translateY(6px);pointer-events:none;transition:all .2s;box-shadow:var(--sh-md)}
+.toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="sidebar-top">
+    <div class="logo-eye">Project CMAP 2026</div>
+    <div class="logo-name">Policy Q&A</div>
+    <div class="logo-sub">6 lenders · 26 documents · cache-first</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-sec">Workspace</div>
+    <div class="nav-item active" onclick="go(this,'qa')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Ask a question
+    </div>
+    <div class="nav-item" onclick="go(this,'library')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Answer library
+      <span class="nav-badge" id="lib-badge">0</span>
+    </div>
+    <div class="nav-item" onclick="go(this,'review')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Review queue
+      <span class="nav-badge" id="rev-badge">0</span>
+    </div>
+    <div class="nav-item" onclick="go(this,'costs')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Cost & speed
+    </div>
+    <div class="nav-sec">Lenders (6)</div>
+    <div class="nav-item" style="cursor:default;opacity:.8"><div class="lender-dot" style="background:#C0007A"></div>Angle Finance · 4 docs</div>
+    <div class="nav-item" style="cursor:default;opacity:.8"><div class="lender-dot" style="background:#185FA5"></div>BFS · 1 doc</div>
+    <div class="nav-item" style="cursor:default;opacity:.8"><div class="lender-dot" style="background:#5B1F8A"></div>Capital Finance · 1 doc</div>
+    <div class="nav-item" style="cursor:default;opacity:.8"><div class="lender-dot" style="background:#D4500A"></div>flexicommercial · 6 docs</div>
+    <div class="nav-item" style="cursor:default;opacity:.8"><div class="lender-dot" style="background:#1665C1"></div>Metro Finance · 8 docs</div>
+    <div class="nav-item" style="cursor:default;opacity:.8"><div class="lender-dot" style="background:#0F6E8C"></div>Resimac Asset Finance · 1 doc</div>
+    <div class="nav-item" style="cursor:default;opacity:.8"><div class="lender-dot" style="background:#C01414"></div>Westpac · 5 docs</div>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="mini-stat"><span class="mini-label">API calls</span><span class="mini-val" id="s-api">0</span></div>
+    <div class="mini-stat"><span class="mini-label">Cache hits</span><span class="mini-val" id="s-hit">0</span></div>
+    <div class="mini-stat"><span class="mini-label">Total cost</span><span class="mini-val" id="s-cost">$0.0000</span></div>
+    <div class="savings-label" id="s-saved">↑ $0.0000 saved by cache</div>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+<!-- ══ Q&A PANEL ══ -->
+<div class="panel active" id="panel-qa">
+  <div class="topbar">
+    <div><div class="topbar-title">Ask a policy question</div><div class="topbar-sub">Cache-first · 6 lenders · 26 documents loaded</div></div>
+    <div class="topbar-right">
+      <button class="btn btn-sm" onclick="clearChat()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Clear</button>
+    </div>
+  </div>
+  <div class="infobar">
+    <div class="info-dot" id="info-dot"></div>
+    <span id="info-txt">Ready · <strong id="cache-sz">0</strong> answers cached across all 6 lenders</span>
+    <div class="cache-chip" id="savings-chip" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:10px;height:10px"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span id="chip-txt">$0 saved</span></div>
+  </div>
+  <!-- Lender filter -->
+  <div class="lender-bar">
+    <span style="font-size:10px;color:var(--ink3);font-weight:600;white-space:nowrap">Filter:</span>
+    <button class="lender-btn active" data-l="ALL" onclick="setLenderFilter(this)">All lenders</button>
+    <button class="lender-btn" data-l="Angle" onclick="setLenderFilter(this)"><span class="dot" style="background:#C0007A"></span>Angle</button>
+    <button class="lender-btn" data-l="BFS" onclick="setLenderFilter(this)"><span class="dot" style="background:#185FA5"></span>BFS</button>
+    <button class="lender-btn" data-l="Capital Finance" onclick="setLenderFilter(this)"><span class="dot" style="background:#5B1F8A"></span>Capital Finance</button>
+    <button class="lender-btn" data-l="flexicommercial" onclick="setLenderFilter(this)"><span class="dot" style="background:#D4500A"></span>flexicommercial</button>
+    <button class="lender-btn" data-l="Metro Finance" onclick="setLenderFilter(this)"><span class="dot" style="background:#1665C1"></span>Metro Finance</button>
+    <button class="lender-btn" data-l="Resimac" onclick="setLenderFilter(this)"><span class="dot" style="background:#0F6E8C"></span>Resimac</button>
+    <button class="lender-btn" data-l="Westpac" onclick="setLenderFilter(this)"><span class="dot" style="background:#C01414"></span>Westpac</button>
+  </div>
+  <div class="chat-body" id="chat-body">
+    <div class="msg ai"><div class="avatar">C</div><div class="msg-wrap">
+      <div class="bubble"><strong>CMAP 2026 Policy Q&A is ready.</strong><br><br>All 6 lenders are loaded: <strong>Angle Finance</strong>, <strong>BFS</strong>, <strong>Capital Finance</strong>, <strong>flexicommercial</strong>, <strong>Metro Finance</strong>, and <strong>Westpac</strong> — covering 26 policy documents. I check the answer library before calling the API, so repeat questions are instant and free. Try a suggestion below or type your own.</div>
+      <div class="meta-row"><span>System ready</span></div>
+    </div></div>
+  </div>
+  <div class="sug-wrap" id="sug-wrap">
+    <button class="sug" onclick="ask(this.textContent)">Angle Finance — Low Doc limits?</button>
+    <button class="sug" onclick="ask(this.textContent)">BFS Tier 2 minimum CCR score?</button>
+    <button class="sug" onclick="ask(this.textContent)">Capital Finance docs needed for $500k+?</button>
+    <button class="sug" onclick="ask(this.textContent)">flexicommercial standard rate — primary $100k?</button>
+    <button class="sug" onclick="ask(this.textContent)">Metro Finance passenger vehicle max loan?</button>
+    <button class="sug" onclick="ask(this.textContent)">Resimac rates for electric vehicles?</button>
+    <button class="sug" onclick="ask(this.textContent)">Westpac DriveXpress max loan — new client?</button>
+    <button class="sug" onclick="ask(this.textContent)">Angle Finance Prime Mover qualifying criteria?</button>
+  </div>
+  <div class="cost-strip">
+    <span>Session:</span>
+    <span class="cpill cpill-spent" id="strip-spent">$0.0000 spent</span>
+    <span class="cpill cpill-saved" id="strip-saved">$0.0000 saved</span>
+    <span style="margin-left:auto">Hit rate: <strong style="color:var(--ink2)" id="strip-rate">—</strong></span>
+  </div>
+  <div class="input-row">
+    <textarea id="qa-in" placeholder="Ask about any lender policy — rates, limits, documentation, exclusions…" onkeydown="handleKey(event)" oninput="resize(this)"></textarea>
+    <button class="send-btn" id="send-btn" onclick="sendQ()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+  </div>
+</div>
+
+<!-- ══ LIBRARY PANEL ══ -->
+<div class="panel" id="panel-library">
+  <div class="lib-topbar">
+    <div class="lib-search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="lib-search" type="text" id="lib-search" placeholder="Search questions, answers, lenders, sections…" oninput="renderLib()">
+    </div>
+    <button class="fpill active" data-s="all" onclick="setLibFilter(this)">All</button>
+    <button class="fpill" data-s="cached" onclick="setLibFilter(this)">Cached</button>
+    <button class="fpill" data-s="pending" onclick="setLibFilter(this)">Pending</button>
+  </div>
+  <div class="lib-body" id="lib-body"></div>
+</div>
+
+<!-- ══ REVIEW PANEL ══ -->
+<div class="panel" id="panel-review">
+  <div class="topbar"><div><div class="topbar-title">Review queue</div><div class="topbar-sub">Approve, edit or reject AI-generated answers before they become canonical</div></div></div>
+  <div style="flex:1;overflow-y:auto;padding-bottom:10px" id="rev-body"></div>
+</div>
+
+<!-- ══ COST PANEL ══ -->
+<div class="panel" id="panel-costs">
+  <div class="topbar"><div><div class="topbar-title">Cost & speed dashboard</div><div class="topbar-sub">Real-time tracking of API spend vs cache savings</div></div></div>
+  <div class="cost-body">
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-lbl">Total queries</div><div class="kpi-val" id="k-total">0</div><div class="kpi-sub">this session</div></div>
+      <div class="kpi"><div class="kpi-lbl">API calls</div><div class="kpi-val" id="k-api">0</div><div class="kpi-sub" id="k-api-sub">—% of queries</div></div>
+      <div class="kpi"><div class="kpi-lbl">API cost (est.)</div><div class="kpi-val" id="k-cost">$0.0000</div><div class="kpi-sub">claude-sonnet-4-6</div></div>
+      <div class="kpi hl"><div class="kpi-lbl">Saved by cache</div><div class="kpi-val" id="k-saved">$0.0000</div><div class="kpi-sub" id="k-saved-sub">0 instant answers</div></div>
+    </div>
+    <div class="sec-hd">Cache vs API breakdown</div>
+    <div class="bar-chart">
+      <div class="bar-r"><div class="bar-lbl">Cache hits</div><div class="bar-track"><div class="bar-fill g" id="bh" style="width:0%"></div></div><div class="bar-v" id="bvh">0</div></div>
+      <div class="bar-r"><div class="bar-lbl">API calls</div><div class="bar-track"><div class="bar-fill a" id="ba" style="width:0%"></div></div><div class="bar-v" id="bva">0</div></div>
+      <div style="font-size:10px;color:var(--ink3);margin-top:7px">Cache hits: &lt;10ms · $0.00. API calls: ~1.3s · ~$0.008 each.</div>
+    </div>
+    <div class="sec-hd">Query log</div>
+    <table class="log-table"><thead><tr><th>Question</th><th>Lender</th><th>Source</th><th>Time</th><th>Cost</th></tr></thead><tbody id="log-body"><tr><td colspan="5" style="text-align:center;color:var(--ink3);padding:18px">No queries yet</td></tr></tbody></table>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /shell -->
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><polyline points="20 6 9 17 4 12"/></svg><span id="toast-msg"></span></div>
+
+<script>
+// ── Pricing ──────────────────────────────────────────────────────
+const IN_PER_1K  = 0.003;
+const OUT_PER_1K = 0.015;
+const AVG_IN     = 420;
+const AVG_OUT    = 175;
+const API_COST   = (AVG_IN * IN_PER_1K + AVG_OUT * OUT_PER_1K) / 1000;
+
+// ── Real FastAPI backend ──────────────────────────────────────────
+const API_BASE = 'https://frying-june-evict.ngrok-free.dev';
+
+// Map API lender codes → HTML display names
+const LENDER_MAP = {
+  'ANGLE':   'Angle Finance',
+  'BFS':     'BFS',
+  'CFAL':    'Capital Finance',
+  'FLEXI':   'flexicommercial',
+  'METRO':   'Metro Finance',
+  'RESIMAC': 'Resimac',
+  'WESTPAC': 'Westpac',
+};
+
+// ── Lender brand config ──────────────────────────────────────────
+const LB = {
+  'Angle Finance':    { bg:'#FCE4F3', c:'#8B0057', abbr:'ANG' },
+  'BFS':              { bg:'#E6F1FB', c:'#0C447C', abbr:'BFS' },
+  'Capital Finance':  { bg:'#F0E8FA', c:'#3B1466', abbr:'CAP' },
+  'flexicommercial':  { bg:'#FEF0E6', c:'#8B2E00', abbr:'FLX' },
+  'Metro Finance':    { bg:'#E6F0FB', c:'#0C3E7A', abbr:'MET' },
+  'Resimac':          { bg:'#E0F2F7', c:'#0A4F6E', abbr:'RES' },
+  'Westpac':          { bg:'#FEE2E2', c:'#7F0C0C', abbr:'WBC' },
+};
+function ldot(lender, sz=26) {
+  const l = LB[lender]||{bg:'#F1F5F9',c:'#475569',abbr:'?'};
+  return `<div class="lib-ldot" style="background:${l.bg};color:${l.c};width:${sz}px;height:${sz}px;border-radius:${Math.round(sz*.27)}px;font-size:${Math.max(8,sz*.34)}px">${l.abbr}</div>`;
+}
+function srcChip(lender, section) {
+  const l = LB[lender]||{bg:'#F1F5F9',c:'#475569'};
+  return `<span class="src-chip" style="background:${l.bg};color:${l.c}">${lender}</span><span class="src-chip" style="background:var(--bg);color:var(--ink3)">${section}</span>`;
+}
+
+// ── Full knowledge base — all 6 lenders ─────────────────────────
+let KB = [
+  // ── ANGLE FINANCE ──
+  { id:1,  q:"Angle Finance Low Doc limits and exposure?",
+    a:"Angle Finance offers three Low Doc bands: under $100k (ABN 2+ yrs, Veda 550+, property or non-property backed, Primary & Secondary & Tertiary up to limits, no credit reference required), $100k–$250k (ABN 2+ yrs, GST 1+ yrs, Veda 550+ Corporate / 600+ Individual, property backed, Primary & Secondary up to $250k, Motor Vehicles up to $200k, asset finance credit reference or mortgage statements required), and up to $400k (ABN 3+ yrs, GST 3+ yrs, Veda 600+, property backed including spousal, Primary & Secondary only, no tertiary assets, prime movers or buses, asset finance credit reference from an Angle-accepted lender required, ATO portals for $250k+).",
+    lender:"Angle Finance", section:"Rate Card, p.3 — Low Doc & Mid Doc guidelines", status:"cached", ts:Date.now()-86400000*5, hits:8 },
+
+  { id:2,  q:"Angle Finance A+ and A++ profile rates?",
+    a:"Angle's A++ profile requires 8+ year ABN, 4+ year GST, primary assets only, new assets (YOM 2023), and strong credit score. Rates: property backed 7.79%, non-property backed 8.79%. The A+ profile requires 4+ year ABN, 2+ year GST, primary & secondary assets, end of term up to 10 years, strong credit score. Rates: property backed 8.29%, non-property backed 9.29%. A+ deals receive priority assessment with an average 2-hour turnaround, and no rate loading applies for private sales, business continuity, commission up to 8%, or property in spouse's name.",
+    lender:"Angle Finance", section:"Rate Card, p.2 — A++ and A+ Profiles", status:"cached", ts:Date.now()-86400000*4, hits:5 },
+
+  { id:3,  q:"Angle Finance Prime Mover qualifying criteria?",
+    a:"Prime Movers at Angle Finance require: Company or Trust entity only (no sole traders or individual partnerships), minimum 5 years ABN & GST (business continuity — speak to BDM), strong credit score of 600+, maximum asset age up to EOT 20 years, property backed (standard rules apply, spousal property accepted), bank statements or full financial assessment, comparable asset finance credit reference, and a 1% rate loading applies to standard primary asset rates. Rates start from 8.99% (as of the Prime Mover flyer). Documentation must be Mid Doc or Full Doc — Low Doc is not available. Fleet credit limits can be applied for to draw down additional trucks as required.",
+    lender:"Angle Finance", section:"Prime Movers flyer + Rate Card, p.4", status:"cached", ts:Date.now()-86400000*3, hits:4 },
+
+  { id:4,  q:"Angle Finance Start-Up product criteria?",
+    a:"Angle's Start-Up product is for businesses with an active ABN under 2 years. Criteria: business operating minimum 3 months and actively trading, loan maximum $150,000 including brokerage, minimum credit score (Veda 1:1) 550+, 20% deposit on all applications, previous industry experience required, and bank statements must demonstrate serviceability. Bank statements minimum 6 months are required, unless the ABN has been trading for less than 6 months. On the rate card, Start-Up (<2y ABN) rates are 11.35% for property backed and 17.35% for non-property backed.",
+    lender:"Angle Finance", section:"Start-Up Flyer + Rate Card, p.2", status:"cached", ts:Date.now()-86400000*2, hits:3 },
+
+  { id:5,  q:"Angle Finance standard rate card rates by asset and EOT?",
+    a:"For 2+ year ABN and 1+ year GST registration. Primary assets: 8.39% (10yr EOT), 9.65% (15yr EOT), 10.65% (20yr EOT), 12.65% (25yr EOT) — property owner. Non-property: 10.95% (10yr), 11.45% (15yr), 17.15% (20yr). Secondary assets: property 11.35% (10yr), NEW 13.35% (15yr); non-property 12.15% (10yr). Tertiary assets: property 11.85% (10yr); non-property 17.85% (10yr). A 1% rate loading applies for terms over 60 months (customer must be property backed to qualify).",
+    lender:"Angle Finance", section:"Rate Card, p.2 — Standard Rate Card", status:"cached", ts:Date.now()-86400000*2, hits:6 },
+
+  // ── BFS ──
+  { id:6,  q:"BFS Tier 2 minimum CCR score?",
+    a:"The minimum Experian CCR score for BFS Prime Tier 2 is 600, applying to the primary borrower or guarantor. Tier 3 requires 550+ with a 20% deposit, Tier 4 requires 400+ with a 20% deposit. Ultra Prime requires 960+, Tier 1 requires 800+, and BFS Plus requires 400 (or 550 for commercial contracts for Used vehicles). All scores effective 1 July 2026.",
+    lender:"BFS", section:"Product Guide, p.1 — Pricing Table", status:"cached", ts:Date.now()-86400000*5, hits:9 },
+
+  { id:7,  q:"BFS commercial base rates for new and demo vehicles?",
+    a:"BFS commercial base rates for New and Demo vehicles (effective 1 July 2026): Ultra Prime 7.60%, Tier 1 8.25%, Tier 2 8.50%, Tier 3 10.15%, Tier 4 11.50%. The maximum rate across all tiers is 17.15%. Adjustments: maximum margin above base 6%, non-asset backed subject to a loading of 1.85% (Tier 1–4 only, not Ultra Prime), private sale subject to an additional loading of 0.50%.",
+    lender:"BFS", section:"Product Guide, p.1 — Commercial Pricing", status:"cached", ts:Date.now()-86400000*4, hits:7 },
+
+  { id:8,  q:"BFS maximum loan size and loan terms?",
+    a:"BFS Prime standard loans: $5,000–$250,000. Private sales: $5,000–$150,000. High value loans ($250,000–$400,000) available for Ultra Prime to Tier 2 on case-by-case basis, requiring minimum 20% deposit and asset-backed applicants only. BFS Plus: $5,000–$100,000. Loan terms: 12–84 months for Prime (may be reduced for courier, ride-share or rental vehicles). BFS Plus: 12–60 months.",
+    lender:"BFS", section:"Product Guide, p.2 — Loan Size & Loan Term", status:"cached", ts:Date.now()-86400000*3, hits:5 },
+
+  { id:9,  q:"BFS loan exclusions?",
+    a:"BFS explicitly excludes: debt consolidation, cash raising, top-up loans, sale and buyback, sale and leaseback, and mid-term refinancing. Licences with interlock conditions are also not accepted. Auto decline applies where all individuals and guarantors have a CCR score below 400 (consumer + commercial new/demo) or 550 (commercial used), any individual is currently bankrupt, or consumer applications where net monthly income is less than $2,318 per month.",
+    lender:"BFS", section:"Product Guide, p.3 — Loan Exclusions & Auto Decline", status:"cached", ts:Date.now()-86400000*3, hits:4 },
+
+  { id:10, q:"BFS consumer pricing maximum rates?",
+    a:"BFS consumer maximum rates (effective 1 July 2026): New and Demo — Ultra Prime 9.15%, Tier 1 9.29%, Tier 2 10.15%, Tier 3 11.50%, Tier 4 12.50%. Used 2022–2026 — Ultra Prime 9.15%, T1 9.75%, T2 10.55%, T3 12.00%, T4 13.20%. Used 2017–2021 — T1 10.35%, T2 11.35%, T3 12.25%, T4 13.70%. Used 2016 and older — Ultra Prime 10.15%, T1 11.35%, T2 11.65%, T3 13.00%, T4 13.90%. Maximum rate cap: 17.15%. A discount of up to 2% may be applied to the maximum rate.",
+    lender:"BFS", section:"Product Guide, p.1 — Consumer Pricing", status:"cached", ts:Date.now()-86400000*2, hits:6 },
+
+  // ── CAPITAL FINANCE ──
+  { id:11, q:"Capital Finance docs needed under $250k?",
+    a:"For Capital Finance (CFAL) transactions under $250,000, the minimum documentation required is: client information (name, address, DOB etc.), brief background of business/directors, ABN for 2 years and GST registered, full description of goods, reason for purchase, signed privacy form from ALL individuals, last 2 years financial statements not more than 18 months old (P&L and balance sheet), last 2 years tax returns for individuals and beneficiaries, current asset and liability statement from all directors/individual guarantors, and commitment schedule.",
+    lender:"Capital Finance", section:"Credit Checklist — Min. Documentation Requirements", status:"cached", ts:Date.now()-86400000*4, hits:5 },
+
+  { id:12, q:"Capital Finance docs needed for $500k to $1 million?",
+    a:"For CFAL transactions between $500,000 and $1 million, all requirements for $250k–$500k apply, plus: detailed background of business/directors, last 3 years financial statements (not more than 18 months old), interim or management accounts if financial statements year-end is more than 6 months old, details of succession planning, list of major competitors and major clients, current tax portal (Integrated Client Account, TFNs redacted), commentary on major movements in financial statements (≥10%), and current aged debtor and creditor listing.",
+    lender:"Capital Finance", section:"Credit Checklist — $500k–$1m column", status:"cached", ts:Date.now()-86400000*3, hits:3 },
+
+  { id:13, q:"Capital Finance docs required for transactions over $1 million?",
+    a:"For CFAL transactions over $1 million, all requirements from the $500k–$1m band apply, plus cash flow projections with assumptions. The checklist notes that level of existing exposure may trigger additional requirements beyond the minimums listed.",
+    lender:"Capital Finance", section:"Credit Checklist — Over $1m column", status:"cached", ts:Date.now()-86400000*2, hits:2 },
+
+  // ── FLEXICOMMERCIAL ──
+  { id:14, q:"flexicommercial standard rates for primary assets?",
+    a:"flexicommercial standard base rates for primary assets (effective 15 May 2026, ex brokerage): $10k–$20k: 12.85%, $20k–$50k: 10.35%, $50k–$150k: 8.60%, $150k+: 8.10%. Rate add-ons: +1.0% for prime movers, assets 11–15 years old at EOT, terms under 24 months, or private sales/refinances. +1.25% for non-asset backed or terms over 60 months. +2.0% for assets over 15 years at EOT. Establishment fee $495 (private sales/refinances $745). Minimum deal $10,000.",
+    lender:"flexicommercial", section:"Rate Card May 2026 — Standard Rates", status:"cached", ts:Date.now()-86400000*4, hits:7 },
+
+  { id:15, q:"flexicommercial flexiPremium rates?",
+    a:"flexicommercial flexiPremium rates (effective 15 May 2026): Primary assets — $50k–$100k: 7.30%, $100k–$500k: 7.30%. Secondary assets — $50k–$100k: 8.69%, $100k–$500k: 8.19%. Amounts above $500k: contact BDM. Eligible assets: Primary up to 5 years old, Secondary up to 2 years old. Time in business: asset backed 4+ years ABN & GST, non-asset backed 8+ years. Entity types: Companies, Trusts, Partnerships — Sole Traders are excluded. Maximum brokerage 3%.",
+    lender:"flexicommercial", section:"Rate Card May 2026 — flexiPremium", status:"cached", ts:Date.now()-86400000*3, hits:6 },
+
+  { id:16, q:"flexicommercial credit matrix — primary asset max exposure?",
+    a:"flexicommercial primary assets: max aggregate exposure up to $750,000, with individual transactions up to $500,000. Requirements escalate with loan size: ABN >2 years required from $10k. GST registered >2 years required from $20k. Asset backed with sufficient equity or 20% deposit required from $50k. Repayment history of 9 months required for $300k–$500k band. Repayment history of 18 months required for $500k–$750k band. Asset backing is mandatory for all transport operator/subcontractor transactions.",
+    lender:"flexicommercial", section:"Credit Matrix Dec 2025 — Primary Assets", status:"cached", ts:Date.now()-86400000*3, hits:5 },
+
+  { id:17, q:"flexicommercial replacement policy conditions?",
+    a:"flexicommercial flexireplacement conditions: maximum transaction size/aggregated exposure $500k, proposed repayment not to exceed 125% of that being replaced, primary assets only (age limits as per matrix), asset must be core business equipment (not necessarily like-for-like). Facility being replaced must be with an approved lender, either current or paid in full within last 3 months after being established for 18+ months. New facility: clear Equifax history on all borrowers/guarantors, borrowing and guarantee parties must be identical, settlement within 90 days of expiry of old facility. Can also be used for balloon refinances up to $500k (inspection/valuation required if over $300k).",
+    lender:"flexicommercial", section:"flexiReplacement Policy — Conditions", status:"cached", ts:Date.now()-86400000*2, hits:4 },
+
+  { id:18, q:"flexicommercial mid-term refinancing framework?",
+    a:"flexicommercial mid-term refinancing requires: at least 12 months into the current contract term, terms of up to 5 years considered, satisfactory repayment history with no material arrears (small number of non-systemic dishonours may be acceptable), deal refinanced at net book value (no early termination costs), standard interest rates apply, subject to normal flexicommercial credit policy. Brokerage limited to 1.0% — speak to BDM if complexity warrants more.",
+    lender:"flexicommercial", section:"Mid-term Refinancing Fact Sheet", status:"cached", ts:Date.now()-86400000*2, hits:3 },
+
+  // ── METRO FINANCE ──
+  { id:19, q:"Metro Finance passenger vehicle max loan and exposure?",
+    a:"Metro Finance passenger vehicle streamlined product (vehicles <3.5T GVM): property backed (in borrower or guarantor's name): max loan $150,000 (dealer and private sale), max Metro exposure $250,000 for new customers, $500,000 for customers with 12 months good repayment history, $750,000 for customers with 24 months history. Spouse's name: max loan $150,000, max exposure $150,000. Non-property backed (motor vehicles only, dealer sale only, 30% deposit required): max loan $100,000, max exposure $100,000. Asset age at EOT: no older than 12 years. GST registration: 2 years continuously. Comparable credit reference required (within last 12 months).",
+    lender:"Metro Finance", section:"Passenger Vehicle Streamlined Product", status:"cached", ts:Date.now()-86400000*4, hits:6 },
+
+  { id:20, q:"Metro Finance commercial asset finance rates April 2026?",
+    a:"Metro Finance Commercial Asset Finance rates (effective 01/04/2026, 24–60 months): Passenger & Commercial Vehicles (<12T GVM, up to 5 years) — over $20k: 8.35%, $10k–$20k: 9.15%. Heavy Commercial Vehicles (>12T GVM & trailers, up to 5 years) — over $20k: 8.60%, $10k–$20k: 10.30%. Wheeled Plant & Equipment (up to 5 years) — over $20k: 8.65%, $10k–$20k: 10.40%. Key loadings: assets older than 5 years at start of term add 0.75%, assets older than 10 years at EOT add 1.50%, private sale add 0.25%, sale/hire back add 0.75%. Brokerage: rates applicable up to 4%; above 4.0% add 0.5% for every 1% brokerage. An 8.35% prime rate applies for vehicle <5 years streamline product via dealer sale.",
+    lender:"Metro Finance", section:"Commercial Rate Sheet 01/04/2026", status:"cached", ts:Date.now()-86400000*3, hits:5 },
+
+  { id:21, q:"Metro Finance trucks and heavy equipment max loan?",
+    a:"Metro Finance Trucks, Trailers & Wheeled Equipment streamlined product (medium & heavy commercial >3.5T GVM, excluding prime movers): property backed — max loan $250,000 for new customers, $300,000 for customers with 12 months good history with Metro; max Metro exposure $250,000 new / $500,000 (12 months history) / $750,000 (24 months history). Spouse's name: max loan $150,000, exposure $150,000. Non-property backed motor vehicles: max loan $100,000, exposure $100,000 (dealer only, 30% deposit). Asset age at EOT: no older than 15 years, no balloons or residuals for lends out to 15 years at EOT. GST: 2 years continuously.",
+    lender:"Metro Finance", section:"Trucks, Trailers & Wheeled Equipment Streamlined Product", status:"cached", ts:Date.now()-86400000*3, hits:4 },
+
+  { id:22, q:"Metro Finance Agri streamlined product eligibility?",
+    a:"Metro Finance Agri Streamlined: must be a genuine primary producer, minimum farm size 40 hectares, no sale/hire back, satisfactory Equifax, monthly payments only. Primary equipment (in borrower/guarantor's name): max $250k dealer/private sale ($300k for customers with 12 months good Metro history), GST registered 5+ years, comparable credit reference within last 12 months on similar asset, max age 15 years at EOT, max term 60 months. Eligible: tractors, harvesters, wheeled handling equipment, self-propelled mower conditioners, self-propelled sprayers. Implements/Tertiary: max $150k, max exposure $150k. Non-eligible: sheds, silos, dairy/irrigation equipment, bikes/ATVs, forestry.",
+    lender:"Metro Finance", section:"Agri Streamlined Product", status:"cached", ts:Date.now()-86400000*2, hits:3 },
+
+  { id:23, q:"MetroEco electric vehicle finance product?",
+    a:"MetroEco Electric Vehicles & Chargers: can bundle assets on one application at the vehicle carded rate, MetroEco rate discount applies, approvals valid 90 days. Commercial: loan up to $91,387, 60 months max, EOT 5 years, dealer only, new or demo. Consumer: loan up to $91,387, 84 months max, EOT 7 years, dealer only. Novated: loan up to $91,387, 60 months max, EOT 5 years. Electric Trucks: 1% MetroEco discount, brand new assets/dealer only, up to $250k new customers / $300k for 12 months history, ABN & GST 2 years, comparable credit reference, battery electric trucks 3.5T GVM and above, property owners only, max transaction $600k with full financials. A 1% discount also applies to eligible wheeled equipment and batteries/chargers/solar.",
+    lender:"Metro Finance", section:"MetroEco Booklet — EV & Electric Trucks", status:"cached", ts:Date.now()-86400000*2, hits:4 },
+
+  // ── RESIMAC ──
+  { id:24, q:"Resimac rates for electric vehicles?",
+    a:"Resimac charges 7.54% p.a. for PremiumPLUS clients and 7.79% p.a. for Premium, Standard, and Basic clients on electric vehicles. The 25bps PremiumPLUS discount is already embedded in those figures. A 2% risk loading applies for private sales, classic cars, assets aged 16+ years at EOT, and prime movers — multiple loadings can stack to a maximum of 4% per deal.",
+    lender:"Resimac", section:"Commercial Product Guide, p.4 — Interest Rates", status:"cached", ts:Date.now()-86400000*5, hits:8 },
+
+  { id:25, q:"Resimac customer tiers and ABN requirements?",
+    a:"Resimac has four commercial tiers: PremiumPLUS (ABN >6 years, GST >3 years, property-backed only), Premium (ABN >4 years, GST >2 years, property-backed, business continuity accepted), Standard (ABN >2 years, GST >1 year, property-backed, spouse-owned, or renter), Basic (ABN >1 year, GST >1 year, property-backed, spouse-owned, renter, or LWP/other excluding boarders). Non property-backed deposits: 10% for motor vehicles, 20% for all other assets.",
+    lender:"Resimac", section:"Commercial Product Guide, p.2 — Customer Tiers", status:"cached", ts:Date.now()-86400000*4, hits:6 },
+
+  { id:26, q:"Resimac maximum loan amounts by tier and doc type?",
+    a:"Resimac maximum loan amounts (NAF, ex fees and brokerage) across PremiumPLUS/Premium: Low $300k, Lite $400k, Full $450k. Standard: Low $200k, Lite $300k, Full $400k. Basic: Low $100k, Lite $150k, Full $200k. Tertiary assets not available on Low Doc. Max NAF per individual motor vehicle: $250k. Exposure limits: SME $500k, large corporate $750k, private school/club $500k, S&P 'A' rated $2m, government $2m.",
+    lender:"Resimac", section:"Commercial Product Guide, p.3 — Maximum Loan Amounts", status:"cached", ts:Date.now()-86400000*3, hits:5 },
+
+  { id:27, q:"Resimac asset categories and what is excluded?",
+    a:"Resimac classifies assets as: Motor vehicles (passenger, light trucks, LCVs, classic cars, motorbikes — max $75k NAF per motorbike, $250k per passenger vehicle). Primary (heavy trucks >4.5T, trailers, buses, excavators, construction/earthmoving, farming, materials handling, prime movers, caravans). Secondary (generators, medical equipment, CNC, woodworking, landscaping — motorised only, attachments). Tertiary (audio visual, conveyors, wine/beer processing, skip bins, medical lasers, testing equipment, detachable GPS). Excluded: fixtures/fittings, cool rooms, refrigeration, gym equipment, hospitality equipment, software, IT hardware, food trucks, artwork, livestock, ride share/taxi/repairable writeoffs, demountables, shipping containers, racking, office furniture, EVs/vehicles for hire or rental.",
+    lender:"Resimac", section:"Commercial Product Guide, p.7 — Asset Categories", status:"cached", ts:Date.now()-86400000*3, hits:4 },
+
+  // ── WESTPAC ──
+  { id:28, q:"Westpac DriveXpress max loan for a new client?",
+    a:"For a new Westpac Business Bank client who owns residential property with minimum annual income of $75k, the maximum DriveXpress loan is $150,000 across eligible goods A, B & C, with maximum DriveXpress exposure of $250,000. For existing clients with 12 months current WEF history: up to $200k (Cat A), $300k (Cat B), $500k (Cat C) — with maximum total exposure $750k.",
+    lender:"Westpac", section:"Key Financial Policies Q1FY26 — DriveXpress", status:"cached", ts:Date.now()-86400000*5, hits:9 },
+
+  { id:29, q:"Westpac Equipment Finance Xpress rates June 2026?",
+    a:"Westpac DriveXpress rates (effective 15 June 2026, licensed dealers, up to 5 years old, cars & light commercial <4.5T GVM): 7.75% for 24/36/48 month terms, 7.85% for 60 months. Private sales (up to 5 years old): 8.17% for 24/36/48 months, 8.37% for 60 months. Heavy equipment (licensed dealers): 8.17% for 24/36/48 months, 8.37% for 60 months. Farm equipment (up to 7 years, dealers): 8.17% for 24/36/48 months, 8.37% for 60 months. For electric vehicles, reduce any rate by 1%. Brokerage limited to maximum 3%. Rates valid for 7 days subject to settlement.",
+    lender:"Westpac", section:"Rate Chart Xpress Only — 15 June 2026", status:"cached", ts:Date.now()-86400000*4, hits:7 },
+
+  { id:30, q:"Westpac standard equipment finance rates June 2026?",
+    a:"Westpac standard Equipment Finance rates (15 June 2026, hire purchase/commercial loan/finance lease, monthly repayments, excludes Xpress deals): New motor vehicles up to 4 years old — $15k–$20k: 9.97%/9.97%/10.17% (24-36/48/60 months); $20k–$50k: 8.42%/8.52%/8.67%; $50k–$150k: 8.32%/8.42%/8.62%; $150k+: by negotiation. New plant & equipment — $15k–$20k: 10.22%/10.36%/10.56%; $20k–$50k: 8.72%/8.86%/9.06%; $50k–$150k: 8.52%/8.62%/8.82%; $150k+: by negotiation. Used motor vehicles 4–10 years old: add 0.75%. EV discount: reduce rate by 1%. Brokerage up to 3%; base rate for up to 4% by negotiation.",
+    lender:"Westpac", section:"Rate Chart Standard — 15 June 2026", status:"cached", ts:Date.now()-86400000*3, hits:6 },
+
+  { id:31, q:"Westpac Rollover and Replacement policy conditions?",
+    a:"Westpac Rollover (existing clients only, 12 months current WEF history or finalised WEF within last 12 months): Westpac-originated up to $500k (all goods), other financier up to $250k (Cat A & B, inspection required). Criteria: ABN >2 years, GST registered, statutory lodgements current, satisfactory credit bureau and ASIC, contract operating >12 months, same borrower/guarantor and security position, St George Group EF RVs accepted. Replacement: New clients up to $150k (A & B), existing clients up to $200k (A) or $650k (B & C). New loan repayment max 125% of replaced (new clients) or 150% (existing). Contract being replaced must have run minimum 12 months, finalised within last 6 months, borrower/guarantors same or additional.",
+    lender:"Westpac", section:"Key Financial Policies Q1FY26 — Rollover & Replacement", status:"cached", ts:Date.now()-86400000*2, hits:5 },
+
+  { id:32, q:"Westpac updated settlement requirements 2025?",
+    a:"From 24 February 2025, two Westpac Equipment Finance settlement requirements were simplified. Change 1 — PPSR on buybacks and private sales: where the financed asset is a motor vehicle with a VIN and the sale is a buyback or private sale, a PPSR company search over a private seller or customer is no longer required. Asset must have a VIN; a search the day before or day of sale must not disclose another registration over that VIN. Change 2 — Certificate of Currency for fleet policies: for assets above $150k, where the CoC confirms a 'fleet policy', asset detail (VIN/Serial) no longer needs to be included on the CoC. This applies to motor vehicles only.",
+    lender:"Westpac", section:"Updated EF Settlement Requirements — Feb 2025", status:"cached", ts:Date.now()-86400000*2, hits:3 },
+];
+
+let nextId = 33;
+
+// ── Session ──────────────────────────────────────────────────────
+let session  = { api:0, hits:0, cost:0, saved:0, log:[] };
+let busy     = false;
+let lFilter  = 'ALL';
+let libFilter = 'all';
+let qaLender = 'ALL';
+let conversationHistory = []; // recent {question, answer} turns, sent with each /query so follow-ups like "make it concise" have context
+
+// ── Similarity ───────────────────────────────────────────────────
+function sim(a, b) {
+  const wa = new Set(a.toLowerCase().split(/\W+/).filter(w=>w.length>2));
+  const wb = new Set(b.toLowerCase().split(/\W+/).filter(w=>w.length>2));
+  if(!wa.size||!wb.size) return 0;
+  let n=0; wa.forEach(w=>{if(wb.has(w))n++});
+  return n/Math.max(wa.size,wb.size);
+}
+
+function findCached(q, lenderFilter) {
+  let best=null, bestScore=0;
+  for(const e of KB) {
+    if(e.status!=='cached') continue;
+    if(lenderFilter!=='ALL' && e.lender!==lenderFilter) continue;
+    const s = sim(q, e.q);
+    if(s>bestScore){bestScore=s;best=e;}
+  }
+  return bestScore>0.35 ? best : null;
+}
+
+// ── Fallback answers for new questions ───────────────────────────
+function genAnswer(q, lf) {
+  const ql = q.toLowerCase();
+  // Try to route by lender filter first
+  if(lf==='Angle Finance' || ql.includes('angle')) {
+    return {a:"Based on Angle Finance's Rate Card (April 2026 v02.04.26): Angle offers A++, A+, standard rate card, Low Doc (<$100k, $100k–$250k, $400k), Mid Doc (<$500k), Start-Up, and Prime Mover products. Rates range from 7.79% (A++, property backed) to 17.85% (tertiary, non-property). For specific scenarios, please narrow your question to a product type or loan size.", lender:"Angle Finance", section:"Rate Card Apr 2026"};
+  }
+  if(lf==='BFS' || ql.includes('bfs') || ql.includes('branded')) {
+    return {a:"Based on BFS Product Guide (effective 1 July 2026): BFS Prime spans Ultra Prime (CCR 960+) through Tier 4 (CCR 400+), plus BFS Plus. Consumer and commercial pricing grids are separate. Please specify tier, vehicle type (new/used/year band), and consumer vs commercial for a precise answer.", lender:"BFS", section:"Product Guide, p.1–3"};
+  }
+  if(lf==='Capital Finance' || ql.includes('capital finance') || ql.includes('cfal')) {
+    return {a:"Based on Capital Finance Australia Limited's documentation checklist: requirements scale from Matrix/≤$250k level up to $1m+ with increasing financial detail required. For specific transaction sizes or Matrix policy queries, please refine your question.", lender:"Capital Finance", section:"Credit Checklist"};
+  }
+  if(lf==='flexicommercial' || ql.includes('flexi')) {
+    return {a:"Based on flexicommercial's Rate Card (15 May 2026) and Credit Matrix (8 December 2025): flexicommercial offers flexiPremium (from 7.30%) and standard rates, covering primary ($10k–$750k), secondary (up to $500k) and tertiary (up to $300k) assets for companies, trusts, partnerships, and sole traders. Please specify asset category and exposure for precise rates.", lender:"flexicommercial", section:"Rate Card May 2026 + Credit Matrix Dec 2025"};
+  }
+  if(lf==='Metro Finance' || ql.includes('metro')) {
+    return {a:"Based on Metro Finance's Commercial Rate Sheet (01/04/2026) and streamlined product guides: Metro covers passenger vehicles, heavy commercials, wheeled plant, agri, and MetroEco (electric). Rates start from 8.35% for vehicles <5 years via streamline. Please specify asset type, loan size, and customer history for precise limits.", lender:"Metro Finance", section:"Commercial Rate Sheet 01/04/2026"};
+  }
+  if(lf==='Resimac' || ql.includes('resimac')) {
+    return {a:"Based on Resimac Asset Finance Commercial Product Guide (effective 27 March 2026): four tiers (PremiumPLUS to Basic) based on ABN/GST age and property backing. Rates from 7.54% p.a. (EVs, PremiumPLUS) to 14.34% p.a. (tertiary). Please specify tier, asset category, and doc type for precise limits.", lender:"Resimac", section:"Commercial Product Guide, Mar 2026"};
+  }
+  if(lf==='Westpac' || ql.includes('westpac')) {
+    return {a:"Based on Westpac Equipment Finance documents (Q1FY26 policies + June 2026 rate charts): Westpac offers DriveXpress (fast-track), Rollover, Replacement, and Medical programs plus standard HP/Commercial Loan/Finance Lease. Please specify program type and customer profile for exact rates and limits.", lender:"Westpac", section:"Key Policies Q1FY26 + Rate Charts Jun 2026"};
+  }
+  return {a:"I couldn't find a precise match across the 6 lenders for that query. Try filtering by a specific lender using the buttons above, or rephrase with: lender name + product type + specific policy area (rates, loan limits, credit score, documentation, exclusions).", lender:null, section:null};
+}
+
+// ── Core ─────────────────────────────────────────────────────────
+function ask(q) { document.getElementById('qa-in').value=q; sendQ(); }
+
+function pushHistory(question, answer) {
+  conversationHistory.push({question, answer});
+  if (conversationHistory.length > 8) conversationHistory.shift();
+}
+
+function sendQ() {
+  if(busy) return;
+  const inp = document.getElementById('qa-in');
+  const q = inp.value.trim();
+  if(!q) return;
+  inp.value=''; resize(inp);
+  document.getElementById('sug-wrap').style.display='none';
+  busy=true;
+  document.getElementById('send-btn').disabled=true;
+
+  addUserMsg(q);
+
+  const cached = findCached(q, qaLender);
+  if(cached) {
+    const ms = 4+Math.round(Math.random()*7);
+    cached.hits++;
+    session.hits++;
+    session.saved += API_COST;
+    session.log.unshift({q, src:'cache', ms, tokens:0, cost:0, lender:cached.lender, section:cached.section});
+    setTimeout(()=>{
+      addAiMsg(cached.a, cached.lender, cached.section, true, ms, 0);
+      pushHistory(q, cached.a);
+      updateInfoBar(true);
+      updateAll();
+      busy=false; document.getElementById('send-btn').disabled=false;
+    }, ms+80);
+  } else {
+    updateInfoBar(false, true);
+    const typing = addTyping();
+
+    // Prepend lender filter to question if one is selected
+    const questionWithLender = (qaLender !== 'ALL')
+      ? qaLender + ': ' + q
+      : q;
+
+    fetch(API_BASE + '/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+      body: JSON.stringify({ question: questionWithLender, history: conversationHistory.slice(-3) })
+    })
+    .then(r => {
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(data => {
+      typing.remove();
+      const ms = Math.round((data.response_time || 1) * 1000);
+
+      // Map API lender code to display name
+      const apiLender = data.sources && data.sources.length > 0
+        ? data.sources[0].lender : null;
+      const lender = LENDER_MAP[apiLender] || apiLender;
+
+      // Use chunk_ids as the section label
+      const section = data.sources
+        ? data.sources.map(s => s.chunk_id).join(', ')
+        : '';
+
+      // Estimate cost (GPT-4o-mini rates)
+      const outTokens = Math.round(data.answer.length / 4);
+      const cost = (AVG_IN * IN_PER_1K + outTokens * OUT_PER_1K) / 1000;
+
+      session.api++;
+      session.cost += cost;
+      session.log.unshift({
+        q, src:'api', ms,
+        tokens: AVG_IN + outTokens,
+        cost,
+        lender: lender || '—',
+        section: section || '—'
+      });
+
+      addAiMsg(data.answer, lender, section, false, ms, cost);
+      pushHistory(q, data.answer);
+      if(lender) KB.unshift({
+        id: nextId++, q, a: data.answer,
+        lender, section, status: 'pending',
+        ts: Date.now(), hits: 0
+      });
+      updateInfoBar(false, false);
+      updateAll();
+      busy=false;
+      document.getElementById('send-btn').disabled=false;
+    })
+    .catch(err => {
+      typing.remove();
+      addAiMsg(
+        '⚠️ Could not connect to the backend. ' +
+        'Make sure the FastAPI server is running: ' +
+        'uvicorn src.api:app --port 8000',
+        null, null, false, 0, 0
+      );
+      busy=false;
+      document.getElementById('send-btn').disabled=false;
+      updateInfoBar(false, false);
+      console.error('API error:', err);
+    });
+  }
+}
+
+// ── Chat rendering ────────────────────────────────────────────────
+function addUserMsg(text) {
+  const b=document.getElementById('chat-body');
+  const d=document.createElement('div'); d.className='msg user';
+  d.innerHTML=`<div class="avatar">U</div><div class="msg-wrap"><div class="bubble">${esc(text)}</div></div>`;
+  b.appendChild(d); b.scrollTop=b.scrollHeight;
+}
+
+function addTyping() {
+  const b=document.getElementById('chat-body');
+  const d=document.createElement('div'); d.className='msg ai';
+  d.innerHTML=`<div class="avatar">C</div><div class="msg-wrap"><div class="bubble"><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div></div>`;
+  b.appendChild(d); b.scrollTop=b.scrollHeight; return d;
+}
+
+function addAiMsg(text, lender, section, isHit, ms, cost) {
+  const b=document.getElementById('chat-body');
+  const d=document.createElement('div'); d.className='msg ai';
+  const badge = isHit
+    ? `<div class="hit-badge">⚡ Cache hit · ${ms}ms · $0.0000</div>`
+    : `<div class="miss-badge">↗ API call · ${ms}ms</div>`;
+  const sources = lender
+    ? `<div class="source-row">${srcChip(lender, section)}</div>` : '';
+  const meta = isHit
+    ? `<span class="cost-hit">$0.0000 · saved ~$${API_COST.toFixed(4)}</span>`
+    : `<span class="cost-api">$${cost.toFixed(4)} API cost</span>`;
+  d.innerHTML=`<div class="avatar">C</div><div class="msg-wrap">${badge}<div class="bubble">${esc(text)}${sources}</div><div class="meta-row">${meta}</div></div>`;
+  b.appendChild(d); b.scrollTop=b.scrollHeight;
+}
+
+// ── Library ───────────────────────────────────────────────────────
+function setLibFilter(el) {
+  document.querySelectorAll('.fpill').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active'); libFilter=el.dataset.s; renderLib();
+}
+
+function renderLib() {
+  const q=(document.getElementById('lib-search')?.value||'').toLowerCase().trim();
+  let entries=[...KB];
+  if(libFilter!=='all') entries=entries.filter(e=>e.status===libFilter);
+  if(q) entries=entries.filter(e=>e.q.toLowerCase().includes(q)||e.a.toLowerCase().includes(q)||e.lender.toLowerCase().includes(q));
+  document.getElementById('lib-badge').textContent=KB.length;
+  const body=document.getElementById('lib-body');
+  if(!entries.length){body.innerHTML='<div class="lib-empty">No entries match</div>';return;}
+  body.innerHTML=entries.map(e=>{
+    const l=LB[e.lender]||{bg:'#F1F5F9',c:'#475569',abbr:'?'};
+    const stag=e.status==='cached'
+      ?'<span class="tag tag-cached">Cached</span>'
+      :'<span class="tag tag-pending">Pending</span>';
+    const hittag=e.hits>0?`<span class="tag tag-section">↺ ${e.hits}×</span>`:'';
+    return`<div class="lib-row"><div class="lib-ldot" style="background:${l.bg};color:${l.c}">${l.abbr}</div><div class="lib-main"><div class="lib-q">${esc(e.q)}</div><div class="lib-a">${esc(e.a)}</div><div class="lib-tags"><span class="tag" style="background:${l.bg};color:${l.c}">${e.lender}</span><span class="tag tag-section">${e.section.substring(0,40)}</span>${stag}${hittag}<span class="lib-meta">${ago(e.ts)}</span></div></div></div>`;
+  }).join('');
+}
+
+// ── Review ────────────────────────────────────────────────────────
+function renderReview() {
+  const pending=KB.filter(e=>e.status==='pending');
+  document.getElementById('rev-badge').textContent=pending.length;
+  const body=document.getElementById('rev-body');
+  if(!pending.length){body.innerHTML='<div class="rev-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Queue is clear — all answers reviewed</div>';return;}
+  body.innerHTML=pending.map(e=>{
+    const l=LB[e.lender]||{bg:'#F1F5F9',c:'#475569',abbr:'?'};
+    return`<div class="rev-card" id="rc-${e.id}">
+      <div class="rev-header">${ldot(e.lender)}<div style="flex:1"><div class="rev-q">${esc(e.q)}</div><div style="display:flex;gap:4px;margin-top:5px"><span class="tag" style="background:${l.bg};color:${l.c}">${e.lender}</span><span class="tag tag-section">${e.section}</span></div></div></div>
+      <div class="rev-body">
+        <div class="rev-lbl">AI-generated answer</div>
+        <div class="rev-answer" id="ra-${e.id}">${esc(e.a)}</div>
+        <textarea class="rev-edit-ta" id="re-${e.id}">${e.a}</textarea>
+      </div>
+      <div class="rev-footer">
+        <input class="rev-note" id="rn-${e.id}" type="text" placeholder="Optional reviewer note…">
+        <button class="btn btn-sm" onclick="toggleEdit(${e.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
+        <button class="btn btn-sm btn-del" onclick="rejectEntry(${e.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Reject</button>
+        <button class="btn btn-sm btn-ok" onclick="approveEntry(${e.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><polyline points="20 6 9 17 4 12"/></svg>Approve</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleEdit(id) {
+  const ta=document.getElementById('re-'+id), ans=document.getElementById('ra-'+id);
+  const editing=ta.style.display==='block';
+  if(editing){ans.textContent=ta.value;ta.style.display='none';ans.style.display='';}
+  else{ta.style.display='block';ans.style.display='none';ta.focus();}
+}
+
+function approveEntry(id) {
+  const e=KB.find(x=>x.id===id); if(!e) return;
+  const ta=document.getElementById('re-'+id);
+  if(ta&&ta.style.display==='block') e.a=ta.value;
+  e.status='cached'; e.ts=Date.now();
+  const c=document.getElementById('rc-'+id);
+  if(c){c.style.opacity='.35';c.style.pointerEvents='none';}
+
+  // Save validated answer to FastAPI answer library
+  fetch(API_BASE + '/answer-library/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+    body: JSON.stringify({
+      question: e.q,
+      answer: e.a,
+      chunk_ids: e.section ? e.section.split(', ').filter(Boolean) : []
+    })
+  }).catch(()=>{}); // Silent fail — local KB is source of truth for UI
+
+  setTimeout(()=>{renderReview();renderLib();updateAll();},700);
+  toast('Answer approved and saved to library');
+}
+
+function rejectEntry(id) {
+  KB=KB.filter(x=>x.id!==id);
+  const c=document.getElementById('rc-'+id);
+  if(c){c.style.opacity='.35';c.style.pointerEvents='none';}
+  setTimeout(()=>{renderReview();renderLib();updateAll();},700);
+  toast('Entry rejected');
+}
+
+// ── Cost dashboard ─────────────────────────────────────────────────
+function renderCosts() {
+  const total=session.api+session.hits;
+  document.getElementById('k-total').textContent=total;
+  document.getElementById('k-api').textContent=session.api;
+  document.getElementById('k-api-sub').textContent=total>0?`${Math.round(session.api/total*100)}% of queries`:'—% of queries';
+  document.getElementById('k-cost').textContent=`$${session.cost.toFixed(4)}`;
+  document.getElementById('k-saved').textContent=`$${session.saved.toFixed(4)}`;
+  document.getElementById('k-saved-sub').textContent=`${session.hits} instant answer${session.hits!==1?'s':''}`;
+  const mx=Math.max(session.api,session.hits,1);
+  document.getElementById('bh').style.width=`${(session.hits/mx)*100}%`;
+  document.getElementById('ba').style.width=`${(session.api/mx)*100}%`;
+  document.getElementById('bvh').textContent=session.hits;
+  document.getElementById('bva').textContent=session.api;
+  const lb=document.getElementById('log-body');
+  if(!session.log.length){lb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--ink3);padding:16px">No queries yet</td></tr>';return;}
+  lb.innerHTML=session.log.map(l=>{
+    const badge=l.src==='cache'?'<span class="badge-hit">Cache hit</span>':'<span class="badge-api">API call</span>';
+    const costCell=l.src==='cache'?'<span style="color:var(--grn);font-weight:600">$0.0000</span>':`<span style="color:var(--amb);font-weight:600">$${l.cost.toFixed(4)}</span>`;
+    const lStr=l.lender||'—';
+    const sStr=l.section?l.section.substring(0,30)+'…':'—';
+    return`<tr><td style="max-width:220px;word-break:break-word">${esc(l.q.length>65?l.q.substring(0,65)+'…':l.q)}</td><td>${badge}<br><span style="font-size:10px;color:var(--ink3)">${lStr}</span></td><td style="font-size:10px">${sStr}</td><td>${l.ms}ms</td><td>${costCell}</td></tr>`;
+  }).join('');
+}
+
+// ── Global update ─────────────────────────────────────────────────
+function updateAll() {
+  const total=session.api+session.hits;
+  document.getElementById('s-api').textContent=session.api;
+  document.getElementById('s-hit').textContent=session.hits;
+  document.getElementById('s-cost').textContent=`$${session.cost.toFixed(4)}`;
+  document.getElementById('s-saved').textContent=`↑ $${session.saved.toFixed(4)} saved by cache`;
+  document.getElementById('strip-spent').textContent=`$${session.cost.toFixed(4)} spent`;
+  document.getElementById('strip-saved').textContent=`$${session.saved.toFixed(4)} saved`;
+  document.getElementById('strip-rate').textContent=total>0?`${Math.round(session.hits/total*100)}%`:'—';
+  const cached=KB.filter(e=>e.status==='cached').length;
+  const cacheSzEl=document.getElementById('cache-sz');
+  if(cacheSzEl) cacheSzEl.textContent=cached;
+  if(session.saved>0){document.getElementById('savings-chip').style.display='flex';document.getElementById('chip-txt').textContent=`$${session.saved.toFixed(4)} saved`;}
+  document.getElementById('lib-badge').textContent=KB.length;
+  document.getElementById('rev-badge').textContent=KB.filter(e=>e.status==='pending').length;
+  renderLib(); renderCosts();
+}
+
+function updateInfoBar(isHit, loading=false) {
+  const dot=document.getElementById('info-dot'), txt=document.getElementById('info-txt');
+  if(loading){dot.className='info-dot miss';txt.innerHTML='Searching across 26 documents…';return;}
+  if(isHit){dot.className='info-dot';txt.innerHTML='Last query: <strong>cache hit</strong> — returned instantly at $0';}
+  else{dot.className='info-dot miss';txt.innerHTML='Last query: <strong>API call</strong> — answer added to library for future reuse';setTimeout(()=>{dot.className='info-dot';txt.innerHTML=`Ready · <strong id="cache-sz">${KB.filter(e=>e.status==='cached').length}</strong> answers cached across all 6 lenders`;},3200);}
+}
+
+// ── Nav / filters ─────────────────────────────────────────────────
+function go(el, panel) {
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+panel).classList.add('active');
+  if(panel==='library') renderLib();
+  if(panel==='review') renderReview();
+  if(panel==='costs') renderCosts();
+}
+
+function setLenderFilter(el) {
+  document.querySelectorAll('.lender-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active'); qaLender=el.dataset.l;
+}
+
+function clearChat() {
+  const cached=KB.filter(e=>e.status==='cached').length;
+  document.getElementById('chat-body').innerHTML=`<div class="msg ai"><div class="avatar">C</div><div class="msg-wrap"><div class="bubble">Chat cleared. ${cached} answers are still cached across all 6 lenders — ask a new question to get started.</div></div></div>`;
+  document.getElementById('sug-wrap').style.display='flex';
+  conversationHistory = [];
+}
+
+// ── Utilities ─────────────────────────────────────────────────────
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendQ();}}
+function resize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,110)+'px';}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function ago(ts){const d=Date.now()-ts;if(d<60000)return'just now';if(d<3600000)return Math.floor(d/60000)+'m ago';if(d<86400000)return Math.floor(d/3600000)+'h ago';return Math.floor(d/86400000)+'d ago';}
+function toast(msg){const t=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+// ── Boot ──────────────────────────────────────────────────────────
+updateAll();
+</script>
+</body>
+</html>
