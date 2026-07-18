@@ -1,0 +1,372 @@
+<title>Week 4 Evaluation — LifeX Policy Assistant</title>
+<style>
+  :root{
+    --bg:#efeee6;
+    --surface:#ffffff;
+    --surface-2:#e6e3d6;
+    --ink:#1c1e18;
+    --ink-muted:#5d6058;
+    --rule:#d8d3c2;
+    --accent:#1f4b49;
+    --accent-soft:#dbe6e2;
+    --pass:#3e7a52;
+    --pass-soft:#e1ecdf;
+    --partial:#a8791e;
+    --partial-soft:#f2e6cd;
+    --fail:#a63a2e;
+    --fail-soft:#f3ded9;
+    --shadow: 0 1px 2px rgba(28,30,24,0.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#14181a;
+      --surface:#1b2022;
+      --surface-2:#242a2c;
+      --ink:#e9e7dd;
+      --ink-muted:#9aa39c;
+      --rule:#2d3335;
+      --accent:#59aba3;
+      --accent-soft:#203330;
+      --pass:#72c08d;
+      --pass-soft:#1e3327;
+      --partial:#dcac4d;
+      --partial-soft:#3a2f17;
+      --fail:#e2887a;
+      --fail-soft:#3a201c;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14181a; --surface:#1b2022; --surface-2:#242a2c; --ink:#e9e7dd; --ink-muted:#9aa39c;
+    --rule:#2d3335; --accent:#59aba3; --accent-soft:#203330; --pass:#72c08d; --pass-soft:#1e3327;
+    --partial:#dcac4d; --partial-soft:#3a2f17; --fail:#e2887a; --fail-soft:#3a201c;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4);
+  }
+  :root[data-theme="light"]{
+    --bg:#efeee6; --surface:#ffffff; --surface-2:#e6e3d6; --ink:#1c1e18; --ink-muted:#5d6058;
+    --rule:#d8d3c2; --accent:#1f4b49; --accent-soft:#dbe6e2; --pass:#3e7a52; --pass-soft:#e1ecdf;
+    --partial:#a8791e; --partial-soft:#f2e6cd; --fail:#a63a2e; --fail-soft:#f3ded9;
+    --shadow: 0 1px 2px rgba(28,30,24,0.06);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.55;
+  }
+  .page{ max-width:880px; margin:0 auto; padding:56px 24px 96px; }
+
+  .eyebrow{
+    font-family:Consolas,"SFMono-Regular","Cascadia Code",monospace;
+    font-size:12.5px; letter-spacing:0.09em; text-transform:uppercase;
+    color:var(--accent); font-weight:600; margin:0 0 10px;
+  }
+  h1{
+    font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif;
+    font-size:clamp(28px,4vw,38px); font-weight:600; margin:0 0 8px; text-wrap:balance;
+    letter-spacing:-0.01em;
+  }
+  .dek{ font-size:16.5px; color:var(--ink-muted); max-width:62ch; margin:0 0 28px; }
+  .meta-row{
+    display:flex; flex-wrap:wrap; gap:6px 22px; font-size:13px; color:var(--ink-muted);
+    padding-bottom:28px; border-bottom:1px solid var(--rule); margin-bottom:36px;
+  }
+  .meta-row b{ color:var(--ink); font-weight:600; }
+
+  section{ margin-bottom:48px; }
+  h2{
+    font-family:Georgia,"Iowan Old Style",serif; font-size:22px; font-weight:600;
+    margin:0 0 6px; letter-spacing:-0.005em;
+  }
+  .section-note{ font-size:14px; color:var(--ink-muted); margin:0 0 20px; max-width:66ch; }
+
+  /* stat trio */
+  .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:8px; }
+  .stat{
+    background:var(--surface); border:1px solid var(--rule); border-radius:6px;
+    padding:18px 18px 16px; box-shadow:var(--shadow);
+  }
+  .stat .n{
+    font-family:Consolas,"SFMono-Regular",monospace; font-variant-numeric:tabular-nums;
+    font-size:32px; font-weight:600; line-height:1;
+  }
+  .stat .pct{ font-size:13px; color:var(--ink-muted); margin-top:4px; }
+  .stat .label{
+    font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; font-weight:600;
+    margin-top:10px; color:var(--ink-muted);
+  }
+  .stat.pass{ border-top:3px solid var(--pass); } .stat.pass .n{ color:var(--pass); }
+  .stat.partial{ border-top:3px solid var(--partial); } .stat.partial .n{ color:var(--partial); }
+  .stat.fail{ border-top:3px solid var(--fail); } .stat.fail .n{ color:var(--fail); }
+
+  .stackbar{ height:10px; border-radius:5px; overflow:hidden; display:flex; margin:18px 0 4px; border:1px solid var(--rule); }
+  .stackbar span{ height:100%; }
+
+  /* callout */
+  .callout{
+    background:var(--surface-2); border-left:3px solid var(--accent);
+    border-radius:0 6px 6px 0; padding:16px 20px; font-size:14.5px;
+  }
+  .callout p{ margin:0 0 8px; } .callout p:last-child{ margin-bottom:0; }
+  .callout strong{ color:var(--accent); }
+
+  /* breakdown tables */
+  table.breakdown{ width:100%; border-collapse:collapse; font-size:14px; }
+  table.breakdown th{
+    text-align:left; font-size:11px; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--ink-muted); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--rule);
+  }
+  table.breakdown td{ padding:9px 10px; border-bottom:1px solid var(--rule); vertical-align:middle; }
+  table.breakdown tr:last-child td{ border-bottom:none; }
+  table.breakdown td.num, table.breakdown th.num{
+    font-family:Consolas,"SFMono-Regular",monospace; font-variant-numeric:tabular-nums; text-align:right;
+  }
+  .barcell{ display:flex; align-items:center; gap:8px; }
+  .barcell .track{ flex:1; height:6px; background:var(--surface-2); border-radius:3px; overflow:hidden; min-width:60px; }
+  .barcell .fill{ height:100%; background:var(--accent); }
+  .barcell .pctnum{ font-family:Consolas,monospace; font-variant-numeric:tabular-nums; font-size:12.5px; color:var(--ink-muted); width:34px; text-align:right; }
+
+  .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:32px; }
+  @media (max-width:640px){ .two-col{ grid-template-columns:1fr; } .stats{ grid-template-columns:1fr; } }
+
+  /* finding cards */
+  .finding{
+    background:var(--surface); border:1px solid var(--rule); border-left-width:3px;
+    border-radius:0 6px 6px 0; margin-bottom:10px; box-shadow:var(--shadow);
+  }
+  .finding.fail{ border-left-color:var(--fail); }
+  .finding.partial{ border-left-color:var(--partial); }
+  .finding summary{
+    list-style:none; cursor:pointer; padding:13px 18px; display:flex; align-items:baseline; gap:12px;
+    flex-wrap:wrap;
+  }
+  .finding summary::-webkit-details-marker{ display:none; }
+  .finding summary::before{
+    content:"▸"; font-size:11px; color:var(--ink-muted); margin-right:2px;
+    transition:transform 0.15s ease;
+  }
+  .finding[open] summary::before{ transform:rotate(90deg); }
+  .fid{ font-family:Consolas,monospace; font-size:12.5px; font-weight:700; color:var(--ink); }
+  .chip{
+    font-size:10.5px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+    padding:2px 7px; border-radius:3px;
+  }
+  .chip.fail{ background:var(--fail-soft); color:var(--fail); }
+  .chip.partial{ background:var(--partial-soft); color:var(--partial); }
+  .chip.cat{ background:var(--surface-2); color:var(--ink-muted); }
+  .fsum{ font-size:14px; color:var(--ink); flex:1; min-width:200px; }
+  .finding .body{ padding:0 18px 18px 18px; font-size:14px; }
+  .qa-block{ margin-top:4px; }
+  .qa-block .k{ font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-muted); font-weight:600; margin:12px 0 4px; }
+  .qa-block .v{ margin:0; color:var(--ink); }
+  .qa-block .v.model{ color:var(--fail); }
+  .fix-line{ margin-top:12px; padding-top:12px; border-top:1px dashed var(--rule); font-size:13.5px; color:var(--ink-muted); }
+  .fix-line b{ color:var(--ink); }
+
+  /* partial list */
+  .partial-list{ display:flex; flex-direction:column; gap:8px; }
+  .partial-row{
+    display:flex; gap:12px; align-items:baseline; padding:10px 14px; background:var(--surface);
+    border:1px solid var(--rule); border-left:3px solid var(--partial); border-radius:0 6px 6px 0;
+    font-size:13.5px;
+  }
+  .partial-row .fid{ flex-shrink:0; }
+  .partial-row .txt{ color:var(--ink-muted); }
+  .partial-row .txt b{ color:var(--ink); font-weight:600; }
+
+  footer{
+    border-top:1px solid var(--rule); padding-top:20px; font-size:13px; color:var(--ink-muted);
+  }
+  footer a{ color:var(--accent); }
+  code.filename{
+    font-family:Consolas,monospace; background:var(--surface-2); padding:1px 6px; border-radius:3px; font-size:12.5px;
+  }
+</style>
+
+<div class="page">
+
+  <p class="eyebrow">CMAP 2026 · LifeX Policy Assistant</p>
+  <h1>Week 4 Evaluation — Scenario Question Bank</h1>
+  <p class="dek">41 hand-written scenario questions across 6 lenders, graded answer-by-answer against a reference answer. Run fresh against the live backend with an emptied query cache and 62 re-ingested chunks, so every response reflects the current chunks and prompt — not a cached answer from a prior run.</p>
+
+  <div class="meta-row">
+    <span><b>Test set</b> policy_question_bank.xlsx</span>
+    <span><b>Questions</b> 41</span>
+    <span><b>Lenders</b> Resimac, BFS, CFAL, Angle, flexicommercial, Metro</span>
+    <span><b>Date</b> 2026-07-18</span>
+  </div>
+
+  <section>
+    <h2>Overall</h2>
+    <p class="section-note">Graded PASS / PARTIAL / FAIL against each question's reference answer. PARTIAL means the core conclusion is right but a materially useful detail is missing; FAIL means the answer would mislead or misinform a broker.</p>
+    <div class="stats">
+      <div class="stat pass"><div class="n">24</div><div class="pct">58.5% of 41</div><div class="label">Pass</div></div>
+      <div class="stat partial"><div class="n">8</div><div class="pct">19.5% of 41</div><div class="label">Partial</div></div>
+      <div class="stat fail"><div class="n">9</div><div class="pct">22.0% of 41</div><div class="label">Fail</div></div>
+    </div>
+    <div class="stackbar">
+      <span style="width:58.5%; background:var(--pass);"></span>
+      <span style="width:19.5%; background:var(--partial);"></span>
+      <span style="width:22.0%; background:var(--fail);"></span>
+    </div>
+  </section>
+
+  <section>
+    <h2>What this run confirms and what it doesn't</h2>
+    <div class="callout">
+      <p><strong>Confirmed fixed:</strong> the four errors originally caught in an earlier pass over this same question bank — <b>BFS-03</b> (tier misidentification), <b>ANG-03</b> (rate-loading double-count), <b>FLX-03</b> (missing private-sale rate add-on), and <b>CFAL-05</b> (backwards eligibility logic) — all now answer correctly on this fresh run.</p>
+      <p><strong>Not reliably fixed:</strong> <b>RES-04</b> was verified correct in a manual retest right after its prompt fix, but reverted to the old exposure-limit / NAF conflation in this run. Same question, same chunks, different wrong answer — the prompt instruction isn't holding across LLM samples, so this needs a structural fix in the source chunk rather than another prompt tweak.</p>
+      <p>The other 8 failures below were <b>not part of the original 5</b> — they only surfaced because this is the first time all 41 questions were graded end-to-end rather than spot-checked.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Breakdown</h2>
+    <div class="two-col">
+      <div>
+        <h3 style="font-size:14px;margin:0 0 10px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.05em;">By lender</h3>
+        <table class="breakdown">
+          <tr><th>Lender</th><th class="num">Pass</th><th class="num">Partial</th><th class="num">Fail</th><th style="width:110px;">Rate</th></tr>
+          <tr><td>Resimac</td><td class="num">4</td><td class="num">2</td><td class="num">2</td><td><div class="barcell"><div class="track"><div class="fill" style="width:50%"></div></div><span class="pctnum">50%</span></div></td></tr>
+          <tr><td>BFS</td><td class="num">4</td><td class="num">1</td><td class="num">2</td><td><div class="barcell"><div class="track"><div class="fill" style="width:57%"></div></div><span class="pctnum">57%</span></div></td></tr>
+          <tr><td>CFAL</td><td class="num">4</td><td class="num">1</td><td class="num">1</td><td><div class="barcell"><div class="track"><div class="fill" style="width:67%"></div></div><span class="pctnum">67%</span></div></td></tr>
+          <tr><td>Angle</td><td class="num">4</td><td class="num">1</td><td class="num">2</td><td><div class="barcell"><div class="track"><div class="fill" style="width:57%"></div></div><span class="pctnum">57%</span></div></td></tr>
+          <tr><td>flexicommercial</td><td class="num">4</td><td class="num">1</td><td class="num">1</td><td><div class="barcell"><div class="track"><div class="fill" style="width:67%"></div></div><span class="pctnum">67%</span></div></td></tr>
+          <tr><td>Metro</td><td class="num">4</td><td class="num">2</td><td class="num">1</td><td><div class="barcell"><div class="track"><div class="fill" style="width:57%"></div></div><span class="pctnum">57%</span></div></td></tr>
+        </table>
+      </div>
+      <div>
+        <h3 style="font-size:14px;margin:0 0 10px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.05em;">By category</h3>
+        <table class="breakdown">
+          <tr><th>Category</th><th class="num">n</th><th style="width:110px;">Rate</th></tr>
+          <tr><td>Settlement</td><td class="num">2</td><td><div class="barcell"><div class="track"><div class="fill" style="width:100%"></div></div><span class="pctnum">100%</span></div></td></tr>
+          <tr><td>Fees</td><td class="num">2</td><td><div class="barcell"><div class="track"><div class="fill" style="width:100%"></div></div><span class="pctnum">100%</span></div></td></tr>
+          <tr><td>Asset eligibility</td><td class="num">3</td><td><div class="barcell"><div class="track"><div class="fill" style="width:67%"></div></div><span class="pctnum">67%</span></div></td></tr>
+          <tr><td>Pricing</td><td class="num">9</td><td><div class="barcell"><div class="track"><div class="fill" style="width:67%"></div></div><span class="pctnum">67%</span></div></td></tr>
+          <tr><td>Eligibility</td><td class="num">11</td><td><div class="barcell"><div class="track"><div class="fill" style="width:64%"></div></div><span class="pctnum">64%</span></div></td></tr>
+          <tr><td>Special programs</td><td class="num">7</td><td><div class="barcell"><div class="track"><div class="fill" style="width:57%"></div></div><span class="pctnum">57%</span></div></td></tr>
+          <tr><td>Loan limits</td><td class="num">4</td><td><div class="barcell"><div class="track"><div class="fill" style="width:25%"></div></div><span class="pctnum">25%</span></div></td></tr>
+          <tr><td>Documentation</td><td class="num">3</td><td><div class="barcell"><div class="track"><div class="fill" style="width:0%"></div></div><span class="pctnum">0%</span></div></td></tr>
+        </table>
+      </div>
+    </div>
+    <p class="section-note" style="margin-top:18px;">Every lender clusters around 50–67% — this isn't a single lender's chunk quality problem. <b>Loan limits</b> (1 of 4 correct) and <b>documentation</b> (0 of 3 clean, though both misses were partial omissions rather than wrong answers) are the two weakest question types, cutting across every lender.</p>
+  </section>
+
+  <section>
+    <h2>Fail — 9 questions where the answer would mislead a broker</h2>
+    <p class="section-note">Sorted by lender. Click a row to see the question, reference answer, and what the model actually said.</p>
+
+    <details class="finding fail">
+      <summary><span class="fid">RES-01</span><span class="chip fail">Fail</span><span class="chip cat">Eligibility</span><span class="fsum">Cites a 2-year "Standard tier" threshold instead of the real 1-year Basic-tier rule — right conclusion, wrong figure.</span></summary>
+      <div class="body">
+        <div class="qa-block"><div class="k">Question</div><p class="v">I registered my ABN 8 months ago and I'm about to buy a delivery van for my new business. Can I get finance through Resimac, and if not, what's missing?</p></div>
+        <div class="qa-block"><div class="k">Reference</div><p class="v">Resimac's lowest tier, Basic, still requires the ABN and GST registration to both be more than 1 year old. At 8 months you're below every tier.</p></div>
+        <div class="qa-block"><div class="k">Model said</div><p class="v model">"…Resimac requires at least 2 years of ABN registration for the Standard tier, which is the minimum tier you can qualify for."</p></div>
+        <div class="fix-line"><b>Root cause:</b> resimac_customer_tiers chunk wording likely blurs the Basic (1yr) vs Standard (2yr) tier boundary. <b>Fix:</b> clarify which tier is actually the floor.</div>
+      </div>
+    </details>
+
+    <details class="finding fail">
+      <summary><span class="fid">RES-04</span><span class="chip fail">Fail</span><span class="chip cat">Loan limits</span><span class="fsum">Non-deterministic regression — reverted to conflating the aggregate exposure limit with the single-deal NAF cap after passing a manual retest.</span></summary>
+      <div class="body">
+        <div class="qa-block"><div class="k">Question</div><p class="v">I run an established company and want to finance $500,000 worth of new equipment in one deal. Can Resimac fund that?</p></div>
+        <div class="qa-block"><div class="k">Reference</div><p class="v">Not at the standard limit — Full Doc max NAF under the top tiers is $450,000, $50k short. Split the purchase, use a lender with a higher single-transaction ceiling, or ask Resimac for an exception.</p></div>
+        <div class="qa-block"><div class="k">Model said</div><p class="v model">"…the maximum exposure limit for an SME is capped at $500,000 across all contracts, which means you couldn't borrow that amount in one go…"</p></div>
+        <div class="fix-line"><b>Root cause:</b> this exact question was confirmed fixed right after a prompt edit distinguishing exposure limits from NAF caps — but a fresh sample reverted to the old confusion. The prompt instruction isn't reliable across generations. <b>Fix:</b> separate the NAF and exposure figures more structurally in resimac_loan_limits rather than relying on prompt wording alone.</div>
+      </div>
+    </details>
+
+    <details class="finding fail">
+      <summary><span class="fid">BFS-04</span><span class="chip fail">Fail</span><span class="chip cat">Loan limits</span><span class="fsum">Directly contradicts the reference — wrongly declines an application the policy actually approves.</span></summary>
+      <div class="body">
+        <div class="qa-block"><div class="k">Question</div><p class="v">I have an Experian CCR of 850 and want to finance a $350,000 vehicle. Can BFS approve this?</p></div>
+        <div class="qa-block"><div class="k">Reference</div><p class="v">Yes — 850 places you in Tier 1 (CCR ≥800), which qualifies for High Value lending up to $400,000. $350,000 fits comfortably.</p></div>
+        <div class="qa-block"><div class="k">Model said</div><p class="v model">"…since your CCR doesn't meet the Ultra Prime criteria (which requires a score of 960), BFS won't be able to approve the financing for that amount."</p></div>
+        <div class="fix-line"><b>Root cause:</b> model appears to misread which tiers unlock the High Value product, inventing a 960-score gate. <b>Fix:</b> check bfs_vehicle_types / bfs_customer_tiers for ambiguity around High Value eligibility.</div>
+      </div>
+    </details>
+
+    <details class="finding fail">
+      <summary><span class="fid">BFS-05</span><span class="chip fail">Fail</span><span class="chip cat">Eligibility</span><span class="fsum">Never mentions the visa-holder income thresholds that actually govern this question.</span></summary>
+      <div class="body">
+        <div class="qa-block"><div class="k">Question</div><p class="v">I'm on a temporary skilled work visa earning $85,000 a year and want to finance a car. Am I eligible for BFS PRIME or would I need the Plus product?</p></div>
+        <div class="qa-block"><div class="k">Reference</div><p class="v">PRIME needs $100k p.a. for visa holders — you don't qualify. Plus has a $50k bar, so you'd be assessed under Plus.</p></div>
+        <div class="qa-block"><div class="k">Model said</div><p class="v model">"…To confirm your options, could you let me know your Experian CCR score?" (no mention of the income thresholds at all)</p></div>
+        <div class="fix-line"><b>Root cause:</b> the visa income-threshold chunk likely isn't ranking highly enough for this phrasing. <b>Fix:</b> check retrieval for visa-related eligibility questions; consider trigger-word additions.</div>
+      </div>
+    </details>
+
+    <details class="finding fail">
+      <summary><span class="fid">CFAL-03</span><span class="chip fail">Fail</span><span class="chip cat">Special programs</span><span class="fsum">Lender mis-detection — the word "Westpac" in the question pulls in the wrong lender's chunks entirely.</span></summary>
+      <div class="body">
+        <div class="qa-block"><div class="k">Question</div><p class="v">I've had a CFAL/Westpac equipment loan running for 14 months with a clean payment record, and I want to roll it into a new facility. Am I eligible for Rollover?</p></div>
+        <div class="qa-block"><div class="k">Reference</div><p class="v">Yes — CFAL's Rollover needs 12+ months, 14 clears it. $500k cap rolling into a CFAL/Westpac-originated facility, $250k into another financier's.</p></div>
+        <div class="qa-block"><div class="k">Model said</div><p class="v model">Retrieved sources: westpac_rollover, westpac_replacement, westpac_exclusions… (zero CFAL chunks). "If you're an existing client with Westpac, you should be eligible to roll over your contract…"</p></div>
+        <div class="fix-line"><b>Root cause:</b> detect_lender() picks "Westpac" over "CFAL" because the question names both — and CFAL is itself a Westpac Group brand, so this collision is structural, not incidental. <b>Fix:</b> CFAL should win when both keywords appear together.</div>
+      </div>
+    </details>
+
+    <details class="finding fail">
+      <summary><span class="fid">ANG-05</span><span class="chip fail">Fail</span><span class="chip cat">Documentation</span><span class="fsum">Drops two of the explicitly required documents at the $500k–$1m band.</span></summary>
+      <div class="body">
+        <div class="qa-block"><div class="k">Question</div><p class="v">I want to borrow $700,000 for equipment through Angle. What financial documentation will I need to provide?</p></div>
+        <div class="qa-block"><div class="k">Reference</div><p class="v">FY2024+FY2023 financials only (no bank-statement alternative at this size), <b>plus an aged debtor/creditor listing and cash flow projections</b>, plus business background.</p></div>
+        <div class="qa-block"><div class="k">Model said</div><p class="v model">Listed FY24/23 financials, Commitment Schedule, ATO portal statements, business background — no mention of the aged debtor/creditor listing or cash flow projections.</p></div>
+        <div class="fix-line"><b>Root cause:</b> retrieval/synthesis drops two explicitly-required document types for this size band. <b>Fix:</b> verify angle_doc_types chunk lists all $500k–$1m items clearly and check they're all surfacing.</div>
+      </div>
+    </details>
+
+    <details class="finding fail">
+      <summary><span class="fid">ANG-07</span><span class="chip fail">Fail</span><span class="chip cat">Loan limits</span><span class="fsum">Fabricates a wrong cap and denies a real $400k program even though the correct chunk was in context.</span></summary>
+      <div class="body">
+        <div class="qa-block"><div class="k">Question</div><p class="v">My business has been going for 3 years with a 620 credit score, and I want to borrow $380,000 with minimal paperwork. Is there a low-doc option that stretches that high? <i>(no lender named)</i></p></div>
+        <div class="qa-block"><div class="k">Reference</div><p class="v">Yes — Angle's dedicated $400k Low Doc program (3+ yr ABN/GST, 600+ score) covers exactly this.</p></div>
+        <div class="qa-block"><div class="k">Model said</div><p class="v model">"…there isn't a specific Low Doc program that extends to $380,000. The maximum amount for Low Doc loans is generally capped at $150,000…"</p></div>
+        <div class="fix-line"><b>Root cause:</b> question names no lender, so the system fans out across all 7 lenders; angle_400k_low_doc is retrieved but lost in the noise of the wider pool. <b>Fix:</b> investigate whether fan-out context is too large for reliable single-chunk synthesis on numeric eligibility questions.</div>
+      </div>
+    </details>
+
+    <details class="finding fail">
+      <summary><span class="fid">FLX-02</span><span class="chip fail">Fail</span><span class="chip cat">Pricing</span><span class="fsum">Cites the wrong age rule for the exact condition the question hinges on, and omits the rate.</span></summary>
+      <div class="body">
+        <div class="qa-block"><div class="k">Question</div><p class="v">My Road Transport & Logistics business runs 6 trucks and has been established for years. Can I access flexicommercial's flexipremium pricing on a used prime mover that's 4 years old?</p></div>
+        <div class="qa-block"><div class="k">Reference</div><p class="v">Yes — the fleet exception allows used trucks up to <b>5 years old</b> (yours at 4 qualifies). Base rate ~7.30% + the standard 1.0% prime mover add-on.</p></div>
+        <div class="qa-block"><div class="k">Model said</div><p class="v model">"…the prime mover needs to be within the asset age limit of up to <b>20 years</b> at the end of the term…" (no rate given)</p></div>
+        <div class="fix-line"><b>Root cause:</b> conflates the general 15–20yr end-of-term loading band with the specific 5-year fleet-exception age cap — the actual crux of the question. <b>Fix:</b> make the 5-year limit more clearly distinguished in flexi_flexipremium.</div>
+      </div>
+    </details>
+
+    <details class="finding fail">
+      <summary><span class="fid">MET-07</span><span class="chip fail">Fail</span><span class="chip cat">Pricing</span><span class="fsum">Reports only one of two loadings that both apply and stack.</span></summary>
+      <div class="body">
+        <div class="qa-block"><div class="k">Question</div><p class="v">I want to finance a used passenger vehicle that's 11 years old at the start of the loan and will be 13 years old at the end of the term. How does Metro's age loading work here?</p></div>
+        <div class="qa-block"><div class="k">Reference</div><p class="v">Two loadings stack: +0.75% (over 5yrs at start) and +1.50% (over 10yrs at end).</p></div>
+        <div class="qa-block"><div class="k">Model said</div><p class="v model">"…an additional loading of 1.50% will apply." (the +0.75% start-of-term loading is never mentioned)</p></div>
+        <div class="fix-line"><b>Root cause:</b> only the end-of-term loading is surfaced; the two loadings aren't flagged as additive. <b>Fix:</b> check metro_interest_rates / prompt for whether stacking loadings are clearly marked as cumulative.</div>
+      </div>
+    </details>
+  </section>
+
+  <section>
+    <h2>Partial — 8 questions, right conclusion but missing a detail</h2>
+    <p class="section-note">Not misleading, but incomplete enough that a broker would need to double-check before quoting it.</p>
+    <div class="partial-list">
+      <div class="partial-row"><span class="fid">RES-03</span><span class="txt">Correct +2% private-sale loading, <b>but omits the 4% cap</b> on stacked risk loadings.</span></div>
+      <div class="partial-row"><span class="fid">RES-05</span><span class="txt">Correctly checks both stated conditions, <b>but omits the &gt;2.5x turnover-to-asset-price</b> requirement.</span></div>
+      <div class="partial-row"><span class="fid">BFS-01</span><span class="txt">Right product and cap, <b>but appends an unrelated Tier 3/4 deposit note</b> that doesn't apply here.</span></div>
+      <div class="partial-row"><span class="fid">CFAL-04</span><span class="txt">Lists all &gt;$1m-specific items correctly, <b>but drops the baseline 3-years-of-financials</b> requirement.</span></div>
+      <div class="partial-row"><span class="fid">ANG-01</span><span class="txt">Right product and deposit, <b>but omits the clean bank-statement test</b> and adds an unverified 550-score figure.</span></div>
+      <div class="partial-row"><span class="fid">FLX-05</span><span class="txt">Right eligibility and terms, <b>but omits the 1.0% brokerage cap</b> specific to this product.</span></div>
+      <div class="partial-row"><span class="fid">MET-03</span><span class="txt">Correctly flags the exclusion, <b>but never names the actual right channel</b> (Balloon/Residual Refinance).</span></div>
+      <div class="partial-row"><span class="fid">MET-05</span><span class="txt">Right $150k figure, <b>but frames it as a general loan cap</b> rather than the spousal-property-specific one, and drops the relationship-evidence requirement.</span></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Full 41-row detail — every question, reference answer, model answer, retrieved chunk IDs, and response time — is in the companion file <code class="filename">Week4_Evaluation_Results.xlsx</code> (Evaluation / Summary / ErrorLog sheets).</p>
+    <p>Methodology note: this run required clearing <code class="filename">data/query_cache.json</code> first — several of these exact questions were cached from an earlier pass and were silently returning stale pre-fix answers until the cache was emptied.</p>
+  </footer>
+
+</div>
