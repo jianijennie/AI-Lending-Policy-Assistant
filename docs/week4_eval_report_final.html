@@ -1,0 +1,294 @@
+<title>Week 4 Evaluation (Final) — LifeX Policy Assistant</title>
+<style>
+  :root{
+    --bg:#efeee6;
+    --surface:#ffffff;
+    --surface-2:#e6e3d6;
+    --ink:#1c1e18;
+    --ink-muted:#5d6058;
+    --rule:#d8d3c2;
+    --accent:#1f4b49;
+    --accent-soft:#dbe6e2;
+    --pass:#3e7a52;
+    --pass-soft:#e1ecdf;
+    --partial:#a8791e;
+    --partial-soft:#f2e6cd;
+    --fail:#a63a2e;
+    --fail-soft:#f3ded9;
+    --shadow: 0 1px 2px rgba(28,30,24,0.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#14181a; --surface:#1b2022; --surface-2:#242a2c; --ink:#e9e7dd; --ink-muted:#9aa39c;
+      --rule:#2d3335; --accent:#59aba3; --accent-soft:#203330; --pass:#72c08d; --pass-soft:#1e3327;
+      --partial:#dcac4d; --partial-soft:#3a2f17; --fail:#e2887a; --fail-soft:#3a201c;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14181a; --surface:#1b2022; --surface-2:#242a2c; --ink:#e9e7dd; --ink-muted:#9aa39c;
+    --rule:#2d3335; --accent:#59aba3; --accent-soft:#203330; --pass:#72c08d; --pass-soft:#1e3327;
+    --partial:#dcac4d; --partial-soft:#3a2f17; --fail:#e2887a; --fail-soft:#3a201c;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4);
+  }
+  :root[data-theme="light"]{
+    --bg:#efeee6; --surface:#ffffff; --surface-2:#e6e3d6; --ink:#1c1e18; --ink-muted:#5d6058;
+    --rule:#d8d3c2; --accent:#1f4b49; --accent-soft:#dbe6e2; --pass:#3e7a52; --pass-soft:#e1ecdf;
+    --partial:#a8791e; --partial-soft:#f2e6cd; --fail:#a63a2e; --fail-soft:#f3ded9;
+    --shadow: 0 1px 2px rgba(28,30,24,0.06);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.55;
+  }
+  .page{ max-width:880px; margin:0 auto; padding:56px 24px 96px; }
+
+  .eyebrow{
+    font-family:Consolas,"SFMono-Regular","Cascadia Code",monospace;
+    font-size:12.5px; letter-spacing:0.09em; text-transform:uppercase;
+    color:var(--accent); font-weight:600; margin:0 0 10px;
+  }
+  h1{
+    font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif;
+    font-size:clamp(28px,4vw,38px); font-weight:600; margin:0 0 8px; text-wrap:balance;
+    letter-spacing:-0.01em;
+  }
+  .dek{ font-size:16.5px; color:var(--ink-muted); max-width:64ch; margin:0 0 28px; }
+  .meta-row{
+    display:flex; flex-wrap:wrap; gap:6px 22px; font-size:13px; color:var(--ink-muted);
+    padding-bottom:28px; border-bottom:1px solid var(--rule); margin-bottom:36px;
+  }
+  .meta-row b{ color:var(--ink); font-weight:600; }
+
+  section{ margin-bottom:48px; }
+  h2{
+    font-family:Georgia,"Iowan Old Style",serif; font-size:22px; font-weight:600;
+    margin:0 0 6px; letter-spacing:-0.005em;
+  }
+  .section-note{ font-size:14px; color:var(--ink-muted); margin:0 0 20px; max-width:66ch; }
+
+  .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:8px; }
+  .stat{
+    background:var(--surface); border:1px solid var(--rule); border-radius:6px;
+    padding:18px 18px 16px; box-shadow:var(--shadow);
+  }
+  .stat .n{
+    font-family:Consolas,"SFMono-Regular",monospace; font-variant-numeric:tabular-nums;
+    font-size:32px; font-weight:600; line-height:1;
+  }
+  .stat .pct{ font-size:13px; color:var(--ink-muted); margin-top:4px; }
+  .stat .label{
+    font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; font-weight:600;
+    margin-top:10px; color:var(--ink-muted);
+  }
+  .stat.pass{ border-top:3px solid var(--pass); } .stat.pass .n{ color:var(--pass); }
+  .stat.partial{ border-top:3px solid var(--partial); } .stat.partial .n{ color:var(--partial); }
+  .stat.fail{ border-top:3px solid var(--fail); } .stat.fail .n{ color:var(--fail); }
+
+  .stackbar{ height:10px; border-radius:5px; overflow:hidden; display:flex; margin:18px 0 4px; border:1px solid var(--rule); }
+  .stackbar span{ height:100%; }
+
+  .callout{
+    background:var(--surface-2); border-left:3px solid var(--accent);
+    border-radius:0 6px 6px 0; padding:16px 20px; font-size:14.5px;
+  }
+  .callout p{ margin:0 0 8px; } .callout p:last-child{ margin-bottom:0; }
+  .callout strong{ color:var(--accent); }
+
+  table.breakdown{ width:100%; border-collapse:collapse; font-size:14px; }
+  table.breakdown th{
+    text-align:left; font-size:11px; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--ink-muted); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--rule);
+  }
+  table.breakdown td{ padding:9px 10px; border-bottom:1px solid var(--rule); vertical-align:middle; }
+  table.breakdown tr:last-child td{ border-bottom:none; }
+  table.breakdown td.num, table.breakdown th.num{
+    font-family:Consolas,"SFMono-Regular",monospace; font-variant-numeric:tabular-nums; text-align:right;
+  }
+  .barcell{ display:flex; align-items:center; gap:8px; }
+  .barcell .track{ flex:1; height:6px; background:var(--surface-2); border-radius:3px; overflow:hidden; min-width:60px; }
+  .barcell .fill{ height:100%; background:var(--accent); }
+  .barcell .pctnum{ font-family:Consolas,monospace; font-variant-numeric:tabular-nums; font-size:12.5px; color:var(--ink-muted); width:34px; text-align:right; }
+
+  .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:32px; }
+  @media (max-width:640px){ .two-col{ grid-template-columns:1fr; } .stats{ grid-template-columns:1fr; } }
+
+  .finding{
+    background:var(--surface); border:1px solid var(--rule); border-left-width:3px;
+    border-radius:0 6px 6px 0; margin-bottom:10px; box-shadow:var(--shadow);
+  }
+  .finding.fail{ border-left-color:var(--fail); }
+  .finding.partial{ border-left-color:var(--partial); }
+  .finding summary{
+    list-style:none; cursor:pointer; padding:13px 18px; display:flex; align-items:baseline; gap:12px;
+    flex-wrap:wrap;
+  }
+  .finding summary::-webkit-details-marker{ display:none; }
+  .finding summary::before{
+    content:"▸"; font-size:11px; color:var(--ink-muted); margin-right:2px;
+    transition:transform 0.15s ease;
+  }
+  .finding[open] summary::before{ transform:rotate(90deg); }
+  .fid{ font-family:Consolas,monospace; font-size:12.5px; font-weight:700; color:var(--ink); }
+  .chip{
+    font-size:10.5px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+    padding:2px 7px; border-radius:3px;
+  }
+  .chip.fail{ background:var(--fail-soft); color:var(--fail); }
+  .chip.partial{ background:var(--partial-soft); color:var(--partial); }
+  .chip.cat{ background:var(--surface-2); color:var(--ink-muted); }
+  .fsum{ font-size:14px; color:var(--ink); flex:1; min-width:200px; }
+  .finding .body{ padding:0 18px 18px 18px; font-size:14px; }
+  .qa-block{ margin-top:4px; }
+  .qa-block .k{ font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-muted); font-weight:600; margin:12px 0 4px; }
+  .qa-block .v{ margin:0; color:var(--ink); }
+  .qa-block .v.model{ color:var(--fail); }
+  .fix-line{ margin-top:12px; padding-top:12px; border-top:1px dashed var(--rule); font-size:13.5px; color:var(--ink-muted); }
+  .fix-line b{ color:var(--ink); }
+
+  .partial-list{ display:flex; flex-direction:column; gap:8px; }
+  .partial-row{
+    display:flex; gap:12px; align-items:baseline; padding:10px 14px; background:var(--surface);
+    border:1px solid var(--rule); border-left:3px solid var(--partial); border-radius:0 6px 6px 0;
+    font-size:13.5px;
+  }
+  .partial-row .fid{ flex-shrink:0; }
+  .partial-row .txt{ color:var(--ink-muted); }
+  .partial-row .txt b{ color:var(--ink); font-weight:600; }
+
+  .changelog{ display:flex; flex-direction:column; gap:6px; font-size:13.5px; }
+  .changelog li{ margin-left:18px; }
+  .changelog li::marker{ color:var(--accent); }
+
+  footer{
+    border-top:1px solid var(--rule); padding-top:20px; font-size:13px; color:var(--ink-muted);
+  }
+  footer a{ color:var(--accent); }
+  code.filename{
+    font-family:Consolas,monospace; background:var(--surface-2); padding:1px 6px; border-radius:3px; font-size:12.5px;
+  }
+</style>
+
+<div class="page">
+
+  <p class="eyebrow">CMAP 2026 · LifeX Policy Assistant</p>
+  <h1>Week 4 Evaluation — Final</h1>
+  <p class="dek">Same 41-question scenario bank as the earlier Week 4 evaluation, re-run after a full session of fixes: a retrieval-logic refactor, config portability, a lender-detection bug fix, a sweep of dense/ambiguous source tables, and one genuine missing-data gap closed by reading the original BFS policy PDF.</p>
+
+  <div class="meta-row">
+    <span><b>Test set</b> policy_question_bank.xlsx</span>
+    <span><b>Questions</b> 41</span>
+    <span><b>Lenders</b> Resimac, BFS, CFAL, Angle, flexicommercial, Metro</span>
+    <span><b>Date</b> 2026-07-19</span>
+  </div>
+
+  <section>
+    <h2>Overall</h2>
+    <p class="section-note">Same grading standard as the first Week 4 evaluation: PARTIAL means the core conclusion is right but a materially useful detail is missing; FAIL means the answer would mislead or misinform a broker.</p>
+    <div class="stats">
+      <div class="stat pass"><div class="n">33</div><div class="pct">80.5% of 41</div><div class="label">Pass</div></div>
+      <div class="stat partial"><div class="n">7</div><div class="pct">17.1% of 41</div><div class="label">Partial</div></div>
+      <div class="stat fail"><div class="n">1</div><div class="pct">2.4% of 41</div><div class="label">Fail</div></div>
+    </div>
+    <div class="stackbar">
+      <span style="width:80.5%; background:var(--pass);"></span>
+      <span style="width:17.1%; background:var(--partial);"></span>
+      <span style="width:2.4%; background:var(--fail);"></span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Compared to the first Week 4 run</h2>
+    <div class="callout">
+      <p><strong>Fail count: 9 → 1.</strong> Pass rate: 58.5% → 80.5%. Six of the eight originally-failing questions (RES-01, RES-04, CFAL-03, ANG-05, ANG-07, FLX-02) are now passing or partial; one (BFS-05) needed a genuine missing-data fix rather than a RAG-side change.</p>
+      <p><strong>BFS-05 was the one true content gap.</strong> The visa-holder income thresholds the reference answer expects ($100k for PRIME, $50k for BFS Plus) were never in the chunk files — not a retrieval bug, not an ambiguous table, just absent. Confirmed by reading the actual BFS Product Guide PDF (page 2) and adding the real figures.</p>
+      <p><strong>ANG-07 is the one fail left</strong>, and it's a different kind of problem entirely: the model has the correct chunk and the correct numbers in front of it and still states "$380,000 exceeds the $400,000 maximum" — which is simply false. This is a raw numeric-comparison error, not something a better chunk or a different retrieval strategy fixes.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Breakdown</h2>
+    <div class="two-col">
+      <div>
+        <h3 style="font-size:14px;margin:0 0 10px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.05em;">By lender</h3>
+        <table class="breakdown">
+          <tr><th>Lender</th><th class="num">Pass</th><th class="num">Partial</th><th class="num">Fail</th><th style="width:110px;">Rate</th></tr>
+          <tr><td>Resimac</td><td class="num">6</td><td class="num">2</td><td class="num">0</td><td><div class="barcell"><div class="track"><div class="fill" style="width:75%"></div></div><span class="pctnum">75%</span></div></td></tr>
+          <tr><td>BFS</td><td class="num">6</td><td class="num">1</td><td class="num">0</td><td><div class="barcell"><div class="track"><div class="fill" style="width:86%"></div></div><span class="pctnum">86%</span></div></td></tr>
+          <tr><td>CFAL</td><td class="num">5</td><td class="num">1</td><td class="num">0</td><td><div class="barcell"><div class="track"><div class="fill" style="width:83%"></div></div><span class="pctnum">83%</span></div></td></tr>
+          <tr><td>Angle</td><td class="num">5</td><td class="num">1</td><td class="num">1</td><td><div class="barcell"><div class="track"><div class="fill" style="width:71%"></div></div><span class="pctnum">71%</span></div></td></tr>
+          <tr><td>flexicommercial</td><td class="num">5</td><td class="num">1</td><td class="num">0</td><td><div class="barcell"><div class="track"><div class="fill" style="width:83%"></div></div><span class="pctnum">83%</span></div></td></tr>
+          <tr><td>Metro</td><td class="num">6</td><td class="num">1</td><td class="num">0</td><td><div class="barcell"><div class="track"><div class="fill" style="width:86%"></div></div><span class="pctnum">86%</span></div></td></tr>
+        </table>
+      </div>
+      <div>
+        <h3 style="font-size:14px;margin:0 0 10px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.05em;">By category</h3>
+        <table class="breakdown">
+          <tr><th>Category</th><th class="num">n</th><th style="width:110px;">Rate</th></tr>
+          <tr><td>Settlement</td><td class="num">2</td><td><div class="barcell"><div class="track"><div class="fill" style="width:100%"></div></div><span class="pctnum">100%</span></div></td></tr>
+          <tr><td>Fees</td><td class="num">2</td><td><div class="barcell"><div class="track"><div class="fill" style="width:100%"></div></div><span class="pctnum">100%</span></div></td></tr>
+          <tr><td>Asset eligibility</td><td class="num">3</td><td><div class="barcell"><div class="track"><div class="fill" style="width:100%"></div></div><span class="pctnum">100%</span></div></td></tr>
+          <tr><td>Eligibility</td><td class="num">11</td><td><div class="barcell"><div class="track"><div class="fill" style="width:91%"></div></div><span class="pctnum">91%</span></div></td></tr>
+          <tr><td>Loan limits</td><td class="num">4</td><td><div class="barcell"><div class="track"><div class="fill" style="width:75%"></div></div><span class="pctnum">75%</span></div></td></tr>
+          <tr><td>Special programs</td><td class="num">7</td><td><div class="barcell"><div class="track"><div class="fill" style="width:71%"></div></div><span class="pctnum">71%</span></div></td></tr>
+          <tr><td>Pricing</td><td class="num">9</td><td><div class="barcell"><div class="track"><div class="fill" style="width:67%"></div></div><span class="pctnum">67%</span></div></td></tr>
+          <tr><td>Documentation</td><td class="num">3</td><td><div class="barcell"><div class="track"><div class="fill" style="width:67%"></div></div><span class="pctnum">67%</span></div></td></tr>
+        </table>
+      </div>
+    </div>
+    <p class="section-note" style="margin-top:18px;"><b>Eligibility</b> jumped from the weakest category (64%) to the strongest (91%) once BFS-05's missing visa data was added. <b>Loan limits</b> improved from 25% to 75% — the one remaining miss there (ANG-07) is the numeric-comparison bug, not a policy-data problem.</p>
+  </section>
+
+  <section>
+    <h2>Fail — the one open item</h2>
+    <details class="finding fail">
+      <summary><span class="fid">ANG-07</span><span class="chip fail">Fail</span><span class="chip cat">Loan limits</span><span class="fsum">States "$380,000 exceeds the $400,000 maximum" — it does not. Correct facts, wrong comparison.</span></summary>
+      <div class="body">
+        <div class="qa-block"><div class="k">Question</div><p class="v">My business has been going for 3 years with a 620 credit score, and I want to borrow $380,000 with minimal paperwork. Is there a low-doc option that stretches that high? <i>(no lender named)</i></p></div>
+        <div class="qa-block"><div class="k">Reference</div><p class="v">Yes — Angle's dedicated $400k Low Doc program (3+ yr ABN/GST, 600+ score) covers exactly this.</p></div>
+        <div class="qa-block"><div class="k">Model said</div><p class="v model">"...The maximum transaction size for the $400k Low Doc program is capped at $400,000, but it requires a credit score of at least 600 and a proven track record, which you meet. However, since your request exceeds the maximum limit for low-doc lending, you would need to consider a full-doc option instead."</p></div>
+        <div class="fix-line"><b>Root cause:</b> the model states every correct fact (the $400k cap, the 600+ score requirement, that the applicant's 620 score qualifies) and then draws the wrong conclusion from its own correct numbers. Reordering the retrieved context to put the right chunk first (done earlier this session) fixed the retrieval side of this question but not this residual arithmetic slip. <b>Not fixable via chunking or retrieval</b> — the only real levers are a stronger prompt nudge (unreliable, per this session's repeated experience with RES-04 and MET-02) or a more capable generation model, which is a cost/latency tradeoff to make deliberately, not a quick patch.</div>
+      </div>
+    </details>
+  </section>
+
+  <section>
+    <h2>Partial — 7 questions, right conclusion but missing a detail</h2>
+    <div class="partial-list">
+      <div class="partial-row"><span class="fid">RES-03</span><span class="txt">Correct +2% private-sale loading, <b>but omits the 4% cap</b> on stacked risk loadings.</span></div>
+      <div class="partial-row"><span class="fid">RES-05</span><span class="txt">Correctly checks both stated conditions, <b>but omits the &gt;2.5x turnover-to-asset-price</b> requirement.</span></div>
+      <div class="partial-row"><span class="fid">BFS-03</span><span class="txt">Correct tier and several accurate details, <b>but omits the 20% deposit requirement</b> this run — sampling variance, this question passes cleanly on other runs.</span></div>
+      <div class="partial-row"><span class="fid">CFAL-03</span><span class="txt">Correct eligibility and CFAL-only sources, <b>but doesn't state the specific $500k/$250k caps.</b></span></div>
+      <div class="partial-row"><span class="fid">ANG-01</span><span class="txt">Right product and deposit, <b>but references "clean conduct" generically</b> rather than the specific dishonours/overdraws/ATO-arrangement test.</span></div>
+      <div class="partial-row"><span class="fid">FLX-02</span><span class="txt">Correctly identifies the 5-year used-truck exception (the crux of the question), <b>but omits the ~7.30% rate and 1.0% add-on.</b></span></div>
+      <div class="partial-row"><span class="fid">MET-05</span><span class="txt">Correct $150k figure, <b>but frames it as a general cap</b> rather than spousal-specific — checked Metro's own PDF and the "proof of relationship" documents the reference expects aren't actually in Metro's published policy, so this wasn't force-fixed with unverified content.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What changed this session</h2>
+    <ul class="changelog">
+      <li>CFAL/Westpac lender-detection collision fixed (CFAL now wins when both are named in a question)</li>
+      <li><code class="filename">temperature=0</code> added to the generation call (helps but doesn't fully eliminate sampling variance — see BFS-03 above)</li>
+      <li>Resimac's exposure-limit vs. single-transaction NAF cap disambiguated directly in the source chunk</li>
+      <li>Metro's age-loading stacking clarified so both applicable loadings are reliably reported together</li>
+      <li>Metro's MetroEco 3-column term table (Commercial / Consumer / Novated) disambiguated in the source chunk</li>
+      <li><code class="filename">retrieve_nodes()</code> refactored into 4 named, independently-testable functions — no behavior change, verified byte-for-byte identical retrieval before/after</li>
+      <li><code class="filename">config.py</code> made portable — every path now derives from the project root instead of a hardcoded <code class="filename">C:/Projects/...</code> string</li>
+      <li>ChromaDB moved inside the project (fully regenerable via <code class="filename">ingest.py</code>) instead of living in a sibling folder</li>
+      <li><code class="filename">CHUNK_SIZE</code> raised from 1024 to 4096 tokens — the old value was silently re-splitting hand-authored chunks whenever they were edited to add clarifying text</li>
+      <li>BFS's "TierA–TierB" range notation disambiguated in two places (High Value loans; the Low Doc/Full Doc/New Business Ventures matrix)</li>
+      <li>CFAL's and Resimac's documentation checkmark-grid tables given explicit per-band prose restatements</li>
+      <li>Angle's $500k–$1m documentation table given the same treatment</li>
+      <li>BFS non-resident visa holder income thresholds added from the actual BFS Product Guide PDF — this fact was completely absent from the chunk files before today</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Full 41-row detail — every question, reference answer, model answer, retrieved chunk IDs, and response time — is in the companion file <code class="filename">Week4_Evaluation_Results_Final.xlsx</code> (Evaluation / Summary / ChangeLog / ErrorLog sheets), saved alongside this report in the project root.</p>
+  </footer>
+
+</div>

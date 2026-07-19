@@ -1,0 +1,230 @@
+<title>Policy Assistant — What We Fixed This Week</title>
+<style>
+  :root{
+    --bg:#efeee6;
+    --surface:#ffffff;
+    --surface-2:#e6e3d6;
+    --ink:#1c1e18;
+    --ink-muted:#5d6058;
+    --rule:#d8d3c2;
+    --accent:#1f4b49;
+    --accent-soft:#dbe6e2;
+    --pass:#3e7a52;
+    --pass-soft:#e1ecdf;
+    --partial:#a8791e;
+    --partial-soft:#f2e6cd;
+    --fail:#a63a2e;
+    --fail-soft:#f3ded9;
+    --shadow: 0 1px 2px rgba(28,30,24,0.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#14181a; --surface:#1b2022; --surface-2:#242a2c; --ink:#e9e7dd; --ink-muted:#9aa39c;
+      --rule:#2d3335; --accent:#59aba3; --accent-soft:#203330; --pass:#72c08d; --pass-soft:#1e3327;
+      --partial:#dcac4d; --partial-soft:#3a2f17; --fail:#e2887a; --fail-soft:#3a201c;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14181a; --surface:#1b2022; --surface-2:#242a2c; --ink:#e9e7dd; --ink-muted:#9aa39c;
+    --rule:#2d3335; --accent:#59aba3; --accent-soft:#203330; --pass:#72c08d; --pass-soft:#1e3327;
+    --partial:#dcac4d; --partial-soft:#3a2f17; --fail:#e2887a; --fail-soft:#3a201c;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4);
+  }
+  :root[data-theme="light"]{
+    --bg:#efeee6; --surface:#ffffff; --surface-2:#e6e3d6; --ink:#1c1e18; --ink-muted:#5d6058;
+    --rule:#d8d3c2; --accent:#1f4b49; --accent-soft:#dbe6e2; --pass:#3e7a52; --pass-soft:#e1ecdf;
+    --partial:#a8791e; --partial-soft:#f2e6cd; --fail:#a63a2e; --fail-soft:#f3ded9;
+    --shadow: 0 1px 2px rgba(28,30,24,0.06);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.6;
+  }
+  .page{ max-width:840px; margin:0 auto; padding:56px 24px 96px; }
+
+  .eyebrow{
+    font-family:Consolas,"SFMono-Regular","Cascadia Code",monospace;
+    font-size:12.5px; letter-spacing:0.09em; text-transform:uppercase;
+    color:var(--accent); font-weight:600; margin:0 0 10px;
+  }
+  h1{
+    font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif;
+    font-size:clamp(30px,4.5vw,42px); font-weight:600; margin:0 0 10px; text-wrap:balance;
+    letter-spacing:-0.01em;
+  }
+  .dek{ font-size:18px; color:var(--ink-muted); max-width:60ch; margin:0 0 32px; }
+
+  section{ margin-bottom:52px; }
+  h2{
+    font-family:Georgia,"Iowan Old Style",serif; font-size:24px; font-weight:600;
+    margin:0 0 14px; letter-spacing:-0.005em;
+  }
+  p{ font-size:16px; max-width:64ch; }
+  .lead{ font-size:17px; color:var(--ink-muted); max-width:64ch; }
+
+  /* headline stat comparison */
+  .before-after{
+    display:grid; grid-template-columns:1fr auto 1fr; gap:20px; align-items:center;
+    margin:24px 0;
+  }
+  .ba-card{
+    background:var(--surface); border:1px solid var(--rule); border-radius:8px;
+    padding:24px; text-align:center; box-shadow:var(--shadow);
+  }
+  .ba-card .tag{ font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-muted); font-weight:600; }
+  .ba-card .big{ font-family:Georgia,serif; font-size:44px; font-weight:600; margin:8px 0 4px; }
+  .ba-card.before .big{ color:var(--fail); }
+  .ba-card.after .big{ color:var(--pass); }
+  .ba-card .sub{ font-size:13px; color:var(--ink-muted); }
+  .arrow{ font-size:28px; color:var(--accent); }
+  @media (max-width:600px){ .before-after{ grid-template-columns:1fr; } .arrow{ transform:rotate(90deg); text-align:center; } }
+
+  .stackbar{ height:14px; border-radius:7px; overflow:hidden; display:flex; margin:6px 0; border:1px solid var(--rule); }
+  .stackbar span{ height:100%; }
+  .bar-label{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--ink-muted); margin-bottom:4px; }
+
+  /* problem cards */
+  .problems{ display:flex; flex-direction:column; gap:14px; }
+  .problem{
+    display:grid; grid-template-columns:44px 1fr; gap:16px;
+    background:var(--surface); border:1px solid var(--rule); border-radius:8px;
+    padding:18px 20px; box-shadow:var(--shadow);
+  }
+  .problem .num{
+    font-family:Georgia,serif; font-size:24px; font-weight:600; color:var(--accent);
+    line-height:1;
+  }
+  .problem h3{ font-size:16px; margin:0 0 6px; font-weight:700; }
+  .problem p{ font-size:14.5px; margin:0; color:var(--ink-muted); }
+  .problem .example{
+    margin-top:8px; padding:10px 12px; background:var(--surface-2); border-radius:5px;
+    font-size:13.5px; font-style:italic; color:var(--ink);
+  }
+
+  .callout{
+    background:var(--accent-soft); border-left:3px solid var(--accent);
+    border-radius:0 8px 8px 0; padding:18px 22px; font-size:15px;
+  }
+  .callout strong{ color:var(--accent); }
+
+  .whatelse{ display:flex; flex-direction:column; gap:8px; font-size:15px; }
+  .whatelse li{ margin-left:20px; }
+  .whatelse li::marker{ color:var(--accent); }
+
+  .open-item{
+    background:var(--partial-soft); border-left:3px solid var(--partial);
+    border-radius:0 8px 8px 0; padding:18px 22px; font-size:15px;
+  }
+  .open-item strong{ color:var(--partial); }
+
+  footer{
+    border-top:1px solid var(--rule); padding-top:20px; font-size:13.5px; color:var(--ink-muted);
+  }
+  code.filename{
+    font-family:Consolas,monospace; background:var(--surface-2); padding:1px 6px; border-radius:3px; font-size:12.5px;
+  }
+</style>
+
+<div class="page">
+
+  <p class="eyebrow">CMAP 2026 · LifeX Policy Assistant</p>
+  <h1>What We Fixed This Week</h1>
+  <p class="dek">A plain-language walkthrough of the testing, bugs, and fixes behind this week's accuracy improvements — for tomorrow's office update.</p>
+
+  <section>
+    <h2>The short version</h2>
+    <p class="lead">We ran the assistant through 41 realistic broker scenarios across our 6 lenders — not simple lookups, but the kind of layered questions a broker actually asks ("my client's ABN is 8 months old, my customer earns $85k on a work visa," etc.). We graded every answer against a verified correct answer, found the exact reason behind every wrong one, and fixed them one by one.</p>
+
+    <div class="before-after">
+      <div class="ba-card before">
+        <div class="tag">Before this week</div>
+        <div class="big">58.5%</div>
+        <div class="sub">correct — 9 of 41 answers would have misled a broker</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="ba-card after">
+        <div class="tag">After this week's fixes</div>
+        <div class="big">80.5%</div>
+        <div class="sub">correct — down to 1 of 41 misleading answers</div>
+      </div>
+    </div>
+
+    <div class="bar-label"><span>Before</span><span>58.5% correct · 22.0% wrong</span></div>
+    <div class="stackbar">
+      <span style="width:58.5%; background:var(--pass);"></span>
+      <span style="width:19.5%; background:var(--partial);"></span>
+      <span style="width:22.0%; background:var(--fail);"></span>
+    </div>
+    <div class="bar-label" style="margin-top:14px;"><span>After</span><span>80.5% correct · 2.4% wrong</span></div>
+    <div class="stackbar">
+      <span style="width:80.5%; background:var(--pass);"></span>
+      <span style="width:17.1%; background:var(--partial);"></span>
+      <span style="width:2.4%; background:var(--fail);"></span>
+    </div>
+  </section>
+
+  <section>
+    <h2>What was actually going wrong</h2>
+    <p class="lead" style="margin-bottom:20px;">Every wrong answer got root-caused individually rather than patched blindly. Four distinct problems turned up:</p>
+
+    <div class="problems">
+      <div class="problem">
+        <div class="num">1</div>
+        <div>
+          <h3>Mixing up two similarly-named companies</h3>
+          <p>One of our lenders is technically a division of a bigger banking group. When a broker's question mentioned both names in the same sentence, the assistant would grab the wrong one and answer using the wrong company's rules entirely.</p>
+          <div class="example">"I've had a CFAL/Westpac loan for 14 months..." → answered using Westpac's policy instead of CFAL's.</div>
+        </div>
+      </div>
+      <div class="problem">
+        <div class="num">2</div>
+        <div>
+          <h3>Confusing two different numbers that happened to be close together</h3>
+          <p>Some policy documents list a cap on a single loan right next to a completely different cap on a customer's total combined borrowing. The two numbers are unrelated, but sitting side-by-side in the same document, the assistant sometimes quoted the wrong one.</p>
+          <div class="example">A $450,000 single-loan limit got confused with a $500,000 total-exposure limit that applied to something entirely different.</div>
+        </div>
+      </div>
+      <div class="problem">
+        <div class="num">3</div>
+        <div>
+          <h3>Misreading dense tables</h3>
+          <p>Several policy documents pack information into grids — a spreadsheet-style table where you need the right row <em>and</em> the right column to get the correct answer. Those are exactly the kind of table that's easy to misread. We found the highest-risk ones and rewrote the important results as plain sentences alongside the table, so there's no lookup to get wrong.</p>
+        </div>
+      </div>
+      <div class="problem">
+        <div class="num">4</div>
+        <div>
+          <h3>A fact that was genuinely missing</h3>
+          <p>For one question, no amount of re-checking helped — because the answer simply wasn't in our data at all. We went back to the original lender policy PDF, found the real figures on page 2, and added them in. This is the only one of the four that wasn't really a "bug" — it was a gap in what we'd given the assistant to work with.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What else we cleaned up</h2>
+    <p class="lead" style="margin-bottom:16px;">Alongside the accuracy fixes, we also tidied up the engineering behind the scenes so the project is easier to maintain and hand off:</p>
+    <ul class="whatelse">
+      <li>Simplified a core piece of retrieval logic that had grown complex over several weeks of patches, into clearly separated, easier-to-follow pieces — with no change in behavior (tested before/after to confirm).</li>
+      <li>Made the whole project portable — it previously assumed one specific folder on one specific computer. Now it works from any machine or any teammate's copy of the project without manual setup.</li>
+      <li>Found and fixed a quiet data-storage bug where editing a document for clarity could accidentally split it into two disconnected pieces behind the scenes — a problem that would have gotten worse every time we tried to fix something.</li>
+      <li>Removed leftover code from an earlier, now-unused AI provider we switched away from.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>What's still open</h2>
+    <div class="open-item">
+      <strong>One remaining case (of 41):</strong> the assistant is occasionally asked to compare two numbers — like "is $380,000 more or less than a $400,000 limit" — and gets the comparison backwards, even when it has both correct numbers directly in front of it. We checked carefully: this isn't a missing fact or a confusing document, it's a basic reasoning slip by the underlying AI model itself. The real fix here is either a more capable (and more expensive) model, or accepting the small residual risk — a decision worth making deliberately rather than patching around.
+    </div>
+  </section>
+
+  <footer>
+    <p>Full question-by-question detail (all 41 questions, model answers, and the reasoning behind every grade) is available in <code class="filename">Week4_Evaluation_Results_Final.xlsx</code>, alongside this summary in the project folder.</p>
+  </footer>
+
+</div>
