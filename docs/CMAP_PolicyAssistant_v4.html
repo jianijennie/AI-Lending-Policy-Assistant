@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeX Policy Assistant</title>
+<style>
+:root {
+  --navy:#0F1F3D; --navy2:#162947;
+  --ink:#1A2332; --ink2:#3D4F63; --ink3:#7A8A9A;
+  --rule:#E4E8EE; --rule2:#CDD3DC;
+  --bg:#F5F7FA; --surf:#FFFFFF;
+  --blue:#1A56DB; --blue2:#1044B0; --blue-lt:#EBF2FF;
+  --grn:#0A6E40; --grn-lt:#D6F5E3;
+  --amb:#92400E; --amb-lt:#FEF3C7;
+  --red:#991B1B; --red-lt:#FEE2E2;
+  --r:10px; --r-sm:6px;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.04);
+  --sh-md:0 4px 16px rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.04);
+  --sidebar:220px;
+  --angle-c:#9B0060; --angle-lt:#F9E0F2;
+  --bfs-c:#0D4A8A; --bfs-lt:#E0EDFB;
+  --cfal-c:#4A1878; --cfal-lt:#EDE4F8;
+  --flexi-c:#B84000; --flexi-lt:#FDEEE4;
+  --metro-c:#0D4DA8; --metro-lt:#E0EDFB;
+  --res-c:#0A5870; --res-lt:#DDF0F6;
+  --wbc-c:#A00E0E; --wbc-lt:#FCE4E4;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;background:var(--bg);color:var(--ink);font-size:13px;line-height:1.55;-webkit-font-smoothing:antialiased}
+
+/* Shell */
+.shell{display:flex;height:100vh;overflow:hidden}
+
+/* Sidebar */
+.sidebar{width:var(--sidebar);min-width:var(--sidebar);background:var(--navy);display:flex;flex-direction:column;overflow:hidden;border-right:1px solid rgba(255,255,255,.05);transition:width .2s ease,min-width .2s ease}
+.sidebar.collapsed{width:0;min-width:0}
+.sidebar-brand{padding:16px 16px 13px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.brand-eyebrow{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:3px}
+.brand-name{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.025em}
+.brand-tag{font-size:10px;color:rgba(255,255,255,.28);margin-top:2px}
+.nav{flex:1;padding:8px 0;overflow-y:auto}
+.nav-section{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.22);padding:10px 16px 4px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 16px;font-size:12.5px;cursor:pointer;color:rgba(255,255,255,.45);border-left:2px solid transparent;transition:color .12s,background .12s;user-select:none;white-space:nowrap}
+.nav-item:hover{color:rgba(255,255,255,.75);background:rgba(255,255,255,.04)}
+.nav-item.active{color:#fff;background:rgba(255,255,255,.08);border-left-color:#5B9EFF;font-weight:500}
+.nav-icon{width:14px;height:14px;flex-shrink:0;opacity:.6}
+.nav-item.active .nav-icon{opacity:1}
+.nav-badge{margin-left:auto;font-size:9px;font-weight:700;background:#5B9EFF;color:var(--navy);padding:1px 6px;border-radius:20px;min-width:18px;text-align:center;transition:transform .2s,background .2s}
+.nav-badge.pulse{animation:badgepulse .5s ease}
+@keyframes badgepulse{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1)}}
+.lender-entry{display:flex;align-items:center;gap:8px;padding:6px 16px;font-size:11px;color:rgba(255,255,255,.35);cursor:pointer;transition:color .12s,background .12s;border-left:2px solid transparent;white-space:nowrap}
+.lender-entry:hover{color:rgba(255,255,255,.65);background:rgba(255,255,255,.04)}
+.lender-entry.active{color:#fff;background:rgba(255,255,255,.07);border-left-color:#5B9EFF}
+.lender-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sidebar-foot{padding:10px 16px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.status-row{display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,.35);margin-bottom:4px}
+.status-dot{width:6px;height:6px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 2px rgba(74,222,128,.18);flex-shrink:0}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.panel{display:none;flex-direction:column;flex:1;overflow:hidden}
+.panel.active{display:flex}
+
+/* Topbar */
+.topbar{background:var(--surf);border-bottom:1px solid var(--rule);padding:0 20px;height:48px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.topbar-title{font-size:13px;font-weight:600;color:var(--ink)}
+.topbar-sub{font-size:11px;color:var(--ink3)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.hamburger{background:none;border:none;cursor:pointer;padding:6px;border-radius:var(--r-sm);color:var(--ink3);display:flex;align-items:center;transition:background .12s,color .12s}
+.hamburger:hover{background:var(--bg);color:var(--ink)}
+
+/* Filter bar */
+.filter-bar{background:var(--surf);border-bottom:1px solid var(--rule);padding:8px 20px;display:flex;align-items:center;gap:5px;flex-shrink:0;overflow-x:auto}
+.filter-bar::-webkit-scrollbar{display:none}
+.lender-pill{display:flex;align-items:center;gap:5px;padding:4px 11px;font-size:11.5px;font-weight:500;border-radius:20px;border:1.5px solid var(--rule2);background:var(--surf);color:var(--ink2);cursor:pointer;white-space:nowrap;transition:all .12s;flex-shrink:0}
+.lender-pill:hover{border-color:var(--blue);color:var(--blue)}
+.lender-pill.active{color:#fff;border-color:transparent}
+.lender-pill[data-l="ALL"].active{background:var(--navy)}
+.lender-pill[data-l="Angle Finance"].active{background:var(--angle-c)}
+.lender-pill[data-l="BFS"].active{background:var(--bfs-c)}
+.lender-pill[data-l="Capital Finance"].active{background:var(--cfal-c)}
+.lender-pill[data-l="flexicommercial"].active{background:var(--flexi-c)}
+.lender-pill[data-l="Metro Finance"].active{background:var(--metro-c)}
+.lender-pill[data-l="Resimac"].active{background:var(--res-c)}
+.lender-pill[data-l="Westpac"].active{background:var(--wbc-c)}
+.pill-dot{width:6px;height:6px;border-radius:50%}
+
+/* Chat */
+.chat-scroll{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.chat-scroll::-webkit-scrollbar{width:4px}
+.chat-scroll::-webkit-scrollbar-thumb{background:var(--rule2);border-radius:2px}
+
+/* Welcome state */
+.welcome{align-self:center;max-width:520px;width:100%;margin:auto;text-align:center;padding:20px 0}
+.welcome-icon{width:44px;height:44px;background:linear-gradient(135deg,var(--navy),#2563EB);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:var(--sh-md)}
+.welcome-title{font-size:18px;font-weight:700;color:var(--ink);letter-spacing:-.025em;margin-bottom:6px}
+.welcome-sub{font-size:13px;color:var(--ink3);line-height:1.6;margin-bottom:24px}
+.welcome-examples{display:flex;flex-direction:column;gap:8px;text-align:left}
+.welcome-ex{background:var(--surf);border:1.5px solid var(--rule);border-radius:var(--r);padding:10px 14px;cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:10px}
+.welcome-ex:hover{border-color:var(--blue);background:var(--blue-lt)}
+.ex-lender{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.ex-q{font-size:12.5px;color:var(--ink);line-height:1.5}
+
+/* Messages */
+.msg{display:flex;gap:10px;max-width:84%}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.msg.ai{align-self:flex-start}
+.avatar{width:26px;height:26px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-top:2px}
+.msg.user .avatar{background:var(--blue);color:#fff}
+.msg.ai .avatar{background:linear-gradient(135deg,var(--navy),#2563EB);color:#fff}
+.msg-wrap{display:flex;flex-direction:column;gap:5px}
+.bubble{padding:10px 13px;border-radius:var(--r);font-size:13px;line-height:1.65}
+.msg.user .bubble{background:var(--blue);color:#EBF2FF;border-bottom-right-radius:2px}
+.msg.ai .bubble{background:var(--surf);border:1px solid var(--rule);color:var(--ink);border-bottom-left-radius:2px;box-shadow:var(--sh)}
+
+/* Source attribution */
+.source-block{margin-top:10px;padding-top:10px;border-top:1px solid var(--rule)}
+.source-label{font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.source-chips{display:flex;flex-wrap:wrap;gap:4px}
+.src-chip{font-size:11px;padding:3px 9px;border-radius:5px;font-weight:500;display:inline-flex;align-items:center;gap:4px;border:1px solid rgba(0,0,0,.06)}
+
+/* Cache tag */
+.cache-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--grn);background:var(--grn-lt);padding:2px 8px;border-radius:4px;align-self:flex-start}
+
+/* Typing indicator with status text */
+.typing-wrap{display:flex;flex-direction:column;gap:6px}
+.typing{display:flex;gap:4px;align-items:center;padding:2px 0}
+.tdot{width:5px;height:5px;border-radius:50%;background:var(--ink3);animation:pulse 1.3s ease-in-out infinite}
+.tdot:nth-child(2){animation-delay:.2s}.tdot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.typing-status{font-size:11px;color:var(--ink3);animation:fadein .3s ease}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+
+/* Suggestions */
+.sug-wrap{padding:0 20px 12px;display:flex;flex-wrap:wrap;gap:5px;flex-shrink:0}
+.sug{font-size:11.5px;padding:5px 11px;border-radius:20px;border:1.5px solid var(--rule2);background:var(--surf);color:var(--ink2);cursor:pointer;transition:all .12s;white-space:nowrap}
+.sug:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-lt)}
+
+/* Input */
+.input-area{border-top:1px solid var(--rule);background:var(--surf);padding:10px 16px 12px;display:flex;gap:8px;align-items:flex-end;flex-shrink:0}
+textarea#qa-in{flex:1;padding:9px 12px;border:1.5px solid var(--rule2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--ink);background:var(--bg);outline:none;resize:none;height:40px;max-height:120px;line-height:1.5;transition:border-color .15s,box-shadow .15s}
+textarea#qa-in:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(26,86,219,.1)}
+textarea#qa-in::placeholder{color:var(--ink3)}
+.send-btn{width:36px;height:36px;border-radius:var(--r-sm);border:none;background:var(--blue);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .12s,transform .1s;align-self:flex-end}
+.send-btn:hover{background:var(--blue2)}
+.send-btn:active{transform:scale(.95)}
+.send-btn:disabled{background:var(--rule2);cursor:not-allowed}
+
+/* Library */
+.lib-controls{background:var(--surf);border-bottom:1px solid var(--rule);padding:10px 20px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.search-wrap{position:relative;flex:1}
+.search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--ink3);pointer-events:none}
+.search-input{width:100%;padding:7px 10px 7px 30px;border:1.5px solid var(--rule2);border-radius:var(--r-sm);font-size:12.5px;color:var(--ink);background:var(--bg);outline:none;transition:border-color .15s}
+.search-input:focus{border-color:var(--blue);background:#fff}
+.toggle-pill{padding:6px 11px;font-size:11.5px;font-weight:500;cursor:pointer;border:1.5px solid var(--rule2);border-radius:20px;background:var(--surf);color:var(--ink2);transition:all .12s;white-space:nowrap}
+.toggle-pill:hover{border-color:var(--blue);color:var(--blue)}
+.toggle-pill.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.lib-scroll{flex:1;overflow-y:auto}
+.lib-scroll::-webkit-scrollbar{width:4px}
+.lib-scroll::-webkit-scrollbar-thumb{background:var(--rule2);border-radius:2px}
+.lib-row{padding:13px 20px;border-bottom:1px solid var(--rule);display:flex;gap:11px;cursor:pointer;transition:background .1s}
+.lib-row:hover{background:var(--bg)}
+.lib-row.expanded{background:var(--blue-lt);border-left:3px solid var(--blue)}
+.lib-ldot{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-top:1px}
+.lib-main{flex:1;min-width:0}
+.lib-q{font-size:12.5px;font-weight:500;color:var(--ink);margin-bottom:3px}
+.lib-a{font-size:11.5px;color:var(--ink2);line-height:1.5}
+.lib-a.clamped{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lib-expand{font-size:11px;color:var(--blue);cursor:pointer;margin-top:4px;display:inline-block}
+.lib-expand:hover{text-decoration:underline}
+.lib-meta{display:flex;align-items:center;gap:5px;margin-top:6px;flex-wrap:wrap}
+.tag{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500}
+.tag-cached{background:var(--grn-lt);color:var(--grn)}
+.tag-pending{background:var(--amb-lt);color:var(--amb)}
+.tag-section{background:var(--bg);color:var(--ink3);border:1px solid var(--rule)}
+.lib-ts{font-size:10px;color:var(--ink3);margin-left:auto;white-space:nowrap}
+.lib-empty{text-align:center;padding:50px 20px;color:var(--ink3);font-size:12px}
+
+/* Review */
+.rev-scroll{flex:1;overflow-y:auto;padding-bottom:10px}
+.rev-card{background:var(--surf);border:1px solid var(--rule);border-radius:var(--r);margin:14px 20px;overflow:hidden;box-shadow:var(--sh)}
+.rev-head{padding:13px 16px 10px;border-bottom:1px solid var(--rule);display:flex;gap:10px;align-items:flex-start}
+.rev-q{font-size:12.5px;font-weight:500;flex:1}
+.rev-body{padding:12px 16px}
+.rev-lbl{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.rev-answer{background:var(--bg);border:1px solid var(--rule);border-radius:var(--r-sm);padding:10px 12px;font-size:12px;line-height:1.65;color:var(--ink)}
+.rev-edit-ta{width:100%;min-height:80px;padding:9px 11px;border:1.5px solid var(--blue);border-radius:var(--r-sm);font-size:12px;font-family:inherit;color:var(--ink);background:#fff;resize:vertical;outline:none;box-shadow:0 0 0 3px rgba(26,86,219,.1);line-height:1.65;display:none}
+.rev-foot{padding:10px 16px 13px;display:flex;align-items:center;gap:6px;background:var(--bg);border-top:1px solid var(--rule)}
+.rev-note{flex:1;padding:6px 9px;border:1.5px solid var(--rule2);border-radius:var(--r-sm);font-size:11.5px;font-family:inherit;color:var(--ink);background:#fff;outline:none;transition:border-color .15s}
+.rev-note:focus{border-color:var(--blue)}
+.rev-note::placeholder{color:var(--ink3)}
+.rev-empty{text-align:center;padding:50px 20px;color:var(--ink3);font-size:12px}
+.rev-empty svg{width:32px;height:32px;margin:0 auto 10px;display:block;opacity:.2}
+
+/* Buttons */
+.btn{padding:5px 11px;font-size:11.5px;font-weight:500;border-radius:var(--r-sm);border:1.5px solid var(--rule2);background:var(--surf);color:var(--ink2);cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .12s;white-space:nowrap}
+.btn:hover{border-color:var(--blue);color:var(--blue)}
+.btn-approve{background:var(--grn);color:#fff;border-color:var(--grn)}
+.btn-approve:hover{background:#085C35;border-color:#085C35;color:#fff}
+.btn-reject{background:var(--red-lt);color:var(--red);border-color:rgba(153,27,27,.2)}
+.btn-reject:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-icon{padding:5px 8px}
+
+/* Costs */
+.cost-scroll{flex:1;overflow-y:auto;padding:20px}
+.cost-scroll::-webkit-scrollbar{width:4px}
+.cost-scroll::-webkit-scrollbar-thumb{background:var(--rule2);border-radius:2px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+.kpi{background:var(--surf);border:1px solid var(--rule);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh)}
+.kpi.hl{background:var(--grn-lt);border-color:rgba(10,110,64,.15)}
+.kpi-lbl{font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.kpi-val{font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.kpi.hl .kpi-val{color:var(--grn)}
+.kpi-sub{font-size:10px;color:var(--ink3);margin-top:3px}
+.sec-hd{font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin:0 0 12px}
+.bar-wrap{background:var(--surf);border:1px solid var(--rule);border-radius:var(--r);padding:16px;margin-bottom:20px;box-shadow:var(--sh)}
+.bar-r{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bar-r:last-child{margin-bottom:0}
+.bar-lbl{font-size:11px;color:var(--ink2);width:70px;flex-shrink:0}
+.bar-track{flex:1;height:8px;background:var(--rule);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .4s ease}
+.bar-fill.g{background:var(--grn)}
+.bar-fill.a{background:#F59E0B}
+.bar-v{font-size:11px;font-weight:600;color:var(--ink2);width:20px;text-align:right}
+.log-wrap{background:var(--surf);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+.log-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.log-table th{padding:9px 14px;background:var(--bg);text-align:left;font-weight:600;color:var(--ink3);font-size:10px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--rule)}
+.log-table td{padding:9px 14px;border-bottom:1px solid var(--rule);color:var(--ink2);vertical-align:top}
+.log-table tr:last-child td{border-bottom:none}
+.badge-hit{font-size:10px;font-weight:600;color:var(--grn);background:var(--grn-lt);padding:1px 6px;border-radius:4px}
+.badge-api{font-size:10px;font-weight:600;color:var(--amb);background:var(--amb-lt);padding:1px 6px;border-radius:4px}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--ink);color:#fff;font-size:12px;font-weight:500;padding:8px 16px;border-radius:20px;display:flex;align-items:center;gap:7px;opacity:0;transition:all .25s ease;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:999}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Mobile */
+@media(max-width:640px){
+  .sidebar{position:fixed;top:0;left:0;height:100%;z-index:100;transform:translateX(-100%);transition:transform .2s ease;width:240px;min-width:240px}
+  .sidebar.mobile-open{transform:translateX(0)}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99}
+  .sidebar-overlay.show{display:block}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .hamburger{display:flex}
+}
+@media(min-width:641px){
+  .hamburger{display:flex}
+  .sidebar-overlay{display:none!important}
+}
+/* ── Enhancement styles ── */
+.ans-toolbar{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
+.conf-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.conf-high{background:#DCFCE7;color:#166534}.conf-med{background:#FEF9C3;color:#854D0E}.conf-low{background:#FEE2E2;color:#991B1B}
+.conf-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.metric-chip{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--ink3);background:var(--bg2);padding:3px 8px;border-radius:6px;font-weight:500}
+.metric-chip svg{width:10px;height:10px;opacity:.7}
+.act-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--ink2);background:transparent;border:1px solid var(--line);padding:4px 9px;border-radius:7px;cursor:pointer;transition:.15s;font-weight:500}
+.act-btn:hover{background:var(--bg2);color:var(--ink1);border-color:var(--ink3)}
+.act-btn svg{width:11px;height:11px}
+.multi-src{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.src-line{display:flex;align-items:center;gap:7px;font-size:11px;padding:5px 8px;background:var(--bg2);border-radius:7px;border-left:2px solid var(--line)}
+.src-line .sl-chunk{font-family:ui-monospace,Menlo,monospace;font-size:10px;color:var(--ink3)}
+.src-line .sl-score{margin-left:auto;font-weight:600;font-size:10px;color:var(--ink3)}
+.ambiguity-note{margin-top:8px;padding:8px 11px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;font-size:12px;color:#92400E;display:flex;gap:7px;align-items:flex-start}
+.ambiguity-note svg{width:14px;height:14px;flex-shrink:0;margin-top:1px}
+.feedback-row{display:flex;gap:5px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.fb-label{font-size:10.5px;color:var(--ink3);margin-right:2px}
+.fb-btn{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid var(--line);background:transparent;cursor:pointer;transition:.15s}
+.fb-btn:hover{background:var(--bg2)}
+.fb-btn.up.sel{background:#DCFCE7;border-color:#86EFAC;color:#166534}
+.fb-btn.down.sel{background:#FEE2E2;border-color:#FCA5A5;color:#991B1B}
+.fb-btn svg{width:13px;height:13px}
+.compare-toggle{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink2);cursor:pointer;user-select:none}
+.cmp-tray{display:none;position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 16px;gap:8px;align-items:center;flex-wrap:wrap}
+.cmp-tray.show{display:flex}
+.cmp-item{font-size:11px;background:var(--bg2);padding:4px 10px;border-radius:20px;display:flex;align-items:center;gap:6px}
+.cmp-item .x{cursor:pointer;color:var(--ink3);font-weight:700}
+.cmp-go{margin-left:auto;background:var(--ink1);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer}
+.cmp-go:disabled{opacity:.4;cursor:default}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:100;align-items:center;justify-content:center;padding:20px}
+.modal-bg.show{display:flex}
+.modal{background:var(--card);border-radius:16px;max-width:920px;width:100%;max-height:85vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--card);z-index:2}
+.modal-title{font-size:15px;font-weight:700;color:var(--ink1)}
+.modal-x{cursor:pointer;color:var(--ink3);width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:6px}
+.modal-x:hover{background:var(--bg2)}
+.cmp-grid{display:grid;gap:14px;padding:20px}
+.cmp-col{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.cmp-col-head{padding:10px 14px;font-weight:700;font-size:13px;color:#fff}
+.cmp-col-body{padding:14px;font-size:13px;line-height:1.6;color:var(--ink1)}
+.cmp-col-meta{padding:10px 14px;border-top:1px solid var(--line);font-size:11px;color:var(--ink3);display:flex;gap:10px;flex-wrap:wrap}
+.kpi-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.lender-cov{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+.cov-row{display:flex;align-items:center;gap:8px;font-size:12px}
+.cov-name{width:130px;color:var(--ink2);font-weight:500}
+.cov-track{flex:1;height:8px;background:var(--bg2);border-radius:4px;overflow:hidden}
+.cov-fill{height:100%;border-radius:4px}
+.cov-n{width:34px;text-align:right;color:var(--ink3);font-size:11px;font-weight:600}
+.export-btn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink1);background:var(--card);border:1px solid var(--line);padding:7px 13px;border-radius:8px;cursor:pointer;transition:.15s}
+.export-btn:hover{background:var(--bg2);border-color:var(--ink3)}
+.export-btn svg{width:13px;height:13px}
+.tiles-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.stat-tile{flex:1;min-width:120px;background:var(--bg2);border-radius:10px;padding:11px 13px}
+.stat-tile .st-v{font-size:20px;font-weight:700;color:var(--ink1)}
+.stat-tile .st-l{font-size:10.5px;color:var(--ink3);margin-top:2px}
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+<div class="shell">
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-eyebrow">LifeX Asset Finance</div>
+    <div class="brand-name">Policy Assistant</div>
+    <div class="brand-tag">7 lenders · 26 documents</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Workspace</div>
+    <div class="nav-item active" onclick="go(this,'chat')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Ask a question
+    </div>
+    <div class="nav-item" onclick="go(this,'library')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Answer library
+      <span class="nav-badge" id="lib-badge">0</span>
+    </div>
+    <div class="nav-item" onclick="go(this,'review')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Review queue
+      <span class="nav-badge" id="rev-badge" style="background:#F59E0B;color:#fff">0</span>
+    </div>
+    <div class="nav-item" onclick="go(this,'costs')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Usage & cost
+    </div>
+    <div class="nav-section" style="margin-top:4px">Lenders</div>
+    <div class="lender-entry active" onclick="setSidebarLender(this,'ALL')"><div class="lender-dot" style="background:#5B9EFF"></div>All lenders</div>
+    <div class="lender-entry" onclick="setSidebarLender(this,'Angle Finance')"><div class="lender-dot" style="background:var(--angle-c)"></div>Angle Finance</div>
+    <div class="lender-entry" onclick="setSidebarLender(this,'BFS')"><div class="lender-dot" style="background:var(--bfs-c)"></div>BFS</div>
+    <div class="lender-entry" onclick="setSidebarLender(this,'Capital Finance')"><div class="lender-dot" style="background:var(--cfal-c)"></div>Capital Finance</div>
+    <div class="lender-entry" onclick="setSidebarLender(this,'flexicommercial')"><div class="lender-dot" style="background:var(--flexi-c)"></div>flexicommercial</div>
+    <div class="lender-entry" onclick="setSidebarLender(this,'Metro Finance')"><div class="lender-dot" style="background:var(--metro-c)"></div>Metro Finance</div>
+    <div class="lender-entry" onclick="setSidebarLender(this,'Resimac')"><div class="lender-dot" style="background:var(--res-c)"></div>Resimac</div>
+    <div class="lender-entry" onclick="setSidebarLender(this,'Westpac')"><div class="lender-dot" style="background:var(--wbc-c)"></div>Westpac</div>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="status-row"><div class="status-dot"></div>Pipeline connected</div>
+    <div class="status-row"><div class="status-dot"></div><span id="foot-cache">0 answers cached</span></div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- CHAT -->
+  <div class="panel active" id="panel-chat">
+    <div class="topbar">
+      <button class="hamburger btn-icon" onclick="toggleSidebar()" title="Toggle sidebar">
+        <svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="topbar-title">Policy Q&A</div>
+      <div class="topbar-right">
+        <button class="btn btn-icon" onclick="clearChat()" title="Clear chat">
+          <svg style="width:13px;height:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <button class="lender-pill active" data-l="ALL" onclick="setLenderFilter(this)">All lenders</button>
+      <button class="lender-pill" data-l="Angle Finance" onclick="setLenderFilter(this)"><span class="pill-dot" style="background:var(--angle-c)"></span>Angle</button>
+      <button class="lender-pill" data-l="BFS" onclick="setLenderFilter(this)"><span class="pill-dot" style="background:var(--bfs-c)"></span>BFS</button>
+      <button class="lender-pill" data-l="Capital Finance" onclick="setLenderFilter(this)"><span class="pill-dot" style="background:var(--cfal-c)"></span>Capital Finance</button>
+      <button class="lender-pill" data-l="flexicommercial" onclick="setLenderFilter(this)"><span class="pill-dot" style="background:var(--flexi-c)"></span>Flexi</button>
+      <button class="lender-pill" data-l="Metro Finance" onclick="setLenderFilter(this)"><span class="pill-dot" style="background:var(--metro-c)"></span>Metro</button>
+      <button class="lender-pill" data-l="Resimac" onclick="setLenderFilter(this)"><span class="pill-dot" style="background:var(--res-c)"></span>Resimac</button>
+      <button class="lender-pill" data-l="Westpac" onclick="setLenderFilter(this)"><span class="pill-dot" style="background:var(--wbc-c)"></span>Westpac</button>
+    </div>
+    <div class="chat-scroll" id="chat-body">
+      <!-- Welcome state shown on load -->
+      <div class="welcome" id="welcome-state">
+        <div class="welcome-icon">
+          <svg style="width:22px;height:22px" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="welcome-title">What do you need to know?</div>
+        <div class="welcome-sub">Ask any question about lender rates, loan limits, eligibility criteria, documentation requirements, or exclusions. Filter by lender if you're working a specific deal.</div>
+        <div class="welcome-examples">
+          <div class="welcome-ex" onclick="ask(this.querySelector('.ex-q').textContent)">
+            <span class="ex-lender" style="background:var(--res-lt);color:var(--res-c)">Resimac</span>
+            <span class="ex-q">What is the interest rate for electric vehicles under the PremiumPLUS tier?</span>
+          </div>
+          <div class="welcome-ex" onclick="ask(this.querySelector('.ex-q').textContent)">
+            <span class="ex-lender" style="background:var(--wbc-lt);color:var(--wbc-c)">Westpac</span>
+            <span class="ex-q">What is the DriveXpress maximum loan for a new client who owns residential property?</span>
+          </div>
+          <div class="welcome-ex" onclick="ask(this.querySelector('.ex-q').textContent)">
+            <span class="ex-lender" style="background:var(--cfal-lt);color:var(--cfal-c)">Capital Finance</span>
+            <span class="ex-q">What documentation is required for a transaction between $500k and $1 million?</span>
+          </div>
+          <div class="welcome-ex" onclick="ask(this.querySelector('.ex-q').textContent)">
+            <span class="ex-lender" style="background:var(--angle-lt);color:var(--angle-c)">Angle Finance</span>
+            <span class="ex-q">What are the qualifying criteria for Prime Mover finance at Angle?</span>
+          </div>
+          <div class="welcome-ex" onclick="ask(this.querySelector('.ex-q').textContent)">
+            <span class="ex-lender" style="background:var(--bfs-lt);color:var(--bfs-c)">BFS</span>
+            <span class="ex-q">What is the minimum Experian CCR score for BFS Tier 2?</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sug-wrap" id="sug-wrap" style="display:none"></div>
+    <div class="cmp-tray" id="cmp-tray"></div>
+    <div class="input-area">
+      <textarea id="qa-in" placeholder="Ask about any lender policy — rates, limits, documentation, exclusions…" onkeydown="handleKey(event)" oninput="resize(this)"></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendQ()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- LIBRARY -->
+  <div class="panel" id="panel-library">
+    <div class="topbar">
+      <button class="hamburger btn-icon" onclick="toggleSidebar()">
+        <svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div><div class="topbar-title">Answer Library</div><div class="topbar-sub">Validated answers returned instantly at no cost</div></div>
+    </div>
+    <div class="lib-controls">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" type="text" id="lib-search" placeholder="Search questions, answers, lenders…" oninput="renderLib()">
+      </div>
+      <button class="toggle-pill active" data-s="all" onclick="setLibFilter(this)">All</button>
+      <button class="toggle-pill" data-s="cached" onclick="setLibFilter(this)">In library</button>
+      <button class="toggle-pill" data-s="pending" onclick="setLibFilter(this)">Pending review</button>
+    </div>
+    <div class="lib-scroll" id="lib-body"></div>
+  </div>
+
+  <!-- REVIEW -->
+  <div class="panel" id="panel-review">
+    <div class="topbar">
+      <button class="hamburger btn-icon" onclick="toggleSidebar()">
+        <svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div><div class="topbar-title">Review Queue</div><div class="topbar-sub">Approve, edit, or reject AI answers before they enter the library</div></div>
+    </div>
+    <div class="rev-scroll" id="rev-body"></div>
+  </div>
+
+  <!-- COSTS -->
+  <div class="panel" id="panel-costs">
+    <div class="topbar">
+      <button class="hamburger btn-icon" onclick="toggleSidebar()">
+        <svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div><div class="topbar-title">Usage & Cost</div><div class="topbar-sub">API spend vs cache savings this session</div></div>
+    </div>
+    <div class="cost-scroll">
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-lbl">Total queries</div><div class="kpi-val" id="k-total">0</div><div class="kpi-sub">this session</div></div>
+        <div class="kpi"><div class="kpi-lbl">API calls</div><div class="kpi-val" id="k-api">0</div><div class="kpi-sub" id="k-api-sub">—% of queries</div></div>
+        <div class="kpi"><div class="kpi-lbl">API cost</div><div class="kpi-val" id="k-cost">$0.00</div><div class="kpi-sub">estimated spend</div></div>
+        <div class="kpi hl"><div class="kpi-lbl">Saved by cache</div><div class="kpi-val" id="k-saved">$0.00</div><div class="kpi-sub" id="k-saved-sub">0 instant answers</div></div>
+      </div>
+      <div class="sec-hd" style="display:flex;align-items:center;justify-content:space-between">Answer quality &amp; performance
+        <span style="display:flex;gap:6px">
+          <button class="export-btn" onclick="exportSession('csv')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>CSV</button>
+          <button class="export-btn" onclick="exportSession('json')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>JSON</button>
+        </span>
+      </div>
+      <div class="tiles-row">
+        <div class="stat-tile"><div class="st-v" id="t-acc">—</div><div class="st-l">Broker-rated accuracy</div></div>
+        <div class="stat-tile"><div class="st-v" id="t-rated">0</div><div class="st-l">Answers rated (👍 <span id="t-up">0</span> / 👎 <span id="t-down">0</span>)</div></div>
+        <div class="stat-tile"><div class="st-v" id="t-lat">—</div><div class="st-l">Avg API latency</div></div>
+        <div class="stat-tile"><div class="st-v" id="t-tok">0</div><div class="st-l">Total tokens</div></div>
+      </div>
+      <div class="sec-hd" style="margin-top:20px">Coverage by lender</div>
+      <div class="lender-cov" id="lender-cov"><div style="font-size:11px;color:var(--ink3)">No queries yet this session</div></div>
+      <div class="sec-hd" style="margin-top:20px">Cache vs API breakdown</div>
+      <div class="bar-wrap">
+        <div class="bar-r"><div class="bar-lbl">Library hits</div><div class="bar-track"><div class="bar-fill g" id="bh" style="width:0%"></div></div><div class="bar-v" id="bvh">0</div></div>
+        <div class="bar-r"><div class="bar-lbl">API calls</div><div class="bar-track"><div class="bar-fill a" id="ba" style="width:0%"></div></div><div class="bar-v" id="bva">0</div></div>
+        <div style="font-size:10px;color:var(--ink3);margin-top:10px">Library hits: &lt;10ms · $0.00. API calls: ~1–2s · ~$0.008 each.</div>
+      </div>
+      <div class="sec-hd">Query log</div>
+      <div class="log-wrap">
+        <table class="log-table">
+          <thead><tr><th>Question</th><th>Source</th><th>Lender</th><th>Time</th><th>Cost</th></tr></thead>
+          <tbody id="log-body"><tr><td colspan="5" style="text-align:center;color:var(--ink3);padding:20px">No queries yet this session</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="modal-bg" id="cmp-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Side-by-side comparison</div>
+      <div class="modal-x" onclick="closeCompare()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+    </div>
+    <div class="cmp-grid" id="cmp-grid"></div>
+  </div>
+</div>
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+let msgSeq=0; const ANSWERS={}, FEEDBACK={}, COMPARE={};
+const IN_PER_1K=0.003,OUT_PER_1K=0.015,AVG_IN=420,AVG_OUT=175;
+const API_COST=(AVG_IN*IN_PER_1K+AVG_OUT*OUT_PER_1K)/1000;
+const API_BASE='https://frying-june-evict.ngrok-free.dev';
+const LENDER_MAP={ANGLE:'Angle Finance',BFS:'BFS',CFAL:'Capital Finance',FLEXI:'flexicommercial',METRO:'Metro Finance',RESIMAC:'Resimac',WESTPAC:'Westpac'};
+const LB={
+  'Angle Finance':{bg:'#F9E0F2',c:'#9B0060',abbr:'ANG'},
+  'BFS':{bg:'#E0EDFB',c:'#0D4A8A',abbr:'BFS'},
+  'Capital Finance':{bg:'#EDE4F8',c:'#4A1878',abbr:'CAP'},
+  'flexicommercial':{bg:'#FDEEE4',c:'#B84000',abbr:'FLX'},
+  'Metro Finance':{bg:'#E0EDFB',c:'#0D4DA8',abbr:'MET'},
+  'Resimac':{bg:'#DDF0F6',c:'#0A5870',abbr:'RES'},
+  'Westpac':{bg:'#FCE4E4',c:'#A00E0E',abbr:'WBC'}
+};
+
+function ldot(lender,sz=28){const l=LB[lender]||{bg:'#F1F5F9',c:'#475569',abbr:'?'};return`<div class="lib-ldot" style="background:${l.bg};color:${l.c};width:${sz}px;height:${sz}px">${l.abbr}</div>`}
+function srcChip(lender,section){
+  const l=LB[lender]||{bg:'#F1F5F9',c:'#475569'};
+  // Format section — strip internal IDs into readable labels
+  const displaySection = section ? section.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) : '';
+  let chips=`<span class="src-chip" style="background:${l.bg};color:${l.c}">${lender}</span>`;
+  if(displaySection) chips+=`<span class="src-chip" style="background:var(--bg);color:var(--ink3)">${displaySection}</span>`;
+  return chips;
+}
+
+let KB=[
+  {id:1,q:"Angle Finance Low Doc limits and exposure?",a:"Angle Finance offers three Low Doc bands: under $100k (ABN 2+ yrs, Veda 550+, property or non-property backed, Primary & Secondary & Tertiary up to limits, no credit reference required), $100k–$250k (ABN 2+ yrs, GST 1+ yrs, Veda 550+ Corporate / 600+ Individual, property backed, Primary & Secondary up to $250k, Motor Vehicles up to $200k, asset finance credit reference or mortgage statements required), and up to $400k (ABN 3+ yrs, GST 3+ yrs, Veda 600+, property backed including spousal, Primary & Secondary only, no tertiary assets, prime movers or buses, asset finance credit reference from an Angle-accepted lender required, ATO portals for $250k+).",lender:"Angle Finance",section:"Rate Card, p.3 — Low Doc & Mid Doc Guidelines",status:"cached",ts:Date.now()-86400000*5,hits:8},
+  {id:2,q:"Angle Finance A+ and A++ profile rates?",a:"Angle's A++ profile requires 8+ year ABN, 4+ year GST, primary assets only, new assets (YOM 2023), and strong credit score. Rates: property backed 7.79%, non-property backed 8.79%. The A+ profile requires 4+ year ABN, 2+ year GST, primary & secondary assets, end of term up to 10 years, strong credit score. Rates: property backed 8.29%, non-property backed 9.29%.",lender:"Angle Finance",section:"Rate Card, p.2 — A++ and A+ Profiles",status:"cached",ts:Date.now()-86400000*4,hits:5},
+  {id:3,q:"Angle Finance Prime Mover qualifying criteria?",a:"Prime Movers at Angle Finance require: Company or Trust entity only (no sole traders), minimum 5 years ABN & GST, strong credit score of 600+, maximum asset age up to EOT 20 years, property backed, bank statements or full financial assessment, comparable asset finance credit reference, and a 1% rate loading applies. Rates start from 8.99%.",lender:"Angle Finance",section:"Prime Movers Flyer + Rate Card, p.4",status:"cached",ts:Date.now()-86400000*3,hits:4},
+  {id:4,q:"BFS Tier 2 minimum CCR score?",a:"The minimum Experian CCR score for BFS Prime Tier 2 is 600. Tier 3 requires 550+ with a 20% deposit, Tier 4 requires 400+ with a 20% deposit. Ultra Prime requires 960+, Tier 1 requires 800+, and BFS Plus requires 400 (or 550 for commercial contracts for Used vehicles). All scores effective 1 July 2026.",lender:"BFS",section:"Product Guide, p.1 — Pricing Table",status:"cached",ts:Date.now()-86400000*5,hits:9},
+  {id:5,q:"BFS commercial base rates for new and demo vehicles?",a:"BFS commercial base rates for New and Demo vehicles (effective 1 July 2026): Ultra Prime 7.60%, Tier 1 8.25%, Tier 2 8.50%, Tier 3 10.15%, Tier 4 11.50%. Maximum rate across all tiers is 17.15%. Non-asset backed subject to a 1.85% loading (Tier 1–4), private sale subject to an additional 0.50% loading.",lender:"BFS",section:"Product Guide, p.1 — Commercial Pricing",status:"cached",ts:Date.now()-86400000*4,hits:7},
+  {id:6,q:"BFS maximum loan size and loan terms?",a:"BFS Prime standard loans: $5,000–$250,000. Private sales: $5,000–$150,000. High value loans ($250,000–$400,000) available for Ultra Prime to Tier 2 on case-by-case basis, requiring minimum 20% deposit and asset-backed applicants only. BFS Plus: $5,000–$100,000. Loan terms: 12–84 months for Prime, 12–60 months for BFS Plus.",lender:"BFS",section:"Product Guide, p.2 — Loan Size & Loan Term",status:"cached",ts:Date.now()-86400000*3,hits:5},
+  {id:7,q:"Capital Finance docs needed under $250k?",a:"For Capital Finance (CFAL) transactions under $250,000: client information, brief background of business/directors, ABN for 2 years and GST registered, full description of goods, reason for purchase, signed privacy form from ALL individuals, last 2 years financial statements not more than 18 months old (P&L and balance sheet), last 2 years tax returns, current asset and liability statement from all directors/individual guarantors, and commitment schedule.",lender:"Capital Finance",section:"Credit Checklist — Min. Documentation Requirements",status:"cached",ts:Date.now()-86400000*4,hits:5},
+  {id:8,q:"Capital Finance docs needed for $500k to $1 million?",a:"For CFAL $500k–$1m: all requirements for $250k–$500k apply, plus detailed background of business/directors, last 3 years financial statements, interim or management accounts if financials year-end is more than 6 months old, succession planning details, list of major competitors and clients, current tax portal (TFNs redacted), commentary on major movements in financials (≥10%), and current aged debtor and creditor listing.",lender:"Capital Finance",section:"Credit Checklist — $500k–$1m Column",status:"cached",ts:Date.now()-86400000*3,hits:3},
+  {id:9,q:"flexicommercial standard rates for primary assets?",a:"flexicommercial standard base rates for primary assets (effective 15 May 2026, ex brokerage): $10k–$20k: 12.85%, $20k–$50k: 10.35%, $50k–$150k: 8.60%, $150k+: 8.10%. Rate add-ons: +1.0% for prime movers, assets 11–15 years old at EOT, terms under 24 months, or private sales/refinances. +1.25% for non-asset backed or terms over 60 months. +2.0% for assets over 15 years at EOT.",lender:"flexicommercial",section:"Rate Card May 2026 — Standard Rates",status:"cached",ts:Date.now()-86400000*4,hits:7},
+  {id:10,q:"flexicommercial flexiPremium rates?",a:"flexicommercial flexiPremium rates (effective 15 May 2026): Primary assets — $50k–$100k: 7.30%, $100k–$500k: 7.30%. Secondary assets — $50k–$100k: 8.69%, $100k–$500k: 8.19%. Time in business: asset backed 4+ years ABN & GST, non-asset backed 8+ years. Entity types: Companies, Trusts, Partnerships only — Sole Traders excluded. Maximum brokerage 3%.",lender:"flexicommercial",section:"Rate Card May 2026 — FlexiPremium",status:"cached",ts:Date.now()-86400000*3,hits:6},
+  {id:11,q:"Metro Finance passenger vehicle max loan and exposure?",a:"Metro Finance passenger vehicle streamlined product: property backed — max loan $150,000, max Metro exposure $250,000 for new customers / $500,000 for 12 months good history / $750,000 for 24 months history. Non-property backed (motor vehicles only, dealer sale, 30% deposit required): max loan $100,000, max exposure $100,000. Asset age at EOT: no older than 12 years. GST registration: 2 years continuously.",lender:"Metro Finance",section:"Passenger Vehicle Streamlined Product",status:"cached",ts:Date.now()-86400000*4,hits:6},
+  {id:12,q:"Metro Finance commercial asset finance rates April 2026?",a:"Metro Finance Commercial rates (01/04/2026, 24–60 months): Passenger & Commercial Vehicles (<12T GVM, up to 5 years) — over $20k: 8.35%, $10k–$20k: 9.15%. Heavy Commercial Vehicles (>12T GVM & trailers) — over $20k: 8.60%, $10k–$20k: 10.30%. Wheeled Plant & Equipment — over $20k: 8.65%, $10k–$20k: 10.40%. Brokerage: rates applicable up to 4%; above 4.0% add 0.5% for every 1%.",lender:"Metro Finance",section:"Commercial Rate Sheet — 01/04/2026",status:"cached",ts:Date.now()-86400000*3,hits:5},
+  {id:13,q:"Resimac rates for electric vehicles?",a:"Resimac charges 7.54% p.a. for PremiumPLUS clients and 7.79% p.a. for Premium, Standard, and Basic clients on electric vehicles. A 2% risk loading applies for private sales, classic cars, assets aged 16+ years at EOT, and prime movers — multiple loadings can stack to a maximum of 4% per deal.",lender:"Resimac",section:"Commercial Product Guide, p.4 — Interest Rates",status:"cached",ts:Date.now()-86400000*5,hits:8},
+  {id:14,q:"Resimac customer tiers and ABN requirements?",a:"Resimac has four commercial tiers: PremiumPLUS (ABN >6 years, GST >3 years, property-backed only), Premium (ABN >4 years, GST >2 years, property-backed), Standard (ABN >2 years, GST >1 year, property-backed or renter), Basic (ABN >1 year, GST >1 year, property-backed, renter, or LWP). Non property-backed deposits: 10% for motor vehicles, 20% for all other assets.",lender:"Resimac",section:"Commercial Product Guide, p.2 — Customer Tiers",status:"cached",ts:Date.now()-86400000*4,hits:6},
+  {id:15,q:"Westpac DriveXpress max loan for a new client?",a:"For a new Westpac Business Bank client who owns residential property with minimum annual income of $75k, the maximum DriveXpress loan is $150,000 across eligible goods A, B & C, with maximum DriveXpress exposure of $250,000. For existing clients with 12 months current WEF history: up to $200k (Cat A), $300k (Cat B), $500k (Cat C) — maximum total exposure $750k.",lender:"Westpac",section:"Key Financial Policies Q1FY26 — DriveXpress",status:"cached",ts:Date.now()-86400000*5,hits:9},
+  {id:16,q:"Westpac Equipment Finance Xpress rates June 2026?",a:"Westpac DriveXpress rates (effective 15 June 2026, licensed dealers, up to 5 years old, cars & light commercial <4.5T GVM): 7.75% for 24/36/48 month terms, 7.85% for 60 months. Private sales (up to 5 years old): 8.17% for 24/36/48 months, 8.37% for 60 months. For electric vehicles, reduce any rate by 1%. Brokerage limited to maximum 3%.",lender:"Westpac",section:"Rate Chart Xpress Only — 15 June 2026",status:"cached",ts:Date.now()-86400000*4,hits:7},
+];
+let nextId=17;
+let session={api:0,hits:0,cost:0,saved:0,log:[],rated:0,upvotes:0,downvotes:0};
+let busy=false,qaLender='ALL',libFilter='all';
+let sidebarOpen=true;
+
+// Try restore lender preference
+try{const saved=localStorage.getItem('cmap_lender');if(saved)qaLender=saved;}catch(e){}
+
+function sim(a,b){
+  const wa=new Set(a.toLowerCase().split(/\W+/).filter(w=>w.length>2));
+  const wb=new Set(b.toLowerCase().split(/\W+/).filter(w=>w.length>2));
+  if(!wa.size||!wb.size)return 0;
+  let n=0;wa.forEach(w=>{if(wb.has(w))n++;});
+  return n/Math.max(wa.size,wb.size);
+}
+function findCached(q,lf){
+  let best=null,bestScore=0;
+  for(const e of KB){
+    if(e.status!=='cached')continue;
+    if(lf!=='ALL'&&e.lender!==lf)continue;
+    const s=sim(q,e.q);
+    if(s>bestScore){bestScore=s;best=e;}
+  }
+  return bestScore>0.35?best:null;
+}
+function genAnswer(q,lf){
+  const ql=q.toLowerCase();
+  if(lf==='Angle Finance'||ql.includes('angle'))return{a:"Based on Angle Finance's Rate Card (April 2026): Angle offers A++, A+, standard rate card, Low Doc, Mid Doc, Start-Up, and Prime Mover products. Rates range from 7.79% (A++, property backed) to 17.85% (tertiary, non-property). Please narrow your question to a product type or loan size for a precise answer.",lender:"Angle Finance",section:"Rate Card Apr 2026"};
+  if(lf==='BFS'||ql.includes('bfs'))return{a:"Based on BFS Product Guide (effective 1 July 2026): BFS Prime spans Ultra Prime (CCR 960+) through Tier 4 (CCR 400+), plus BFS Plus. Please specify tier, vehicle type, and consumer vs commercial for a precise answer.",lender:"BFS",section:"Product Guide, p.1–3"};
+  if(lf==='Capital Finance'||ql.includes('capital finance')||ql.includes('cfal'))return{a:"Based on Capital Finance Australia Limited's documentation checklist: requirements scale from ≤$250k up to $1m+ with increasing financial detail. Please specify the transaction size for exact documentation requirements.",lender:"Capital Finance",section:"Credit Checklist"};
+  if(lf==='flexicommercial'||ql.includes('flexi'))return{a:"Based on flexicommercial's Rate Card (15 May 2026) and Credit Matrix (December 2025): flexicommercial offers flexiPremium (from 7.30%) and standard rates, covering primary ($10k–$750k), secondary (up to $500k) and tertiary (up to $300k) assets. Please specify asset category and exposure for precise rates.",lender:"flexicommercial",section:"Rate Card May 2026 + Credit Matrix Dec 2025"};
+  if(lf==='Metro Finance'||ql.includes('metro'))return{a:"Based on Metro Finance's Commercial Rate Sheet (01/04/2026): Metro covers passenger vehicles, heavy commercials, wheeled plant, agri, and MetroEco (electric). Rates start from 8.35% for vehicles <5 years via streamline. Please specify asset type and loan size for precise limits.",lender:"Metro Finance",section:"Commercial Rate Sheet 01/04/2026"};
+  if(lf==='Resimac'||ql.includes('resimac'))return{a:"Based on Resimac Asset Finance Commercial Product Guide (27 March 2026): four tiers (PremiumPLUS to Basic) based on ABN/GST age and property backing. Rates from 7.54% p.a. (EVs, PremiumPLUS) to 14.34% p.a. (tertiary). Please specify tier, asset category, and doc type.",lender:"Resimac",section:"Commercial Product Guide, Mar 2026"};
+  if(lf==='Westpac'||ql.includes('westpac'))return{a:"Based on Westpac Equipment Finance (Q1FY26 policies + June 2026 rate charts): Westpac offers DriveXpress (fast-track), Rollover, Replacement, and standard HP/Commercial Loan/Finance Lease. Please specify program type and customer profile for exact rates and limits.",lender:"Westpac",section:"Key Policies Q1FY26 + Rate Charts Jun 2026"};
+  return{a:"I couldn't find a precise match across all 7 lenders. Try selecting a specific lender from the filter bar above, or rephrase your question with: lender name + product type + policy area (rates, loan limits, documentation, exclusions).",lender:null,section:null};
+}
+
+function ask(q){document.getElementById('qa-in').value=q;sendQ();}
+
+function sendQ(){
+  if(busy)return;
+  const inp=document.getElementById('qa-in');
+  const q=inp.value.trim();
+  if(!q)return;
+  inp.value='';resize(inp);
+  // Hide welcome state on first message
+  const ws=document.getElementById('welcome-state');
+  if(ws)ws.remove();
+  busy=true;
+  document.getElementById('send-btn').disabled=true;
+  addUserMsg(q);
+  const cached=findCached(q,qaLender);
+  if(cached){
+    const ms=4+Math.round(Math.random()*7);
+    cached.hits++;session.hits++;session.saved+=API_COST;
+    session.log.unshift({q,src:'cache',ms,tokens:0,cost:0,lender:cached.lender,section:cached.section});
+    setTimeout(()=>{
+      addAiMsg(cached.a,cached.lender,cached.section,true,ms,0,q);
+      updateAll();busy=false;
+      document.getElementById('send-btn').disabled=false;
+    },ms+80);
+  } else {
+    const typing=addTyping();
+    const questionWithLender=(qaLender!=='ALL')?qaLender+': '+q:q;
+    fetch(API_BASE+'/query',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},
+      body:JSON.stringify({question:questionWithLender})
+    })
+    .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(data=>{
+      typing.remove();
+      const ms=Math.round((data.response_time||1)*1000);
+      const apiLender=data.sources&&data.sources.length>0?data.sources[0].lender:null;
+      const lender=LENDER_MAP[apiLender]||apiLender;
+      const section=data.sources?data.sources.map(s=>s.chunk_id).join(', '):'';
+      const outTokens=Math.round(data.answer.length/4);
+      const cost=(AVG_IN*IN_PER_1K+outTokens*OUT_PER_1K)/1000;
+      session.api++;session.cost+=cost;
+      session.log.unshift({q,src:'api',ms,tokens:AVG_IN+outTokens,cost,lender:lender||'—',section:section||'—'});
+      addAiMsg(data.answer,lender,section,false,ms,cost,q);
+      if(lender)KB.unshift({id:nextId++,q,a:data.answer,lender,section,status:'pending',ts:Date.now(),hits:0});
+      updateAll();busy=false;
+      document.getElementById('send-btn').disabled=false;
+      // Pulse review badge
+      const rb=document.getElementById('rev-badge');
+      rb.classList.remove('pulse');void rb.offsetWidth;rb.classList.add('pulse');
+    })
+    .catch(err=>{
+      typing.remove();
+      addAiMsg('⚠️ Could not reach the backend. Make sure the FastAPI server is running: uvicorn src.api:app --port 8000',null,null,false,0,0);
+      busy=false;document.getElementById('send-btn').disabled=false;
+      console.error('API error:',err);
+    });
+  }
+}
+
+function addUserMsg(text){
+  const b=document.getElementById('chat-body');
+  const d=document.createElement('div');d.className='msg user';
+  d.innerHTML=`<div class="avatar">U</div><div class="msg-wrap"><div class="bubble">${esc(text)}</div></div>`;
+  b.appendChild(d);b.scrollTop=b.scrollHeight;
+}
+function addTyping(){
+  const b=document.getElementById('chat-body');
+  const d=document.createElement('div');d.className='msg ai';
+  const lenderLabel=qaLender!=='ALL'?qaLender:'all 7 lenders';
+  d.innerHTML=`<div class="avatar">L</div><div class="msg-wrap"><div class="bubble"><div class="typing-wrap"><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div><div class="typing-status">Searching across ${lenderLabel === 'all 7 lenders' ? '26 documents across ' + lenderLabel : lenderLabel + ' policy documents'}…</div></div></div></div>`;
+  b.appendChild(d);b.scrollTop=b.scrollHeight;return d;
+}
+function assessConfidence(text,lender,chunkList){
+  // Heuristic confidence: strong when a lender + at least one chunk resolved and the
+  // answer isn't a fallback/hedge. Lower when no source or hedging language present.
+  if(!lender||!chunkList.length) return {level:'low',label:'Low confidence',why:'No policy chunk was matched — treat as unverified.'};
+  const t=text.toLowerCase();
+  const hedges=['couldn\'t find','please narrow','please specify','not sure','confirm with','no public rate','medium-confidence','may not','cannot be quoted'];
+  const hedged=hedges.some(h=>t.includes(h));
+  const ocr=chunkList.some(c=>c.includes('balloon_refinance'));
+  if(ocr) return {level:'med',label:'Medium confidence',why:'Draws on an OCR-sourced chunk — verify figures with the lender.'};
+  if(hedged) return {level:'med',label:'Medium confidence',why:'Answer hedges or points to the lender — narrow the question for certainty.'};
+  if(chunkList.length>=2) return {level:'high',label:'High confidence',why:`Grounded in ${chunkList.length} matching policy chunks.`};
+  return {level:'high',label:'High confidence',why:'Grounded in a matching policy chunk.'};
+}
+function detectAmbiguity(q){
+  const ql=q.toLowerCase();
+  // Known documented conflicts the model should flag rather than answer definitively
+  if((ql.includes('start-up')||ql.includes('start up')||ql.includes('startup'))&&ql.includes('angle')&&(ql.includes('score')||ql.includes('credit')))
+    return 'Angle\'s materials conflict on the Start-Up credit score (flyer 550+ vs rate card 500+). This answer flags the higher, safer threshold — confirm the current figure with Angle.';
+  if(ql.includes('angle')&&ql.includes('prime mover')&&(ql.includes('rate')||ql.includes('%')))
+    return 'Angle publishes two prime-mover rates (flyer 8.99% vs rate card 9.39%). Confirm the current rate with Angle before quoting.';
+  if(ql.includes('metro')&&(ql.includes('balloon')||ql.includes('residual refinance')))
+    return 'Metro\'s Balloon/Residual Refinance figures come from a scanned (OCR) document and are medium-confidence — verify with Metro before relying on them.';
+  return null;
+}
+function addAiMsg(text,lender,section,isHit,ms,cost,q){
+  const b=document.getElementById('chat-body');
+  const d=document.createElement('div');d.className='msg ai';
+  const mid='m'+(msgSeq++);
+  const chunkList=(section||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const cacheTag=isHit?`<div class="cache-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:10px;height:10px"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>From library · ${ms}ms</div>`:'';
+  // multi-source block: one line per retrieved chunk (broker sees exactly what it drew on)
+  let srcBlock='';
+  if(lender){
+    if(chunkList.length>1){
+      srcBlock=`<div class="source-block"><div class="source-label">Sources · ${chunkList.length} chunks</div><div class="multi-src">`+
+        chunkList.map((c,i)=>`<div class="src-line">${srcChip(lender,'')}<span class="sl-chunk">${esc(c)}</span><span class="sl-score">rank ${i+1}</span></div>`).join('')+`</div></div>`;
+    } else {
+      srcBlock=`<div class="source-block"><div class="source-label">Source</div><div class="source-chips">${srcChip(lender,section)}</div></div>`;
+    }
+  }
+  // confidence + why-this-answer
+  const conf=assessConfidence(text,lender,chunkList);
+  const confBadge=`<span class="conf-badge conf-${conf.level}" title="${esc(conf.why)}"><span class="conf-dot"></span>${conf.label}</span>`;
+  // per-answer metrics (team can read these inline too)
+  const costTxt=isHit?'$0.0000 · cached':('$'+(cost||0).toFixed(4));
+  const metricChips=`<span class="metric-chip" title="Response time"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${ms}ms</span>`+
+    `<span class="metric-chip" title="Estimated cost">${costTxt}</span>`;
+  // action buttons
+  const actions=`<button class="act-btn" onclick="copyAns('${mid}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>`+
+    `<button class="act-btn" onclick="explainWhy('${mid}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Why this answer?</button>`;
+  const whyBox=`<div class="ambiguity-note" id="why-${mid}" style="display:none;background:#EEF2FF;border-color:#C7D2FE;color:#3730A3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span>${esc(conf.why)} The retrieval filtered to ${lender||'no lender'} before searching, so the answer should not mix in other lenders\u2019 policies.</span></div>`;
+  // ambiguity / conflict flag
+  const amb=q?detectAmbiguity(q):null;
+  const ambBox=amb?`<div class="ambiguity-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>${esc(amb)}</span></div>`:'';
+  // feedback + compare
+  const fb=`<div class="feedback-row"><span class="fb-label">Was this right?</span>`+
+    `<button class="fb-btn up" id="up-${mid}" onclick="rateAns('${mid}',1)" title="Correct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></button>`+
+    `<button class="fb-btn down" id="down-${mid}" onclick="rateAns('${mid}',-1)" title="Wrong"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg></button>`+
+    (lender?`<label class="compare-toggle"><input type="checkbox" onchange="toggleCompare('${mid}',this.checked)"> add to compare</label>`:'')+`</div>`;
+  d.innerHTML=`<div class="avatar">L</div><div class="msg-wrap">${cacheTag}<div class="bubble"><div id="${mid}">${esc(text)}</div>${ambBox}${srcBlock}<div class="ans-toolbar">${confBadge}${metricChips}${actions}</div>${whyBox}${fb}</div></div>`;
+  b.appendChild(d);b.scrollTop=b.scrollHeight;
+  // stash for compare / feedback
+  ANSWERS[mid]={q:q||'',text,lender:lender||'—',section:section||'',ms,cost:isHit?0:(cost||0),cached:isHit,conf:conf.level};
+}
+function copyAns(mid){const a=ANSWERS[mid];if(!a)return;navigator.clipboard&&navigator.clipboard.writeText(a.text);toast('Answer copied');}
+function explainWhy(mid){const w=document.getElementById('why-'+mid);if(w)w.style.display=w.style.display==='none'?'flex':'none';}
+function rateAns(mid,v){
+  const up=document.getElementById('up-'+mid),down=document.getElementById('down-'+mid);
+  up.classList.toggle('sel',v===1);down.classList.toggle('sel',v===-1);
+  if(ANSWERS[mid])ANSWERS[mid].rating=v;
+  FEEDBACK[mid]=v;session.rated=Object.keys(FEEDBACK).length;
+  session.upvotes=Object.values(FEEDBACK).filter(x=>x===1).length;
+  session.downvotes=Object.values(FEEDBACK).filter(x=>x===-1).length;
+  toast(v===1?'Marked correct — thanks':'Flagged for review');
+  updateAll();
+}
+function toggleCompare(mid,on){
+  const a=ANSWERS[mid];if(!a)return;
+  if(on){COMPARE[mid]=a;} else {delete COMPARE[mid];}
+  renderCmpTray();
+}
+function renderCmpTray(){
+  const tray=document.getElementById('cmp-tray');const ids=Object.keys(COMPARE);
+  if(!ids.length){tray.classList.remove('show');tray.innerHTML='';return;}
+  tray.classList.add('show');
+  tray.innerHTML=`<span style="font-size:11px;color:var(--ink3);font-weight:600">Compare tray</span>`+
+    ids.map(id=>{const a=COMPARE[id];return`<span class="cmp-item">${esc(a.lender)} · ${esc((a.q||'').slice(0,28))}${(a.q||'').length>28?'…':''}<span class="x" onclick="removeCmp('${id}')">✕</span></span>`;}).join('')+
+    `<button class="cmp-go" ${ids.length<2?'disabled':''} onclick="openCompare()">Compare ${ids.length} answers</button>`;
+}
+function removeCmp(id){delete COMPARE[id];const cb=document.querySelector(`input[onchange*="'${id}'"]`);if(cb)cb.checked=false;renderCmpTray();}
+function openCompare(){
+  const ids=Object.keys(COMPARE);if(ids.length<2)return;
+  const cols=ids.map(id=>{const a=COMPARE[id];const l=LB[a.lender]||{bg:'#334155',c:'#fff'};
+    return`<div class="cmp-col">
+      <div class="cmp-col-head" style="background:${l.bg==='#F1F5F9'?'#334155':l.bg};color:${l.c==='#475569'?'#fff':l.c}">${esc(a.lender)}</div>
+      <div class="cmp-col-body">${esc(a.q?('Q: '+a.q):'')}<br><br>${esc(a.text)}</div>
+      <div class="cmp-col-meta"><span>⏱ ${a.ms}ms</span><span>💲 ${a.cached?'cached':('$'+(a.cost||0).toFixed(4))}</span><span>conf: ${a.conf}</span>${a.section?`<span>chunks: ${esc(a.section)}</span>`:''}</div>
+    </div>`;}).join('');
+  document.getElementById('cmp-grid').innerHTML=cols;
+  document.getElementById('cmp-grid').style.gridTemplateColumns=`repeat(${Math.min(ids.length,3)},1fr)`;
+  document.getElementById('cmp-modal').classList.add('show');
+}
+function closeCompare(){document.getElementById('cmp-modal').classList.remove('show');}
+function exportSession(fmt){
+  const rows=session.log.map(l=>({question:l.q,source:l.src,lender:l.lender,section:l.section,ms:l.ms,tokens:l.tokens,cost:l.cost}));
+  let blob,name;
+  if(fmt==='json'){
+    const payload={exported:new Date().toISOString(),summary:{queries:session.api+session.hits,api_calls:session.api,cache_hits:session.hits,cost:session.cost,saved:session.saved,rated:session.rated,upvotes:session.upvotes,downvotes:session.downvotes},log:rows};
+    blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});name='cmap_session.json';
+  } else {
+    const head='question,source,lender,section,ms,tokens,cost\n';
+    const csv=head+rows.map(r=>`"${(r.question||'').replace(/"/g,'""')}",${r.source},${r.lender},"${(r.section||'').replace(/"/g,'""')}",${r.ms},${r.tokens||0},${(r.cost||0).toFixed(4)}`).join('\n');
+    blob=new Blob([csv],{type:'text/csv'});name='cmap_session.csv';
+  }
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);
+  toast('Session exported ('+fmt.toUpperCase()+')');
+}
+
+// Library with expand/collapse
+function setLibFilter(el){document.querySelectorAll('.toggle-pill').forEach(b=>b.classList.remove('active'));el.classList.add('active');libFilter=el.dataset.s;renderLib();}
+function renderLib(){
+  const q=(document.getElementById('lib-search')?.value||'').toLowerCase().trim();
+  let entries=[...KB];
+  if(libFilter!=='all')entries=entries.filter(e=>e.status===libFilter);
+  if(q)entries=entries.filter(e=>e.q.toLowerCase().includes(q)||e.a.toLowerCase().includes(q)||e.lender.toLowerCase().includes(q));
+  document.getElementById('lib-badge').textContent=KB.length;
+  const body=document.getElementById('lib-body');
+  if(!entries.length){body.innerHTML='<div class="lib-empty">No entries match</div>';return;}
+  body.innerHTML=entries.map(e=>{
+    const l=LB[e.lender]||{bg:'#F1F5F9',c:'#475569',abbr:'?'};
+    const stag=e.status==='cached'?'<span class="tag tag-cached">In library</span>':'<span class="tag tag-pending">Pending review</span>';
+    const hittag=e.hits>0?`<span class="tag tag-section">Used ${e.hits}×</span>`:'';
+    return`<div class="lib-row" id="lr-${e.id}">
+      ${ldot(e.lender)}
+      <div class="lib-main">
+        <div class="lib-q">${esc(e.q)}</div>
+        <div class="lib-a clamped" id="la-${e.id}">${esc(e.a)}</div>
+        <span class="lib-expand" onclick="toggleLibExpand(${e.id})" id="le-${e.id}">Show full answer</span>
+        <div class="lib-meta"><span class="tag" style="background:${l.bg};color:${l.c}">${e.lender}</span>${stag}${hittag}<span class="lib-ts">${ago(e.ts)}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleLibExpand(id){
+  const la=document.getElementById('la-'+id),le=document.getElementById('le-'+id),lr=document.getElementById('lr-'+id);
+  const expanded=!la.classList.contains('clamped');
+  if(expanded){la.classList.add('clamped');le.textContent='Show full answer';lr.classList.remove('expanded');}
+  else{la.classList.remove('clamped');le.textContent='Show less';lr.classList.add('expanded');}
+}
+
+// Review
+function renderReview(){
+  const pending=KB.filter(e=>e.status==='pending');
+  document.getElementById('rev-badge').textContent=pending.length;
+  const body=document.getElementById('rev-body');
+  if(!pending.length){body.innerHTML='<div class="rev-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Queue is clear — all answers reviewed</div>';return;}
+  body.innerHTML=pending.map(e=>{
+    const l=LB[e.lender]||{bg:'#F1F5F9',c:'#475569',abbr:'?'};
+    return`<div class="rev-card" id="rc-${e.id}">
+      <div class="rev-head">${ldot(e.lender,26)}<div style="flex:1"><div class="rev-q">${esc(e.q)}</div><div style="display:flex;gap:4px;margin-top:5px"><span class="tag" style="background:${l.bg};color:${l.c}">${e.lender}</span><span class="tag tag-section">${e.section}</span></div></div></div>
+      <div class="rev-body"><div class="rev-lbl">AI-generated answer</div><div class="rev-answer" id="ra-${e.id}">${esc(e.a)}</div><textarea class="rev-edit-ta" id="re-${e.id}">${e.a}</textarea></div>
+      <div class="rev-foot"><input class="rev-note" id="rn-${e.id}" type="text" placeholder="Optional reviewer note…"><button class="btn" onclick="toggleEdit(${e.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><path d="M11 4H4a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button><button class="btn btn-reject" onclick="rejectEntry(${e.id})">Reject</button><button class="btn btn-approve" onclick="approveEntry(${e.id})">Approve</button></div>
+    </div>`;
+  }).join('');
+}
+function toggleEdit(id){const ta=document.getElementById('re-'+id),ans=document.getElementById('ra-'+id);const editing=ta.style.display==='block';if(editing){ans.textContent=ta.value;ta.style.display='none';ans.style.display='';}else{ta.style.display='block';ans.style.display='none';ta.focus();}}
+function approveEntry(id){
+  const e=KB.find(x=>x.id===id);if(!e)return;
+  const ta=document.getElementById('re-'+id);if(ta&&ta.style.display==='block')e.a=ta.value;
+  e.status='cached';e.ts=Date.now();
+  const c=document.getElementById('rc-'+id);if(c){c.style.opacity='.35';c.style.pointerEvents='none';}
+  fetch(API_BASE+'/answer-library/save',{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({question:e.q,answer:e.a,chunk_ids:e.section?e.section.split(', ').filter(Boolean):[]})}).catch(()=>{});
+  setTimeout(()=>{renderReview();renderLib();updateAll();},700);
+  toast('Answer added to library');
+}
+function rejectEntry(id){KB=KB.filter(x=>x.id!==id);const c=document.getElementById('rc-'+id);if(c){c.style.opacity='.35';c.style.pointerEvents='none';}setTimeout(()=>{renderReview();renderLib();updateAll();},700);toast('Entry rejected');}
+
+// Costs
+function renderCosts(){
+  const total=session.api+session.hits;
+  document.getElementById('k-total').textContent=total;
+  document.getElementById('k-api').textContent=session.api;
+  document.getElementById('k-api-sub').textContent=total>0?`${Math.round(session.api/total*100)}% of queries`:'—% of queries';
+  document.getElementById('k-cost').textContent=`$${session.cost.toFixed(4)}`;
+  document.getElementById('k-saved').textContent=`$${session.saved.toFixed(4)}`;
+  document.getElementById('k-saved-sub').textContent=`${session.hits} instant answer${session.hits!==1?'s':''}`;
+  const mx=Math.max(session.api,session.hits,1);
+  document.getElementById('bh').style.width=`${(session.hits/mx)*100}%`;document.getElementById('ba').style.width=`${(session.api/mx)*100}%`;
+  document.getElementById('bvh').textContent=session.hits;document.getElementById('bva').textContent=session.api;
+  // ── team analytics ──
+  const rated=session.rated||0, up=session.upvotes||0;
+  document.getElementById('t-acc').textContent=rated>0?Math.round(up/rated*100)+'%':'—';
+  document.getElementById('t-rated').textContent=rated;
+  document.getElementById('t-up').textContent=up;
+  document.getElementById('t-down').textContent=session.downvotes||0;
+  const apiLogs=session.log.filter(l=>l.src==='api');
+  const avgLat=apiLogs.length?Math.round(apiLogs.reduce((s,l)=>s+l.ms,0)/apiLogs.length):0;
+  document.getElementById('t-lat').textContent=avgLat?avgLat+'ms':'—';
+  const totTok=session.log.reduce((s,l)=>s+(l.tokens||0),0);
+  document.getElementById('t-tok').textContent=totTok.toLocaleString();
+  // coverage by lender
+  const cov={};session.log.forEach(l=>{const k=l.lender||'—';cov[k]=(cov[k]||0)+1;});
+  const covEl=document.getElementById('lender-cov');
+  const covKeys=Object.keys(cov).filter(k=>k!=='—');
+  if(!covKeys.length){covEl.innerHTML='<div style="font-size:11px;color:var(--ink3)">No queries yet this session</div>';}
+  else{
+    const covMax=Math.max(...covKeys.map(k=>cov[k]));
+    covEl.innerHTML=covKeys.sort((a,b)=>cov[b]-cov[a]).map(k=>{
+      const lk=Object.keys(LENDER_MAP).find(x=>LENDER_MAP[x]===k)||k;
+      const l=LB[k]||LB[lk]||{bg:'#94A3B8',c:'#fff'};
+      const col=(l.bg&&l.bg!=='#F1F5F9')?l.bg:'#64748B';
+      return`<div class="cov-row"><span class="cov-name">${esc(k)}</span><div class="cov-track"><div class="cov-fill" style="width:${cov[k]/covMax*100}%;background:${col}"></div></div><span class="cov-n">${cov[k]}</span></div>`;
+    }).join('');
+  }
+  const lb=document.getElementById('log-body');
+  if(!session.log.length){lb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--ink3);padding:20px">No queries yet this session</td></tr>';return;}
+  lb.innerHTML=session.log.map(l=>{
+    const badge=l.src==='cache'?'<span class="badge-hit">Library</span>':'<span class="badge-api">API call</span>';
+    const costCell=l.src==='cache'?'<span style="color:var(--grn);font-weight:600">$0.0000</span>':`<span style="color:var(--amb);font-weight:600">$${l.cost.toFixed(4)}</span>`;
+    return`<tr><td style="max-width:220px;word-break:break-word">${esc(l.q.length>60?l.q.substring(0,60)+'…':l.q)}</td><td>${badge}</td><td style="font-size:11px">${l.lender||'—'}</td><td>${l.ms}ms</td><td>${costCell}</td></tr>`;
+  }).join('');
+}
+
+function updateAll(){
+  const cached=KB.filter(e=>e.status==='cached').length;
+  document.getElementById('lib-badge').textContent=KB.length;
+  document.getElementById('rev-badge').textContent=KB.filter(e=>e.status==='pending').length;
+  document.getElementById('foot-cache').textContent=`${cached} answer${cached!==1?'s':''} cached`;
+  renderLib();renderCosts();
+}
+
+// Nav
+function go(el,panel){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+panel).classList.add('active');
+  if(panel==='library')renderLib();
+  if(panel==='review')renderReview();
+  if(panel==='costs')renderCosts();
+  if(window.innerWidth<=640)closeSidebar();
+}
+
+// Sidebar toggle
+function toggleSidebar(){
+  if(window.innerWidth<=640){
+    document.getElementById('sidebar').classList.toggle('mobile-open');
+    document.getElementById('overlay').classList.toggle('show');
+  } else {
+    sidebarOpen=!sidebarOpen;
+    document.getElementById('sidebar').classList.toggle('collapsed',!sidebarOpen);
+  }
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// Lender filter
+function setLenderFilter(el){
+  document.querySelectorAll('.lender-pill').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');qaLender=el.dataset.l;
+  try{localStorage.setItem('cmap_lender',qaLender);}catch(e){}
+  syncSidebarLender();
+}
+function setSidebarLender(el,lender){
+  document.querySelectorAll('.lender-entry').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');qaLender=lender;
+  try{localStorage.setItem('cmap_lender',qaLender);}catch(e){}
+  document.querySelectorAll('.lender-pill').forEach(b=>b.classList.toggle('active',b.dataset.l===lender));
+  go(document.querySelector('.nav-item'),'chat');
+}
+function syncSidebarLender(){
+  document.querySelectorAll('.lender-entry').forEach(e=>e.classList.remove('active'));
+  const entries=document.querySelectorAll('.lender-entry');
+  entries.forEach(e=>{if(e.onclick&&e.onclick.toString().includes(`'${qaLender}'`))e.classList.add('active');});
+  if(qaLender==='ALL')entries[0].classList.add('active');
+}
+
+function clearChat(){
+  const cached=KB.filter(e=>e.status==='cached').length;
+  document.getElementById('chat-body').innerHTML=`<div class="msg ai"><div class="avatar">L</div><div class="msg-wrap"><div class="bubble">Chat cleared. ${cached} answer${cached!==1?'s':''} are still in the library — ask a new question to get started.</div></div></div>`;
+}
+
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendQ();}}
+function resize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function ago(ts){const d=Date.now()-ts;if(d<60000)return'just now';if(d<3600000)return Math.floor(d/60000)+'m ago';if(d<86400000)return Math.floor(d/3600000)+'h ago';return Math.floor(d/86400000)+'d ago';}
+function toast(msg){const t=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+// Boot — restore saved lender preference
+updateAll();
+if(qaLender!=='ALL'){
+  document.querySelectorAll('.lender-pill').forEach(b=>b.classList.toggle('active',b.dataset.l===qaLender));
+  syncSidebarLender();
+}
+</script>
+</body>
+</html>
