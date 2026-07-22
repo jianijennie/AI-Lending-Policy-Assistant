@@ -1,0 +1,535 @@
+<title>CMAP 2026 — Complex Question Stress Test</title>
+<style>
+  :root {
+    --paper: #FAFAF8;
+    --paper-raised: #FFFFFF;
+    --ink: #1A2233;
+    --ink-soft: #4B5568;
+    --line: #E2E4E8;
+    --accent: #2B5C8A;
+    --accent-soft: #E7EEF5;
+    --gold: #B8863B;
+    --gold-soft: #F6EEDD;
+    --s1: #B33F3F; --s1-soft: #F8E7E7;
+    --s2: #C97D33; --s2-soft: #FBEEE0;
+    --s3: #3E8074; --s3-soft: #E5F1EE;
+    --s4: #2F7D4F; --s4-soft: #E4F2E9;
+  }
+  :root[data-theme="dark"] {
+    --paper: #14181F;
+    --paper-raised: #1B212B;
+    --ink: #E7E9EE;
+    --ink-soft: #A6ACB9;
+    --line: #2B323F;
+    --accent: #6FA8D6;
+    --accent-soft: #1E2C3A;
+    --gold: #D8AD64;
+    --gold-soft: #2E2718;
+    --s1: #D97D7D; --s1-soft: #3A2222;
+    --s2: #E0A05C; --s2-soft: #382B1A;
+    --s3: #6FBBAA; --s3-soft: #1D332F;
+    --s4: #6FCB93; --s4-soft: #1B3324;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #14181F;
+      --paper-raised: #1B212B;
+      --ink: #E7E9EE;
+      --ink-soft: #A6ACB9;
+      --line: #2B323F;
+      --accent: #6FA8D6;
+      --accent-soft: #1E2C3A;
+      --gold: #D8AD64;
+      --gold-soft: #2E2718;
+      --s1: #D97D7D; --s1-soft: #3A2222;
+      --s2: #E0A05C; --s2-soft: #382B1A;
+      --s3: #6FBBAA; --s3-soft: #1D332F;
+      --s4: #6FCB93; --s4-soft: #1B3324;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0 20px 80px;
+  }
+  h1, h2, h3 { font-family: Iowan Old Style, Palatino Linotype, Georgia, serif; font-weight: 600; text-wrap: balance; }
+  .wrap { max-width: 920px; margin: 0 auto; }
+
+  header {
+    padding: 56px 0 32px;
+    border-bottom: 1px solid var(--line);
+  }
+  .eyebrow {
+    font-size: 12.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  h1 { font-size: 34px; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .subtitle { color: var(--ink-soft); font-size: 15.5px; max-width: 62ch; }
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 8px 18px;
+    margin-top: 18px; font-size: 13.5px; color: var(--ink-soft);
+  }
+  .meta-row span b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  section { padding: 40px 0; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: none; }
+  h2 { font-size: 22px; margin: 0 0 6px; }
+  .section-note { color: var(--ink-soft); font-size: 14px; margin: 0 0 24px; max-width: 68ch; }
+
+  /* Stat cards */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  @media (max-width: 800px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stat-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 18px 16px;
+  }
+  .stat-label { font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 8px; }
+  .stat-value { font-size: 30px; font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: -0.02em; }
+  .stat-value small { font-size: 15px; font-weight: 500; color: var(--ink-soft); }
+  .stat-sub { font-size: 12.5px; color: var(--ink-soft); margin-top: 4px; }
+
+  /* dist bar */
+  .distbar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 10px; }
+  .distbar div { height: 100%; }
+
+  /* Fix narrative */
+  .fix-box {
+    background: var(--gold-soft);
+    border: 1px solid var(--gold);
+    border-radius: 12px;
+    padding: 24px 26px;
+  }
+  .fix-box h3 { font-size: 17px; margin: 0 0 10px; }
+  .fix-box p { margin: 0 0 12px; font-size: 14.5px; }
+  .fix-box code {
+    background: rgba(0,0,0,0.06); padding: 1px 6px; border-radius: 4px;
+    font-size: 0.92em;
+  }
+  :root[data-theme="dark"] .fix-box code, @media (prefers-color-scheme: dark) { }
+  .before-after {
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    gap: 16px; margin: 18px 0 4px; max-width: 480px;
+  }
+  .ba-block { text-align: center; }
+  .ba-label { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); }
+  .ba-value { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ba-arrow { color: var(--gold); font-size: 20px; }
+  .flip-list { margin: 16px 0 0; padding: 0; list-style: none; font-size: 13.5px; }
+  .flip-list li { padding: 6px 0; border-top: 1px solid rgba(0,0,0,0.08); display: flex; justify-content: space-between; gap: 12px; }
+  .flip-id { font-variant-numeric: tabular-nums; color: var(--ink-soft); flex: 0 0 auto; }
+  .flip-q { flex: 1; }
+  .flip-score { font-variant-numeric: tabular-nums; font-weight: 700; flex: 0 0 auto; }
+
+  /* Category table */
+  .cat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .cat-table th {
+    text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--ink-soft); font-weight: 600; padding: 0 10px 8px; border-bottom: 1px solid var(--line);
+  }
+  .cat-table td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  .cat-table tr:last-child td { border-bottom: none; }
+  .cat-name { font-weight: 600; }
+  .cat-avg { font-variant-numeric: tabular-nums; font-weight: 700; }
+  .cat-n { color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .mini-dist { display: flex; height: 8px; border-radius: 4px; overflow: hidden; min-width: 120px; }
+  .mini-dist div { height: 100%; }
+
+  .score-pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 26px; height: 22px; padding: 0 6px; border-radius: 6px;
+    font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums;
+  }
+
+  /* Methodology callout */
+  .method-box {
+    background: var(--accent-soft); border: 1px solid var(--accent);
+    border-radius: 12px; padding: 20px 24px; font-size: 14px;
+  }
+  .method-box h3 { font-size: 15.5px; margin: 0 0 8px; }
+  .method-box ul { margin: 8px 0 0; padding-left: 20px; }
+  .method-box li { margin-bottom: 6px; }
+
+  /* Weak spot cards */
+  details.weak {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    padding: 0;
+    overflow: hidden;
+  }
+  details.weak summary {
+    cursor: pointer;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    list-style: none;
+  }
+  details.weak summary::-webkit-details-marker { display: none; }
+  details.weak summary::before {
+    content: "▸";
+    color: var(--ink-soft);
+    transition: transform 0.15s ease;
+    flex: 0 0 auto;
+  }
+  details.weak[open] summary::before { transform: rotate(90deg); }
+  .weak-id { font-variant-numeric: tabular-nums; color: var(--ink-soft); flex: 0 0 auto; }
+  .weak-type { color: var(--ink-soft); font-size: 12.5px; flex: 0 0 auto; }
+  .weak-q { flex: 1; font-weight: 500; }
+  .weak-body { padding: 0 18px 20px 44px; font-size: 13.5px; }
+  .weak-body h4 { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); margin: 14px 0 4px; }
+  .weak-body h4:first-child { margin-top: 0; }
+  .weak-body p { margin: 0; }
+  .weak-body .trap-tag {
+    display: inline-block; margin-top: 12px; font-size: 12px; padding: 3px 8px;
+    border-radius: 5px; background: var(--s1-soft); color: var(--s1); font-weight: 600;
+  }
+
+  footer { padding-top: 32px; font-size: 13px; color: var(--ink-soft); }
+  footer code { background: var(--accent-soft); padding: 1px 6px; border-radius: 4px; }
+  footer ul { padding-left: 20px; }
+
+  ::selection { background: var(--gold-soft); }
+
+  @media (prefers-reduced-motion: reduce) {
+    details.weak summary::before { transition: none; }
+  }
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">LifeX Policy Assistant — Evaluation Report</div>
+  <h1>Complex Question Stress Test</h1>
+  <p class="subtitle">111 adversarial broker questions across 11 complexity types — cross-lender comparisons, multi-filter stacking, contradiction traps, and calculation chains — run against the live RAG pipeline and graded against a fixed gold-standard rubric.</p>
+  <div class="meta-row">
+    <span>Question bank: <b>ComplexQuestions.xlsx</b></span>
+    <span>Answering model: <b>gpt-5</b></span>
+    <span>Grader: <b>gpt-4o</b> (independent of answerer)</span>
+    <span>Run date: <b>2026-07-22</b></span>
+  </div>
+</header>
+
+<section>
+  <h2>Headline numbers</h2>
+  <p class="section-note">Final scores, after the multi-lender detection fix described below. Rubric: 4 = completely right, 3 = correct with minor mistakes, 2 = incorrect but contains some true information, 1 = completely wrong.</p>
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Average score</div>
+      <div class="stat-value">3.41 <small>/ 4</small></div>
+      <div class="stat-sub">up from 3.31 before the fix</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Score distribution</div>
+      <div class="stat-value" style="font-size:20px;">1 · 14 · 35 · 61</div>
+      <div class="distbar">
+        <div style="width:0.9%;background:var(--s1)"></div>
+        <div style="width:12.6%;background:var(--s2)"></div>
+        <div style="width:31.5%;background:var(--s3)"></div>
+        <div style="width:55%;background:var(--s4)"></div>
+      </div>
+      <div class="stat-sub">counts for scores 1 · 2 · 3 · 4</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Fell for the documented trap</div>
+      <div class="stat-value">23 <small>/ 111</small></div>
+      <div class="stat-sub">21% — every question was designed to tempt a specific wrong answer</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Deliverables produced</div>
+      <div class="stat-value" style="font-size:17px; line-height:1.5;">Answers .txt<br>+ 2 scored JSON files</div>
+      <div class="stat-sub">see footer for paths</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>What running this found</h2>
+  <p class="section-note">The first pass through this bank surfaced a genuine bug, not a model-quality ceiling — worth walking through because it's the main reason the score moved.</p>
+  <div class="fix-box">
+    <h3>Multi-lender detection was silently dropping a lender from comparison questions</h3>
+    <p>Lender detection ran in tiers: check every lender's canonical name first, and only fall through to product/brand-name matching (like <code>flexicommercial</code>, <code>metroeco</code>) if <em>no</em> lender matched canonically. That gating was fine for single-lender questions, but for a two-lender comparison it meant: if one lender was named canonically ("Angle") and the other only by product name ("flexicommercial" — which never matches FLEXI's canonical "flexi" keyword, since it's one unbroken word with no word-boundary break), the function returned only the canonical match and <strong>never even checked</strong> the second lender's product-name tier. FlexiCommercial vanished from retrieval entirely on exactly this pattern.</p>
+    <p>This one bug explained why "Cross-lender comparison (2)" was the single worst-scoring category — the model wasn't reasoning badly, it was answering with half the panel invisible to it.</p>
+    <div class="before-after">
+      <div class="ba-block">
+        <div class="ba-label">Before</div>
+        <div class="ba-value">2.64</div>
+      </div>
+      <div class="ba-arrow">→</div>
+      <div class="ba-block">
+        <div class="ba-label">After</div>
+        <div class="ba-value">3.07</div>
+      </div>
+    </div>
+    <div class="stat-sub">"Cross-lender comparison (2)" category average, before/after the fix</div>
+    <ul class="flip-list">
+      <li><span class="flip-id">CQ-003</span><span class="flip-q">Angle vs flexicommercial rate comparison</span><span class="flip-score">2 → 4</span></li>
+      <li><span class="flip-id">CQ-002</span><span class="flip-q">Resimac vs BFS sole-trader eligibility</span><span class="flip-score">3 → 4</span></li>
+      <li><span class="flip-id">CQ-049</span><span class="flip-q">Metro vs flexicommercial replacement products</span><span class="flip-score">2 → 3</span></li>
+      <li><span class="flip-id">CQ-052</span><span class="flip-q">BFS vs Metro credit bureau &amp; consumer lending</span><span class="flip-score">2 → 3</span></li>
+      <li><span class="flip-id">CQ-106</span><span class="flip-q">flexicommercial vs Resimac medical/dental equipment</span><span class="flip-score">2 → 3</span></li>
+      <li><span class="flip-id">CQ-014</span><span class="flip-q">Angle documentation tier (unaffected lender, retrieval unchanged)</span><span class="flip-score">1 → 4</span></li>
+    </ul>
+    <p style="margin-top:14px; font-size:13px;">Fixed by replacing the tiered fallback with a union: every lender is now checked against both its canonical name and its product names independently, and all matches are combined. Re-verified against the original 41-question regression suite (no regressions) before re-running this bank.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Score by complexity type</h2>
+  <p class="section-note">Sorted weakest to strongest. The three lowest categories share a pattern worth tracking separately from the fix above: they involve either <em>synthesising several lenders' numbers into one ranked answer</em> or <em>stacking several filters onto a single lender</em> — both need the model to hold more independent facts in view at once than a single-fact lookup.</p>
+  <table class="cat-table">
+    <thead><tr><th>Complexity type</th><th>n</th><th>Avg</th><th>Distribution</th></tr></thead>
+    <tbody>
+      <tr><td class="cat-name">Cross-lender + multi-filter</td><td class="cat-n">9</td><td class="cat-avg" style="color:var(--s2)">2.78</td><td><div class="mini-dist"><div style="width:44%;background:var(--s2)"></div><div style="width:33%;background:var(--s3)"></div><div style="width:22%;background:var(--s4)"></div></div></td></tr>
+      <tr><td class="cat-name">Cross-lender comparison (2)</td><td class="cat-n">14</td><td class="cat-avg" style="color:var(--s2)">3.07</td><td><div class="mini-dist"><div style="width:21%;background:var(--s2)"></div><div style="width:50%;background:var(--s3)"></div><div style="width:29%;background:var(--s4)"></div></div></td></tr>
+      <tr><td class="cat-name">Best-fit recommendation</td><td class="cat-n">11</td><td class="cat-avg" style="color:var(--s2)">3.09</td><td><div class="mini-dist"><div style="width:18%;background:var(--s2)"></div><div style="width:55%;background:var(--s3)"></div><div style="width:27%;background:var(--s4)"></div></div></td></tr>
+      <tr><td class="cat-name">Cross-lender comparison (3+)</td><td class="cat-n">7</td><td class="cat-avg" style="color:var(--s2)">3.14</td><td><div class="mini-dist"><div style="width:14%;background:var(--s2)"></div><div style="width:57%;background:var(--s3)"></div><div style="width:29%;background:var(--s4)"></div></div></td></tr>
+      <tr><td class="cat-name">Ambiguous / needs clarification</td><td class="cat-n">5</td><td class="cat-avg" style="color:var(--s3)">3.40</td><td><div class="mini-dist"><div style="width:20%;background:var(--s2)"></div><div style="width:20%;background:var(--s3)"></div><div style="width:60%;background:var(--s4)"></div></div></td></tr>
+      <tr><td class="cat-name">Policy-interaction edge case</td><td class="cat-n">14</td><td class="cat-avg" style="color:var(--s3)">3.43</td><td><div class="mini-dist"><div style="width:57%;background:var(--s3)"></div><div style="width:43%;background:var(--s4)"></div></div></td></tr>
+      <tr><td class="cat-name">Multi-filter (single lender)</td><td class="cat-n">14</td><td class="cat-avg" style="color:var(--s3)">3.50</td><td><div class="mini-dist"><div style="width:7%;background:var(--s1)"></div><div style="width:7%;background:var(--s2)"></div><div style="width:14%;background:var(--s3)"></div><div style="width:72%;background:var(--s4)"></div></div></td></tr>
+      <tr><td class="cat-name">Contradiction detection</td><td class="cat-n">8</td><td class="cat-avg" style="color:var(--s3)">3.50</td><td><div class="mini-dist"><div style="width:12.5%;background:var(--s2)"></div><div style="width:25%;background:var(--s3)"></div><div style="width:62.5%;background:var(--s4)"></div></div></td></tr>
+      <tr><td class="cat-name">Calculation / arithmetic</td><td class="cat-n">10</td><td class="cat-avg" style="color:var(--s4)">3.70</td><td><div class="mini-dist"><div style="width:10%;background:var(--s2)"></div><div style="width:10%;background:var(--s3)"></div><div style="width:80%;background:var(--s4)"></div></div></td></tr>
+      <tr><td class="cat-name">Conditional scenario chain</td><td class="cat-n">9</td><td class="cat-avg" style="color:var(--s4)">3.89</td><td><div class="mini-dist"><div style="width:11%;background:var(--s3)"></div><div style="width:89%;background:var(--s4)"></div></div></td></tr>
+      <tr><td class="cat-name">Negative / trap constraint</td><td class="cat-n">10</td><td class="cat-avg" style="color:var(--s4)">4.00</td><td><div class="mini-dist"><div style="width:100%;background:var(--s4)"></div></div></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>A note on how confident to be in these exact numbers</h2>
+  <div class="method-box">
+    <h3>Grading methodology and its limits</h3>
+    <p>Each answer was scored 1–4 by <b>gpt-4o</b> — deliberately a different model from the <b>gpt-5</b> answerer, so it isn't marking its own work — given the question, the fixed rubric, the gold-standard reference answer, and the specific trap the question was designed to test. The rationale for every score is kept alongside it for spot-checking.</p>
+    <ul>
+      <li><b>gpt-5 has no temperature parameter</b>, so re-running the identical question with identical retrieved chunks can still produce a differently-worded answer. Comparing the two full runs done today: <b>24 of 111 questions</b> got a different score on re-grading despite <em>retrieving the exact same source chunks both times</em> — that's pure answer-phrasing / grader-judgment noise, not a real change in correctness. Only <b>22</b> questions had retrieval genuinely change (the ones the fix above affected).</li>
+      <li>Treat the per-question scores as indicative, not exact — a single question's 3-vs-4 grade can flip on a re-run. The category averages and the overall 3.31 → 3.41 shift are the more reliable signal, since they're computed over enough questions to average out that noise.</li>
+      <li>The raw transcript (<code>ComplexQuestions_Answers.txt</code>) is kept specifically so any of these grades can be checked by eye rather than taken on faith.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Remaining weak spots (score ≤ 2)</h2>
+  <p class="section-note">15 of 111 answers scored 2 or lower on the current build. Expand any item for the full model answer, reference answer, and why it was marked down. These are grouped loosely by pattern below.</p>
+
+  <details class="weak">
+    <summary><span class="score-pill" style="background:var(--s1-soft);color:var(--s1)">1</span><span class="weak-id">CQ-107</span><span class="weak-type">Multi-filter · CFAL</span><span class="weak-q">CFAL DriveXpress: new-to-bank $250k excavator — does it fit?</span></summary>
+    <div class="weak-body">
+      <h4>Model answer</h4>
+      <p>No — not under DriveXpress. New-to-bank DriveXpress cap is $150k... suggests dropping the amount or running standard application.</p>
+      <h4>Reference</h4>
+      <p>New-to-bank DriveXpress Category B limit is $250k (existing clients get $300k) — $250k is exactly at the cap, so it fits, subject to age rules. CFAL has no public rate and no Low Doc.</p>
+      <h4>Why it scored low</h4>
+      <p>Cited the wrong cap figure ($150k instead of $250k) and reached the opposite eligibility conclusion as a result — a genuine retrieval/recall miss on the specific number, not a reasoning trap.</p>
+      <span class="trap-tag">Fell for documented trap</span>
+    </div>
+  </details>
+
+  <details class="weak">
+    <summary><span class="score-pill" style="background:var(--s2-soft);color:var(--s2)">2</span><span class="weak-id">CQ-001</span><span class="weak-type">Cross-lender (2) · Westpac, CFAL</span><span class="weak-q">Westpac vs CFAL Xpress rate — is there a difference?</span></summary>
+    <div class="weak-body">
+      <h4>Model answer</h4>
+      <p>Westpac 7.75% Xpress; assumed CFAL uses "the same DriveXpress program/limits" and would quote 7.75% "unless CFAL prices it separately."</p>
+      <h4>Reference</h4>
+      <p>CFAL publishes no public rate card at all — its DriveXpress pricing must come from the CFAL Credit Manager, and copying Westpac's 7.75% onto it is exactly the trap.</p>
+      <h4>Why it scored low</h4>
+      <p>This is the designed trap firing as intended: same shared fast-track channel, but the model assumed shared pricing without that being stated anywhere in the CFAL chunk.</p>
+      <span class="trap-tag">Fell for documented trap</span>
+    </div>
+  </details>
+
+  <details class="weak">
+    <summary><span class="score-pill" style="background:var(--s2-soft);color:var(--s2)">2</span><span class="weak-id">CQ-005</span><span class="weak-type">Cross-lender (2) · BFS, Westpac</span><span class="weak-q">Ride-share vehicle — would BFS and Westpac accept it?</span></summary>
+    <div class="weak-body">
+      <h4>Model answer</h4>
+      <p>Westpac — No: "taxis and hire cars are excluded, and ride-share falls under hire car exclusions."</p>
+      <h4>Reference</h4>
+      <p>Neither BFS nor Westpac's chunks explicitly name ride-share as excluded — only Resimac does. The honest answer flags ride-share as high-scrutiny but not blanket-excluded for these two.</p>
+      <h4>Why it scored low</h4>
+      <p>Imported an exclusion rule from a different lender (Resimac) that was never stated for Westpac — cross-lender contamination, the exact failure mode this question tests for.</p>
+      <span class="trap-tag">Fell for documented trap</span>
+    </div>
+  </details>
+
+  <details class="weak">
+    <summary><span class="score-pill" style="background:var(--s2-soft);color:var(--s2)">2</span><span class="weak-id">CQ-011</span><span class="weak-type">Multi-filter · Resimac</span><span class="weak-q">PremiumPLUS, used MV private sale, 60 months — all-in rate?</span></summary>
+    <div class="weak-body">
+      <h4>Model answer</h4>
+      <p>8.49% base + 2.00% private-sale loading = 10.49%.</p>
+      <h4>Reference</h4>
+      <p>PremiumPLUS motor vehicle &gt;3yr base is 8.24%, not 8.49% (that's the Premium/Standard/Basic column) — correct all-in is 10.24%.</p>
+      <h4>Why it scored low</h4>
+      <p>Picked the adjacent tier's rate off the same table instead of the PremiumPLUS-specific figure. Did correctly avoid the double-counted age-loading trap.</p>
+      <span class="trap-tag" style="background:var(--s3-soft);color:var(--s3)">Did not fall for the documented trap</span>
+    </div>
+  </details>
+
+  <details class="weak">
+    <summary><span class="score-pill" style="background:var(--s2-soft);color:var(--s2)">2</span><span class="weak-id">CQ-028</span><span class="weak-type">Best-fit · All lenders</span><span class="weak-q">$250k mobile crane, ≤3yr, dealer — who can do it?</span></summary>
+    <div class="weak-body">
+      <h4>Model answer</h4>
+      <p>Included Angle and BFS as viable, and Metro as a fit.</p>
+      <h4>Reference</h4>
+      <p>Westpac/CFAL (Category B, 3-year crane-specific age rule), Resimac and flexicommercial (Primary asset) can consider it; Metro is a poor fit and BFS is out entirely (motor vehicles only).</p>
+      <h4>Why it scored low</h4>
+      <p>Included BFS despite BFS's hard motor-vehicle-only restriction, and missed the crane-specific 3-year age rule (vs. the general 5-year Category B rule) for Westpac/CFAL.</p>
+      <span class="trap-tag">Fell for documented trap</span>
+    </div>
+  </details>
+
+  <details class="weak">
+    <summary><span class="score-pill" style="background:var(--s2-soft);color:var(--s2)">2</span><span class="weak-id">CQ-042</span><span class="weak-type">Cross-lender + multi-filter · Resimac, Angle, BFS</span><span class="weak-q">Non-property-backed, 3yr ABN, $180k primary asset</span></summary>
+    <div class="weak-body">
+      <h4>Model answer</h4>
+      <p>Listed BFS as viable "with 0–20% deposit depending on tier," flagging the asset-type restriction only as a conditional caveat.</p>
+      <h4>Reference</h4>
+      <p>BFS finances motor vehicles only — a general "primary asset" like heavy equipment is not eligible at BFS at all, full stop.</p>
+      <h4>Why it scored low</h4>
+      <p>Treated a hard categorical exclusion (asset type) as a soft condition instead of eliminating BFS outright.</p>
+      <span class="trap-tag">Fell for documented trap</span>
+    </div>
+  </details>
+
+  <details class="weak">
+    <summary><span class="score-pill" style="background:var(--s2-soft);color:var(--s2)">2</span><span class="weak-id">CQ-069</span><span class="weak-type">Contradiction detection · CFAL</span><span class="weak-q">"CFAL publishes 7.75% for cars, so I can quote that, right?"</span></summary>
+    <div class="weak-body">
+      <h4>Model answer</h4>
+      <p>Correctly said don't quote it as firm, but implied 7.75% is still a CFAL figure ("position it as an indication only").</p>
+      <h4>Reference</h4>
+      <p>7.75% is Westpac's rate, not CFAL's — CFAL has no public rate card at all. The false premise itself needs correcting, not just softening.</p>
+      <h4>Why it scored low</h4>
+      <p>Caught the "don't quote as firm" half of the trap but missed correcting the factual misattribution (whose rate 7.75% actually is).</p>
+      <span class="trap-tag">Fell for documented trap</span>
+    </div>
+  </details>
+
+  <details class="weak">
+    <summary><span class="score-pill" style="background:var(--s2-soft);color:var(--s2)">2</span><span class="weak-id">CQ-076</span><span class="weak-type">Ambiguous · All lenders</span><span class="weak-q">"Best commercial rate you've got" for a motor vehicle</span></summary>
+    <div class="weak-body">
+      <h4>Model answer</h4>
+      <p>Quoted specific rate ranges by lender/scenario rather than asking for the missing detail.</p>
+      <h4>Reference</h4>
+      <p>This needs clarification first — asset age, sale type, term, property backing, and credit profile all change the answer; a good answer asks rather than commits to one number.</p>
+      <h4>Why it scored low</h4>
+      <p>The question is deliberately under-specified to test whether the model asks before answering — it committed to numbers instead.</p>
+      <span class="trap-tag">Fell for documented trap</span>
+    </div>
+  </details>
+
+  <details class="weak">
+    <summary><span class="score-pill" style="background:var(--s2-soft);color:var(--s2)">2</span><span class="weak-id">CQ-077</span><span class="weak-type">Cross-lender + multi-filter · Angle, Flexi</span><span class="weak-q">Refinance a 15-month-old primary-asset facility</span></summary>
+    <div class="weak-body">
+      <h4>Model answer</h4>
+      <p>Said Angle also needs 18+ months (it doesn't), and offered a "Mid-term Refinancing" Flexi product not established in the corpus.</p>
+      <h4>Reference</h4>
+      <p>flexireplacement needs 18+ months (15 falls short — blocked); Angle has no such stated threshold and could review it under Mid/Full Doc.</p>
+      <h4>Why it scored low</h4>
+      <p>Got the threshold right for Flexi but incorrectly imported the same 18-month rule onto Angle, which doesn't have it.</p>
+      <span class="trap-tag">Fell for documented trap</span>
+    </div>
+  </details>
+
+  <details class="weak">
+    <summary><span class="score-pill" style="background:var(--s2-soft);color:var(--s2)">2</span><span class="weak-id">CQ-088</span><span class="weak-type">Cross-lender (3+) · Westpac, CFAL, Angle, Metro</span><span class="weak-q">Which lenders finance government/school/route buses?</span></summary>
+    <div class="weak-body">
+      <h4>Model answer</h4>
+      <p>Offered buses via DriveXpress for Westpac/CFAL, and included Metro and Angle as viable-with-conditions.</p>
+      <h4>Reference</h4>
+      <p>Only the Replacement channel (not DriveXpress) covers government/school/route buses for Westpac/CFAL, and charter buses are excluded; Metro doesn't list buses as eligible at all.</p>
+      <h4>Why it scored low</h4>
+      <p>Named the right two lenders but the wrong channel within them, and included two lenders the reference explicitly rules out.</p>
+      <span class="trap-tag">Fell for documented trap</span>
+    </div>
+  </details>
+
+  <details class="weak">
+    <summary><span class="score-pill" style="background:var(--s2-soft);color:var(--s2)">2</span><span class="weak-id">CQ-089</span><span class="weak-type">Cross-lender + multi-filter · Resimac, Westpac</span><span class="weak-q">Property-backed, new EV, 72 months — rate and term availability?</span></summary>
+    <div class="weak-body">
+      <h4>Model answer</h4>
+      <p>Correctly gave Resimac's 84-month Green Goods term, but also pulled in Angle/BFS/CFAL/Flexi/Metro, none of which the question asked about.</p>
+      <h4>Reference</h4>
+      <p>Only Resimac (84-month Green Goods) vs Westpac (no 72-month term in the published structure) — a two-lender comparison.</p>
+      <h4>Why it scored low</h4>
+      <p>Right core fact, wrong scope — diluted the direct two-lender answer with five lenders nobody asked about.</p>
+      <span class="trap-tag">Fell for documented trap</span>
+    </div>
+  </details>
+
+  <details class="weak">
+    <summary><span class="score-pill" style="background:var(--s2-soft);color:var(--s2)">2</span><span class="weak-id">CQ-096</span><span class="weak-type">Cross-lender (2) · Angle, Resimac</span><span class="weak-q">Max asset age at EOT for a primary asset — Angle vs Resimac</span></summary>
+    <div class="weak-body">
+      <h4>Model answer</h4>
+      <p>"Both: 25 years." Stopped there.</p>
+      <h4>Reference</h4>
+      <p>Correct on primary (both 25 years), but they diverge on secondary (Angle 15 vs Resimac 10) and tertiary (Angle 10 vs Resimac 5) — the comparison the question is really testing.</p>
+      <h4>Why it scored low</h4>
+      <p>Answered the literal question correctly but missed that "compare X" implied checking whether the match holds across every asset tier, not just the one named.</p>
+      <span class="trap-tag">Fell for documented trap</span>
+    </div>
+  </details>
+
+  <details class="weak">
+    <summary><span class="score-pill" style="background:var(--s2-soft);color:var(--s2)">2</span><span class="weak-id">CQ-100</span><span class="weak-type">Calculation · BFS</span><span class="weak-q">$140k consumer private sale — list every fee/loading that stacks</span></summary>
+    <div class="weak-body">
+      <h4>Model answer</h4>
+      <p>Included the correct +0.50%/$625 pair, but added PPSR, account maintenance, and early-termination fees that don't apply to this specific scenario.</p>
+      <h4>Reference</h4>
+      <p>Just the +0.50% loading, $625 establishment fee, and the required inspection — nothing else stacks here.</p>
+      <h4>Why it scored low</h4>
+      <p>Over-included generic BFS fees that exist elsewhere in the corpus but aren't triggered by this scenario.</p>
+      <span class="trap-tag">Fell for documented trap</span>
+    </div>
+  </details>
+
+  <details class="weak">
+    <summary><span class="score-pill" style="background:var(--s2-soft);color:var(--s2)">2</span><span class="weak-id">CQ-102</span><span class="weak-type">Best-fit · All lenders</span><span class="weak-q">Cheapest lender for $200k primary asset — and who to avoid quoting</span></summary>
+    <div class="weak-body">
+      <h4>Model answer</h4>
+      <p>Named Westpac (8.17%) as cheapest, and flagged BFS/FlexiPremium as the ones to avoid.</p>
+      <h4>Reference</h4>
+      <p>flexicommercial's flexipremium (7.30%) is actually cheapest; CFAL is the one to avoid quoting a rate for (no public rate card).</p>
+      <h4>Why it scored low</h4>
+      <p>Missed the cheapest option entirely and flagged the wrong lender for the "don't quote a rate" caveat — the two things this question is specifically testing.</p>
+      <span class="trap-tag">Fell for documented trap</span>
+    </div>
+  </details>
+
+  <details class="weak">
+    <summary><span class="score-pill" style="background:var(--s2-soft);color:var(--s2)">2</span><span class="weak-id">CQ-103</span><span class="weak-type">Cross-lender + multi-filter · Metro, Resimac, Angle</span><span class="weak-q">Food truck — can any of Metro, Resimac, Angle finance it?</span></summary>
+    <div class="weak-body">
+      <h4>Model answer</h4>
+      <p>"No" across all three, treating the food truck as a single, wholly-excluded asset everywhere.</p>
+      <h4>Reference</h4>
+      <p>Resimac excludes it explicitly; Metro is a poor fit (catering equipment ineligible); Angle could potentially finance just the vehicle component, subject to review — not a flat no.</p>
+      <h4>Why it scored low</h4>
+      <p>Collapsed a nuanced "vehicle vs. fit-out" distinction into one blanket exclusion across all three lenders.</p>
+      <span class="trap-tag">Fell for documented trap</span>
+    </div>
+  </details>
+
+</section>
+
+<footer>
+  <p><b>Files produced this run</b> (project root / <code>tests/</code>):</p>
+  <ul>
+    <li><code>ComplexQuestions_Answers.txt</code> — every question, model answer, reference answer, and documented failure mode, in one plain-text transcript.</li>
+    <li><code>tests/complex_results.json</code> — raw API responses (answer, sources used, response time) per question.</li>
+    <li><code>tests/complex_grades.json</code> — this report's underlying scores, rationale, and trap-detection flag per question.</li>
+  </ul>
+  <p>Re-run with <code>python tests/run_complex_questions.py</code> (backend must be running) then <code>python tests/grade_complex_questions.py</code>.</p>
+</footer>
+
+</div>
