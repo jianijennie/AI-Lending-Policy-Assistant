@@ -1,0 +1,307 @@
+<title>Prompt-Behavior Fixes — Session Changelog</title>
+<style>
+  :root {
+    --ink: #14181f;
+    --ink-soft: #1c222b;
+    --paper: #f7f6f2;
+    --paper-soft: #eeece5;
+    --text: #1c2024;
+    --text-soft: #4b5158;
+    --text-dark: #e9e6dd;
+    --text-dark-soft: #a9a49a;
+    --amber: #c98a2c;
+    --amber-soft: #e9c98a;
+    --teal: #3f8f88;
+    --teal-soft: #a9d6d1;
+    --rust: #a24b3f;
+    --sage: #5c8a5c;
+    --rule: #ded9cd;
+    --rule-dark: #2c333d;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  :root[data-theme="dark"] {
+    --bg: var(--ink); --bg-soft: var(--ink-soft); --fg: var(--text-dark); --fg-soft: var(--text-dark-soft);
+    --card: #1a1f27; --rule-c: var(--rule-dark); --accent: var(--amber-soft);
+  }
+  :root[data-theme="light"] {
+    --bg: var(--paper); --bg-soft: var(--paper-soft); --fg: var(--text); --fg-soft: var(--text-soft);
+    --card: #ffffff; --rule-c: var(--rule); --accent: var(--amber);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: var(--ink); --bg-soft: var(--ink-soft); --fg: var(--text-dark); --fg-soft: var(--text-dark-soft);
+      --card: #1a1f27; --rule-c: var(--rule-dark); --accent: var(--amber-soft);
+    }
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: var(--paper); --bg-soft: var(--paper-soft); --fg: var(--text); --fg-soft: var(--text-soft);
+      --card: #ffffff; --rule-c: var(--rule); --accent: var(--amber);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans);
+    line-height: 1.6; font-size: 16px;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 3.5rem 1.5rem 6rem; }
+  header.doc-head { margin-bottom: 3rem; }
+  .kicker {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--teal); font-weight: 600;
+  }
+  :root[data-theme="dark"] .kicker, @media (prefers-color-scheme: dark) { }
+  h1 {
+    font-family: var(--serif); font-weight: 500; font-size: clamp(2rem, 5vw, 2.6rem);
+    margin: 0.4rem 0 0.6rem; text-wrap: balance; letter-spacing: -0.01em;
+  }
+  .sub { color: var(--fg-soft); font-size: 1.02rem; max-width: 62ch; }
+  .meta-row {
+    display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1.4rem; font-family: var(--mono);
+    font-size: 0.8rem; color: var(--fg-soft);
+  }
+  .meta-row strong { color: var(--fg); font-weight: 600; }
+  .callout {
+    background: var(--bg-soft); border: 1px solid var(--rule-c); border-radius: 10px;
+    padding: 1.1rem 1.3rem; margin: 1.8rem 0 0; font-size: 0.95rem; color: var(--fg-soft);
+  }
+  .callout a { color: var(--teal); }
+  :root[data-theme="dark"] .callout a { color: var(--teal-soft); }
+
+  .entry {
+    position: relative; margin: 0 0 0; padding: 2.6rem 0 2.6rem 2.4rem; border-left: 2px solid var(--rule-c);
+  }
+  .entry:last-child { border-left-color: transparent; }
+  .entry::before {
+    content: attr(data-num); position: absolute; left: -1.05rem; top: 2.7rem;
+    width: 2.1rem; height: 2.1rem; border-radius: 50%; background: var(--bg);
+    border: 2px solid var(--accent); color: var(--accent); font-family: var(--mono);
+    font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; justify-content: center;
+  }
+  .entry h2 {
+    font-family: var(--serif); font-weight: 500; font-size: 1.5rem; margin: 0 0 0.3rem; text-wrap: balance;
+  }
+  .entry .tag {
+    display: inline-block; font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 0.2rem 0.55rem; border-radius: 5px; margin-bottom: 0.7rem;
+    background: color-mix(in srgb, var(--teal) 16%, transparent); color: var(--teal); font-weight: 700;
+  }
+  :root[data-theme="dark"] .entry .tag { color: var(--teal-soft); background: color-mix(in srgb, var(--teal) 28%, transparent); }
+  .tag.regression { background: color-mix(in srgb, var(--rust) 16%, transparent); color: var(--rust); }
+  :root[data-theme="dark"] .tag.regression { background: color-mix(in srgb, var(--rust) 30%, transparent); color: #e2a094; }
+
+  .block { margin: 1.1rem 0; }
+  .block h3 {
+    font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-soft);
+    font-weight: 700; margin: 0 0 0.4rem;
+  }
+  .block p { margin: 0; }
+  .block p + p { margin-top: 0.6rem; }
+
+  code, .mono { font-family: var(--mono); font-size: 0.88em; }
+  code {
+    background: var(--bg-soft); padding: 0.1em 0.4em; border-radius: 4px; border: 1px solid var(--rule-c);
+  }
+  pre {
+    background: var(--bg-soft); border: 1px solid var(--rule-c); border-radius: 8px; padding: 0.9rem 1.1rem;
+    overflow-x: auto; font-family: var(--mono); font-size: 0.84rem; line-height: 1.55; margin: 0.7rem 0;
+  }
+  .quote {
+    border-left: 3px solid var(--accent); padding: 0.5rem 0 0.5rem 1rem; margin: 0.7rem 0;
+    font-style: italic; color: var(--fg-soft);
+  }
+  .beforeafter { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin: 0.8rem 0; }
+  @media (max-width: 620px) { .beforeafter { grid-template-columns: 1fr; } }
+  .ba-card { border-radius: 8px; padding: 0.85rem 1rem; border: 1px solid var(--rule-c); background: var(--card); }
+  .ba-card .lbl {
+    font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 700; margin-bottom: 0.4rem; display: block;
+  }
+  .ba-card.before .lbl { color: var(--rust); }
+  .ba-card.after .lbl { color: var(--sage); }
+  .ba-card p { font-size: 0.86rem; margin: 0; }
+
+  .score-pill {
+    display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--mono); font-size: 0.85rem;
+    font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 999px; background: var(--bg-soft);
+    border: 1px solid var(--rule-c);
+  }
+  .score-pill .arrow { color: var(--fg-soft); font-weight: 400; }
+  .score-pill .up { color: var(--sage); }
+
+  footer.doc-foot {
+    margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--rule-c);
+    font-family: var(--mono); font-size: 0.78rem; color: var(--fg-soft);
+  }
+  ::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+</style>
+
+<div class="wrap">
+  <header class="doc-head">
+    <div class="kicker">LifeX Policy Assistant · Prompt Behavior</div>
+    <h1>What changed this session, and why</h1>
+    <p class="sub">Six fixes to how the assistant reasons and talks — tone, depth, ranking accuracy, and follow-up handling. Each one below caused a real, reproducible problem; each fix was tested against the live backend before being trusted, not assumed.</p>
+    <div class="meta-row">
+      <span><strong>Scope:</strong> src/query.py</span>
+      <span><strong>Test bed:</strong> 14-question quick-regression set</span>
+      <span><strong>Net result:</strong> 51/56 → 55/56 (3.64 → 3.93 avg)</span>
+    </div>
+    <div class="callout">
+      This covers the prompt-behavior iteration round only. Earlier work this project — the <code>gpt-5</code> model choice, the reasoning-effort tuning, the 11 chunk-content fixes, and the automated-extraction pipeline that was built and then shelved — is documented separately in <strong>Week4_Technical_Documentation.md</strong>.
+    </div>
+  </header>
+
+  <div class="entry" data-num="1">
+    <span class="tag">Ranking accuracy</span>
+    <h2>Fan-out questions weren't checking their own numbers before ranking</h2>
+    <div class="block">
+      <h3>The problem</h3>
+      <p>Asked <em>"which lender is cheapest for a $200k primary asset?"</em>, the model's own answer listed Flexi at 7.30% — then, two sentences later, crowned Westpac "cheapest" at 8.17%. A higher number labelled as the lowest, in the same response.</p>
+    </div>
+    <div class="block">
+      <h3>Why it happened</h3>
+      <p>When no lender is named, retrieval fans out across all 7 lenders (up to ~140 chunks), and that path deliberately runs at a cheaper reasoning setting (<code>minimal</code>) to avoid a 20&ndash;56 second latency blowout found earlier this project. That setting was calibrated for plain yes/no eligibility scans — it was never re-checked against questions that need an actual numeric comparison across the panel before answering.</p>
+    </div>
+    <div class="block">
+      <h3>The fix</h3>
+      <p>A small classifier call (<code>_classify_fanout_effort</code>, same <code>gpt-4o-mini</code> pattern already used for follow-up resolution) decides per fan-out question whether it needs genuine ranking — bumping just those to the higher effort — rather than reverting every fan-out question to the slow setting.</p>
+      <pre>Does answering this require comparing a number across lenders
+and picking the best/cheapest/highest? Or is it a yes/no scan?
+→ "low" effort if ranking, "minimal" if not</pre>
+    </div>
+    <div class="block">
+      <h3>Validated</h3>
+      <p>9/9 correct on a mixed test set, including a phrasing with no literal ranking word at all (<em>"who's the better deal?"</em>) — a keyword list would have missed it, which is exactly why this used the same small-LLM-call pattern instead of pattern matching.</p>
+      <span class="score-pill">Target bug <span class="arrow">→</span> <span class="up">2/4 → 4/4</span></span>
+    </div>
+  </div>
+
+  <div class="entry" data-num="2">
+    <span class="tag">Tone</span>
+    <h2>Panel answers read like a compliance form, not a broker</h2>
+    <div class="block">
+      <h3>The problem</h3>
+      <p>Every "which lenders can do X" answer forced one line per lender — <code>"ANGLE &mdash; Yes-with-conditions: ..."</code> — a format originally built to stop the model silently skipping lenders, but one that never reads like a person talking.</p>
+    </div>
+    <div class="block">
+      <h3>The fix</h3>
+      <p>Rewrote the output-format instruction to group by verdict instead of by lender line — <code>"X, Y and Z can do this; A and B can't"</code> — while keeping the separate, untouched instruction that forces the model to check every lender internally before writing anything. Formatting and completeness turned out to be two different instructions doing two different jobs; only the formatting one needed to change.</p>
+    </div>
+    <div class="beforeafter">
+      <div class="ba-card before">
+        <span class="lbl">Before</span>
+        <p>"ANGLE &mdash; Yes-with-conditions: finances heavy trucks/prime movers; company/trust only (no sole traders), 5+ yrs ABN &amp; GST, 600+ score, property-backed; prime movers start from 9.39% and carry a 1% loading..."</p>
+      </div>
+      <div class="ba-card after">
+        <span class="lbl">After</span>
+        <p>"Short answer: Angle, CFAL, Flexi, Metro, Resimac and Westpac can all do trucks over 5.5 tonnes. BFS can't."</p>
+      </div>
+    </div>
+    <div class="block">
+      <h3>Validated</h3>
+      <p>Ran 3 fan-out questions through both the old and new formatting side by side — every lender still got named in every run, zero silent drops, confirming the completeness guarantee survived the rewording.</p>
+    </div>
+  </div>
+
+  <div class="entry" data-num="3">
+    <span class="tag regression">Regression caught mid-fix</span>
+    <h2>The verdict-grouping fix still let detail creep back in</h2>
+    <div class="block">
+      <h3>The problem</h3>
+      <p>Even grouped by verdict, a real question ("trucks over 5.5 tonnes") still came back with a dense clause per lender &mdash; ABN years, credit scores, loadings, age limits, stacked six times over. Technically grouped, still not how a broker talks.</p>
+    </div>
+    <div class="block">
+      <h3>The fix</h3>
+      <p>Tightened the default depth: for a plain yes/no scan, naming who's in each group <em>is</em> the answer. Routine eligibility mechanics only get added back for a genuine hard exclusion worth knowing by name, or when a number is literally the thing being compared or ranked &mdash; not as a rundown of how each lender qualifies someone.</p>
+    </div>
+    <div class="beforeafter">
+      <div class="ba-card before">
+        <span class="lbl">Still too much</span>
+        <p>"Angle &mdash; yes (includes prime movers; company/trust only, 5+ yrs ABN &amp; GST, 600+ score, property-backed; prime movers start from 9.39% and carry a 1% loading; max EOT age 20yrs...)"</p>
+      </div>
+      <div class="ba-card after">
+        <span class="lbl">Tightened</span>
+        <p>"Angle &mdash; yes (includes prime movers; company/trust only, not sole traders)."</p>
+      </div>
+    </div>
+    <div class="block">
+      <h3>A second regression this caused, and the fix for that too</h3>
+      <p>Cutting "extra depth" this aggressively also cut a genuinely necessary fact: a comparison question about Angle vs Resimac's primary-asset age used to correctly flag that their secondary/tertiary caps <em>diverge</em> (15/10 years vs 10/5) &mdash; exactly the failure mode that question is designed to catch. The tightened instruction quietly dropped that note along with the noise.</p>
+      <p>Fixed by carving out an explicit, non-negotiable exception: if a broker names one attribute and the same excerpt shows a closely-related figure that actually differs between the lenders being compared, that one line stays &mdash; it's a fact the question was testing for, not padding.</p>
+    </div>
+    <div class="block">
+      <h3>Validated</h3>
+      <p>Re-ran the full 14-question set after each tightening pass. The divergence note held on retest; every other answer stayed short.</p>
+    </div>
+  </div>
+
+  <div class="entry" data-num="4">
+    <span class="tag">Behavior</span>
+    <h2>The model answered questions it should have asked about first</h2>
+    <div class="block">
+      <h3>The problem</h3>
+      <p>Asked <em>"what should I quote for the best commercial rate on a motor vehicle?"</em> &mdash; genuinely unanswerable without knowing dealer vs private, new vs used, EV or not &mdash; the model still committed to a number, hedged with "if X then Y" branches covering every possibility instead of just asking.</p>
+    </div>
+    <div class="block">
+      <h3>The fix</h3>
+      <p>Added an explicit decision rule: if the question already gives enough to reach a specific, defensible answer (an asset type, an amount, a borrower profile), answer it directly &mdash; more detail could theoretically sharpen almost anything, and that alone is never a reason to ask instead of answer. Only when a question gives close to nothing to work with does the direct answer become a short, natural clarifying question instead.</p>
+      <div class="quote">"Quick one: is it a dealer-sale car/light commercial under 5 years old, and is it an EV?"</div>
+    </div>
+    <div class="block">
+      <h3>Regression caught immediately</h3>
+      <p>The first version of this rule was too eager &mdash; it made a perfectly answerable ranking question ("$200k primary asset, new, dealer, established company") ask for clarification too, inventing an unasked-about vehicle-weight distinction as the excuse. Tightened the test from "could this be refined further" (almost anything can) to "does this already give enough to answer" (most things do).</p>
+    </div>
+    <div class="block">
+      <h3>Validated</h3>
+      <p>Genuinely ambiguous questions ask; a single missing, defaultable detail (e.g. dealer/private unspecified) gets answered with the assumption named in passing, not a question; a fully-specified calculation still just answers.</p>
+      <span class="score-pill">Ambiguous-question failure mode <span class="arrow">→</span> <span class="up">3/4 → 4/4</span></span>
+    </div>
+  </div>
+
+  <div class="entry" data-num="5">
+    <span class="tag">Cross-lender contamination</span>
+    <h2>A single-lender question couldn't see the fact that would have saved it</h2>
+    <div class="block">
+      <h3>The problem</h3>
+      <p>Asked "CFAL's headline rate is 7.75%, right?" the model correctly refused to confirm the number &mdash; but had no way to say <em>whose</em> rate 7.75% actually is (Westpac's), because a CFAL-only question only ever retrieves CFAL's own chunks.</p>
+    </div>
+    <div class="block">
+      <h3>The fix</h3>
+      <p>A prompt block already existed with exactly this fact ("CFAL shares DriveXpress with Westpac, but not its rate") &mdash; but it was scoped to multi-lender questions only, to avoid an earlier, confirmed problem where unconditional extra facts measurably hurt single-lender arithmetic questions. Added a minimal, CFAL-specific version of the same fact to the single-lender path, since CFAL doesn't have its own rates to calculate anyway &mdash; no arithmetic-question noise risk.</p>
+    </div>
+    <div class="block">
+      <h3>Validated</h3>
+      <p>Confirmed the fix fires only when CFAL is the sole detected lender (checked a second CFAL-only question in the test set to confirm zero unwanted noise there), and that the model now names Westpac by name as the likely source of the confusion.</p>
+      <span class="score-pill">Contradiction-detection failure mode <span class="arrow">→</span> <span class="up">3/4 → 4/4</span></span>
+    </div>
+  </div>
+
+  <div class="entry" data-num="6">
+    <span class="tag regression">Root cause was one layer deeper than expected</span>
+    <h2>A follow-up question silently switched into the wrong mode</h2>
+    <div class="block">
+      <h3>The problem</h3>
+      <p>Asked as a fresh question, "trucks over 5.5 tonnes" now answered cleanly. Asked as a <em>follow-up</em> &mdash; "what about over 4.4 tonnes?" right after &mdash; the old wall-of-detail answer came straight back, as if none of the day's fixes existed.</p>
+    </div>
+    <div class="block">
+      <h3>Why it happened</h3>
+      <p>Follow-ups run through a completely separate code path: a small resolver call rewrites the message and decides whether it's a request for <em>more detail</em> on the same question, which deliberately switches off every brevity instruction (that mode exists on purpose, for when a broker genuinely says "tell me more"). Checked directly: the resolver correctly rewrote "4.4 tonnes" into a brand-new question &mdash; but <em>also</em> incorrectly flagged it as a "more detail" request, which is what pulled in the untouched, deliberately verbose branch.</p>
+      <pre>standalone_question: "which lenders finance trucks over 4.4 tonnes?"   ← correct, new question
+wants_more_detail:   True                                               ← wrong</pre>
+    </div>
+    <div class="block">
+      <h3>The fix</h3>
+      <p>Added a consistency rule to the resolver: "more detail" can only be true when the rewritten question is the <em>same</em> question restated. If any concrete detail changed &mdash; a different threshold, lender, asset, term &mdash; it's a new question at normal depth, no matter how the message is phrased ("what about...", "and...").</p>
+    </div>
+    <div class="block">
+      <h3>Validated</h3>
+      <p>Tested 5 follow-up variations, not just the one reported: a different tonnage, a different asset (buses), a different age (used), a genuine "give me more detail" request, and one legitimately ambiguous case (asking to go deeper on "eligibility" for the unchanged scenario) &mdash; every one classified correctly, including the ambiguous one reasonably staying in detailed mode since nothing concrete actually changed.</p>
+    </div>
+  </div>
+
+  <footer class="doc-foot">
+    Every fix above was tested against the live backend (real API calls, not assumptions) before being considered done, and re-verified against the full 14-question set after each subsequent change to catch regressions between fixes &mdash; two of which were caught and corrected mid-session (entries 3 and 4).
+  </footer>
+</div>

@@ -1,0 +1,170 @@
+<title>Evaluation &amp; Projected Score — 111-Question Bank</title>
+<style>
+  :root {
+    --ink: #14181f; --ink-soft: #1c222b; --paper: #f7f6f2; --paper-soft: #eeece5;
+    --text: #1c2024; --text-soft: #4b5158; --text-dark: #e9e6dd; --text-dark-soft: #a9a49a;
+    --amber: #c98a2c; --amber-soft: #e9c98a; --teal: #3f8f88; --teal-soft: #a9d6d1;
+    --rust: #a24b3f; --rust-soft: #e2a094; --sage: #5c8a5c; --sage-soft: #a8c8a4;
+    --rule: #ded9cd; --rule-dark: #2c333d;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  :root[data-theme="dark"] { --bg: var(--ink); --bg-soft: var(--ink-soft); --fg: var(--text-dark); --fg-soft: var(--text-dark-soft); --card: #1a1f27; --rule-c: var(--rule-dark); --accent: var(--amber-soft); }
+  :root[data-theme="light"] { --bg: var(--paper); --bg-soft: var(--paper-soft); --fg: var(--text); --fg-soft: var(--text-soft); --card: #ffffff; --rule-c: var(--rule); --accent: var(--amber); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: var(--ink); --bg-soft: var(--ink-soft); --fg: var(--text-dark); --fg-soft: var(--text-dark-soft); --card: #1a1f27; --rule-c: var(--rule-dark); --accent: var(--amber-soft); } }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg: var(--paper); --bg-soft: var(--paper-soft); --fg: var(--text); --fg-soft: var(--text-soft); --card: #ffffff; --rule-c: var(--rule); --accent: var(--amber); } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); line-height: 1.6; font-size: 16px; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 3.5rem 1.5rem 6rem; }
+  .kicker { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); font-weight: 600; }
+  :root[data-theme="dark"] .kicker { color: var(--teal-soft); }
+  h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(2rem, 5vw, 2.6rem); margin: 0.4rem 0 0.6rem; text-wrap: balance; letter-spacing: -0.01em; }
+  .sub { color: var(--fg-soft); font-size: 1.02rem; max-width: 68ch; }
+  h2 { font-family: var(--serif); font-weight: 500; font-size: 1.5rem; margin: 3rem 0 0.9rem; text-wrap: balance; }
+  p { margin: 0 0 0.8rem; }
+  code { font-family: var(--mono); font-size: 0.87em; background: var(--bg-soft); padding: 0.1em 0.4em; border-radius: 4px; border: 1px solid var(--rule-c); }
+
+  /* Hero stat row */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1rem; margin: 1.6rem 0 2.2rem; }
+  .stat { background: var(--card); border: 1px solid var(--rule-c); border-radius: 12px; padding: 1.3rem 1.4rem; }
+  .stat .slabel { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-soft); font-weight: 700; display: block; margin-bottom: 0.5rem; }
+  .stat .sval { font-family: var(--serif); font-size: 2rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .stat .sval small { font-family: var(--sans); font-size: 0.95rem; font-weight: 400; color: var(--fg-soft); }
+  .stat .sdetail { font-size: 0.82rem; color: var(--fg-soft); margin-top: 0.3rem; }
+  .stat.hi .sval { color: var(--sage); }
+  :root[data-theme="dark"] .stat.hi .sval { color: var(--sage-soft); }
+  .stat.warn .sval { color: var(--rust); }
+  :root[data-theme="dark"] .stat.warn .sval { color: var(--rust-soft); }
+
+  .badge { display: inline-flex; align-items: center; gap: 0.3rem; font-family: var(--mono); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.03em; padding: 0.15rem 0.55rem; border-radius: 999px; }
+  .badge.confirmed { background: color-mix(in srgb, var(--sage) 18%, transparent); color: var(--sage); }
+  :root[data-theme="dark"] .badge.confirmed { background: color-mix(in srgb, var(--sage) 30%, transparent); color: var(--sage-soft); }
+  .badge.untested { background: color-mix(in srgb, var(--amber) 18%, transparent); color: var(--amber); }
+  :root[data-theme="dark"] .badge.untested { background: color-mix(in srgb, var(--amber) 30%, transparent); color: var(--amber-soft); }
+  .badge.watch { background: color-mix(in srgb, var(--rust) 18%, transparent); color: var(--rust); }
+  :root[data-theme="dark"] .badge.watch { background: color-mix(in srgb, var(--rust) 30%, transparent); color: var(--rust-soft); }
+
+  .tblwrap { overflow-x: auto; margin: 0.8rem 0 1.6rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+  th, td { text-align: left; padding: 0.6rem 0.85rem; border-bottom: 1px solid var(--rule-c); vertical-align: middle; }
+  th { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-soft); font-weight: 700; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.total td { border-top: 2px solid var(--rule-c); border-bottom: none; font-weight: 700; }
+  .bar-cell { display: flex; align-items: center; gap: 0.5rem; min-width: 140px; }
+  .bar-track { flex: 1; height: 6px; border-radius: 3px; background: var(--bg-soft); overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; background: var(--teal); }
+  :root[data-theme="dark"] .bar-fill { background: var(--teal-soft); }
+  .bar-fill.proj { background: var(--sage); }
+  :root[data-theme="dark"] .bar-fill.proj { background: var(--sage-soft); }
+
+  .qcard { background: var(--card); border: 1px solid var(--rule-c); border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 0.8rem; display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap; }
+  .qcard .qid { font-family: var(--mono); font-weight: 700; color: var(--accent); flex: 0 0 auto; }
+  .qcard .qbody { flex: 1 1 320px; }
+  .qcard .qwhy { font-size: 0.85rem; color: var(--fg-soft); margin-top: 0.25rem; }
+  .qcard .qscore { flex: 0 0 auto; font-family: var(--mono); font-size: 0.95rem; font-weight: 700; white-space: nowrap; }
+  .qcard .qscore .from { color: var(--rust); }
+  :root[data-theme="dark"] .qcard .qscore .from { color: var(--rust-soft); }
+  .qcard .qscore .to { color: var(--sage); }
+  :root[data-theme="dark"] .qcard .qscore .to { color: var(--sage-soft); }
+
+  .note { background: var(--bg-soft); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 0.9rem 1.1rem; font-size: 0.9rem; color: var(--fg-soft); margin: 1.2rem 0; }
+  .note strong { color: var(--fg); }
+  .cta { background: var(--card); border: 1px dashed var(--rule-c); border-radius: 12px; padding: 1.4rem 1.6rem; margin-top: 2.5rem; font-size: 0.95rem; }
+  .cta strong { display: block; font-family: var(--serif); font-size: 1.15rem; font-weight: 500; margin-bottom: 0.4rem; }
+
+  footer.doc-foot { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--rule-c); font-family: var(--mono); font-size: 0.78rem; color: var(--fg-soft); }
+  ::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="kicker">LifeX Policy Assistant · Evaluation</div>
+    <h1>Where the score stands, and where it's headed</h1>
+    <p class="sub">The last full, graded run of all 111 questions was on 2026-07-25 — before any of this session's six prompt-behavior fixes. This report anchors on that real result, shows exactly which of its low scorers this session's fixes are confirmed (via direct backend re-testing) to have corrected, and builds a conservative, clearly-labeled projection from there. It is <strong>not</strong> a new full 111-question measurement — that's the one number this report can't give you without actually re-running the suite.</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat">
+      <span class="slabel">Measured baseline (111Q, 2026-07-25)</span>
+      <span class="sval">405<small>/444 · 91.2%</small></span>
+      <span class="sdetail">avg 3.65/4 per question</span>
+    </div>
+    <div class="stat hi">
+      <span class="slabel">Confirmed fixed this session</span>
+      <span class="sval">5<small> questions, +2 each</small></span>
+      <span class="sdetail">re-tested directly against the live backend</span>
+    </div>
+    <div class="stat hi">
+      <span class="slabel">Conservative projection</span>
+      <span class="sval">415<small>/444 · 93.5%</small></span>
+      <span class="sdetail">avg 3.74/4 — confirmed deltas only</span>
+    </div>
+    <div class="stat warn">
+      <span class="slabel">Weakest category, untouched</span>
+      <span class="sval">3.00<small>/4</small></span>
+      <span class="sdetail">Cross-lender + multi-filter — see below</span>
+    </div>
+  </div>
+
+  <h2>The 5 confirmed fixes</h2>
+  <p>These are the questions from the 14-question quick-regression subset that also appear in the graded 111-question baseline's low scorers (≤2/4). Each was re-run against the live backend after this session's fixes and came back correct — this is measured, not estimated.</p>
+
+  <div class="qcard">
+    <span class="qid">CQ-102</span>
+    <div class="qbody">Best-fit recommendation, all 7 lenders (fan-out) — "which lender is cheapest" style ranking.<div class="qwhy">Fixed by the fan-out reasoning-effort classifier — this question needed genuine cross-lender ranking, which the old blanket "minimal" effort setting for fan-out questions wasn't reliably getting right.</div></div>
+    <span class="qscore"><span class="from">2</span> → <span class="to">4</span> / 4</span>
+  </div>
+  <div class="qcard">
+    <span class="qid">CQ-076</span>
+    <div class="qbody">Ambiguous / needs clarification, all 7 lenders (fan-out).<div class="qwhy">Fixed by the clarifying-question logic (Exception 2) — the assistant now asks a short question instead of hedging across every possibility when the question is genuinely underspecified.</div></div>
+    <span class="qscore"><span class="from">2</span> → <span class="to">4</span> / 4</span>
+  </div>
+  <div class="qcard">
+    <span class="qid">CQ-096</span>
+    <div class="qbody">Cross-lender comparison, Angle vs. Resimac — primary-asset age comparison with a secondary/tertiary divergence hidden in the same excerpt.<div class="qwhy">Fixed by the required-exception clause added to the brevity instruction — this is the case that caught the depth-tightening regression mid-session, so it went through two fix passes before landing correct.</div></div>
+    <span class="qscore"><span class="from">2</span> → <span class="to">4</span> / 4</span>
+  </div>
+  <div class="qcard">
+    <span class="qid">CQ-099</span>
+    <div class="qbody">Multi-filter (single lender), Westpac — an exact-cap edge case.<div class="qwhy">Passed clean in the final consolidated quick-regression round after the tone/depth/resolver fixes; not tied to one specific fix in isolation the way the other four are.</div></div>
+    <span class="qscore"><span class="from">2</span> → <span class="to">4</span> / 4</span>
+  </div>
+  <div class="qcard">
+    <span class="qid">CQ-108</span>
+    <div class="qbody">Calculation / arithmetic, Resimac — headline-vs-breakdown rate build-up.<div class="qwhy">Passed clean in the final consolidated quick-regression round; the reasoning-effort raise (a change from just before this session) is the most likely single cause, reinforced by this session's other fixes.</div></div>
+    <span class="qscore"><span class="from">2</span> → <span class="to">4</span> / 4</span>
+  </div>
+
+  <h2>Score by complexity type</h2>
+  <p>Baseline is the real 2026-07-25 grading. "Projected" applies <em>only</em> the five confirmed deltas above to their categories — nothing else in a category is assumed to have changed unless it was independently re-tested.</p>
+  <div class="tblwrap">
+    <table>
+      <tr><th>Complexity type</th><th class="num">n</th><th>Baseline</th><th>Projected</th><th>Status</th></tr>
+      <tr><td>Policy-interaction edge case</td><td class="num">14</td><td class="num">55/56 · 3.93</td><td class="num">55/56 · 3.93</td><td><span class="badge untested">unchanged</span></td></tr>
+      <tr><td>Negative / trap constraint</td><td class="num">10</td><td class="num">40/40 · 4.00</td><td class="num">40/40 · 4.00</td><td><span class="badge untested">unchanged</span></td></tr>
+      <tr><td>Conditional scenario chain</td><td class="num">9</td><td class="num">36/36 · 4.00</td><td class="num">36/36 · 4.00</td><td><span class="badge untested">unchanged</span></td></tr>
+      <tr><td>Contradiction detection</td><td class="num">8</td><td class="num">32/32 · 4.00</td><td class="num">32/32 · 4.00</td><td><span class="badge untested">unchanged (incl. CQ-069, CFAL fix)</span></td></tr>
+      <tr><td>Cross-lender comparison (3+)</td><td class="num">7</td><td class="num">25/28 · 3.57</td><td class="num">25/28 · 3.57</td><td><span class="badge untested">not re-tested</span></td></tr>
+      <tr><td>Best-fit recommendation</td><td class="num">11</td><td class="num">39/44 · 3.55</td><td class="num"><strong>41/44 · 3.73</strong></td><td><span class="badge confirmed">CQ-102 fixed</span></td></tr>
+      <tr><td>Calculation / arithmetic</td><td class="num">10</td><td class="num">36/40 · 3.60</td><td class="num"><strong>38/40 · 3.80</strong></td><td><span class="badge confirmed">CQ-108 fixed</span></td></tr>
+      <tr><td>Ambiguous / needs clarification</td><td class="num">5</td><td class="num">18/20 · 3.60</td><td class="num"><strong>20/20 · 4.00</strong></td><td><span class="badge confirmed">CQ-076 fixed</span></td></tr>
+      <tr><td>Cross-lender comparison (2)</td><td class="num">14</td><td class="num">49/56 · 3.50</td><td class="num"><strong>51/56 · 3.64</strong></td><td><span class="badge confirmed">CQ-096 fixed</span></td></tr>
+      <tr><td>Multi-filter (single lender)</td><td class="num">14</td><td class="num">48/56 · 3.43</td><td class="num"><strong>50/56 · 3.57</strong></td><td><span class="badge confirmed">CQ-099 fixed</span></td></tr>
+      <tr><td>Cross-lender + multi-filter</td><td class="num">9</td><td class="num">27/36 · 3.00</td><td class="num">27/36 · 3.00</td><td><span class="badge watch">weakest — untouched</span></td></tr>
+      <tr class="total"><td>All 111</td><td class="num">111</td><td class="num">405/444 · 91.2%</td><td class="num">415/444 · 93.5%</td><td></td></tr>
+    </table>
+  </div>
+
+  <div class="note"><strong>Why the projection stops at +10 points, not higher:</strong> the honest, defensible number only counts questions actually re-tested against the live backend. Several other questions in the baseline's low-scorer list sit in categories these fixes plausibly help — <code>CQ-043</code> (Cross-lender + multi-filter, all-lender ranking) looks like the same shape of question the fan-out classifier fixed; <code>CQ-014</code> and <code>CQ-107</code> (Multi-filter, Angle/CFAL) weren't touched by any of today's six changes as far as directly verified. Assuming they're also fixed without checking is exactly the kind of claim this project's own testing discipline this session was built to avoid — better to report 415 with confidence than 425+ on a guess.</div>
+
+  <h2>The one category nothing this session touched</h2>
+  <p><strong>Cross-lender + multi-filter</strong> (n=9) is both the lowest-scoring category in the baseline (3.00/4, 27/36) and the one none of this session's six fixes were aimed at. Its three low scorers — <code>CQ-042</code> (Resimac/Angle/BFS), <code>CQ-043</code> (all-lender), <code>CQ-103</code> (Metro/Resimac/Angle) — combine a named-lender-or-more scope with an extra filter condition on top, a shape distinct from anything diagnosed this session. Worth a dedicated look before relying on the full-111 number improving as much as this category could allow.</p>
+
+  <div class="cta">
+    <strong>Want a confirmed number instead of a projection?</strong>
+    Run <code>python tests/run_complex_questions.py</code> against the current backend for a real, graded 111-question result — the same process that produced the 2026-07-25 baseline this report is built on. Recommended before treating 93.5% as more than a well-grounded estimate, and worth doing regardless before the competition.
+  </div>
+
+  <footer class="doc-foot">Baseline: tests/complex_grades_run6_final.json (2026-07-25, pre-session). Confirmed deltas: tests/complex_results_resolver_fix.json + this session's direct backend re-tests. No full 111-question re-grade has been run since this session's fixes.</footer>
+</div>

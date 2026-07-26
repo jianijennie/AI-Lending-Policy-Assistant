@@ -1,0 +1,156 @@
+<title>LifeX Policy Assistant — How the Code Works</title>
+<style>
+  :root {
+    --ink: #14181f; --ink-soft: #1c222b; --paper: #f7f6f2; --paper-soft: #eeece5;
+    --text: #1c2024; --text-soft: #4b5158; --text-dark: #e9e6dd; --text-dark-soft: #a9a49a;
+    --amber: #c98a2c; --amber-soft: #e9c98a; --teal: #3f8f88; --teal-soft: #a9d6d1;
+    --rust: #a24b3f; --sage: #5c8a5c; --rule: #ded9cd; --rule-dark: #2c333d;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  :root[data-theme="dark"] { --bg: var(--ink); --bg-soft: var(--ink-soft); --fg: var(--text-dark); --fg-soft: var(--text-dark-soft); --card: #1a1f27; --rule-c: var(--rule-dark); --accent: var(--amber-soft); }
+  :root[data-theme="light"] { --bg: var(--paper); --bg-soft: var(--paper-soft); --fg: var(--text); --fg-soft: var(--text-soft); --card: #ffffff; --rule-c: var(--rule); --accent: var(--amber); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: var(--ink); --bg-soft: var(--ink-soft); --fg: var(--text-dark); --fg-soft: var(--text-dark-soft); --card: #1a1f27; --rule-c: var(--rule-dark); --accent: var(--amber-soft); } }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg: var(--paper); --bg-soft: var(--paper-soft); --fg: var(--text); --fg-soft: var(--text-soft); --card: #ffffff; --rule-c: var(--rule); --accent: var(--amber); } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); line-height: 1.6; font-size: 16px; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 3.5rem 1.5rem 6rem; }
+  .kicker { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); font-weight: 600; }
+  :root[data-theme="dark"] .kicker { color: var(--teal-soft); }
+  h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(2rem, 5vw, 2.6rem); margin: 0.4rem 0 0.6rem; text-wrap: balance; letter-spacing: -0.01em; }
+  .sub { color: var(--fg-soft); font-size: 1.02rem; max-width: 68ch; }
+  h2 { font-family: var(--serif); font-weight: 500; font-size: 1.6rem; margin: 3rem 0 0.9rem; text-wrap: balance; }
+  h2 .num { font-family: var(--mono); color: var(--teal); font-size: 1rem; margin-right: 0.5rem; }
+  :root[data-theme="dark"] h2 .num { color: var(--teal-soft); }
+  h3 { font-family: var(--sans); font-weight: 700; font-size: 1rem; margin: 0 0 0.4rem; }
+  p { margin: 0 0 0.8rem; }
+  code, .mono { font-family: var(--mono); font-size: 0.87em; }
+  code { background: var(--bg-soft); padding: 0.1em 0.4em; border-radius: 4px; border: 1px solid var(--rule-c); }
+  pre { background: var(--bg-soft); border: 1px solid var(--rule-c); border-radius: 8px; padding: 0.9rem 1.1rem; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.55; margin: 0.7rem 0; }
+
+  /* Pipeline diagram */
+  .pipeline { display: flex; flex-wrap: wrap; gap: 0; align-items: stretch; margin: 1.5rem 0 2rem; overflow-x: auto; padding-bottom: 0.5rem; }
+  .pstage { flex: 1 1 150px; min-width: 150px; background: var(--card); border: 1px solid var(--rule-c); border-radius: 10px; padding: 1rem 1.1rem; position: relative; }
+  .parrow { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; width: 2rem; color: var(--fg-soft); font-size: 1.2rem; }
+  .pstage .plabel { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal); font-weight: 700; display: block; margin-bottom: 0.35rem; }
+  :root[data-theme="dark"] .pstage .plabel { color: var(--teal-soft); }
+  .pstage strong { display: block; font-size: 0.95rem; margin-bottom: 0.3rem; }
+  .pstage span.detail { font-size: 0.8rem; color: var(--fg-soft); }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1rem 0 1.5rem; }
+  .card { background: var(--card); border: 1px solid var(--rule-c); border-radius: 10px; padding: 1.2rem 1.3rem; }
+  .card .fn { font-family: var(--mono); font-size: 0.82rem; color: var(--accent); font-weight: 700; display: block; margin-bottom: 0.5rem; }
+  .card p { font-size: 0.9rem; margin: 0; color: var(--fg-soft); }
+  .card p + p { margin-top: 0.5rem; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 0.8rem 0 1.4rem; }
+  .tblwrap { overflow-x: auto; }
+  th, td { text-align: left; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--rule-c); vertical-align: top; }
+  th { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-soft); font-weight: 700; }
+  td code { white-space: nowrap; }
+
+  .note { background: var(--bg-soft); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 0.8rem 1.1rem; font-size: 0.9rem; color: var(--fg-soft); margin: 1rem 0; }
+  .note strong { color: var(--fg); }
+
+  ul.flow-list { margin: 0.5rem 0 1.2rem; padding-left: 1.3rem; }
+  ul.flow-list li { margin-bottom: 0.5rem; font-size: 0.95rem; }
+
+  footer.doc-foot { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--rule-c); font-family: var(--mono); font-size: 0.78rem; color: var(--fg-soft); }
+  ::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="kicker">LifeX Policy Assistant · Architecture</div>
+    <h1>How the whole system works</h1>
+    <p class="sub">A retrieval-augmented Q&amp;A backend covering 7 lenders' lending policy, built from hand-curated markdown chunks, ChromaDB for retrieval, and GPT-5 for answering — with a chain of small, targeted decisions layered on top to get the answers to actually sound and behave like a broker.</p>
+  </header>
+
+  <h2><span class="num">01</span>End-to-end pipeline</h2>
+  <div class="pipeline">
+    <div class="pstage"><span class="plabel">Source</span><strong>Lender PDFs</strong><span class="detail">Rate cards, product guides, 25 source docs across 7 lenders</span></div>
+    <div class="parrow">→</div>
+    <div class="pstage"><span class="plabel">Authoring</span><strong>data/chunks/*.md</strong><span class="detail">62 hand-curated atomic chunks, tagged with lender/intent/metadata</span></div>
+    <div class="parrow">→</div>
+    <div class="pstage"><span class="plabel">Ingest</span><strong>src/ingest.py</strong><span class="detail">Parses, validates, embeds, stores</span></div>
+    <div class="parrow">→</div>
+    <div class="pstage"><span class="plabel">Store</span><strong>ChromaDB</strong><span class="detail">chroma_db/, collection "lifex_policies"</span></div>
+    <div class="parrow">→</div>
+    <div class="pstage"><span class="plabel">Query</span><strong>src/query.py</strong><span class="detail">Retrieval + prompt assembly + GPT-5</span></div>
+    <div class="parrow">→</div>
+    <div class="pstage"><span class="plabel">Serve</span><strong>src/api.py</strong><span class="detail">FastAPI /query endpoint</span></div>
+  </div>
+
+  <h2><span class="num">02</span>The chunks: what a policy fact looks like at rest</h2>
+  <p>Every fact the assistant can ever cite lives in <code>data/chunks/&lt;lender&gt;_chunks.md</code> — plain markdown, one chunk per <code>## chunk_id:</code> block, separated by <code>---</code>. Nothing is auto-extracted from the source PDFs; every chunk is hand-authored and hand-verified against its source document. Each chunk carries a metadata header:</p>
+  <pre>## chunk_id: angle_interest_rates
+**lenders:** ANGLE
+**intent:** PRICING
+**borrower_profile:** ...
+**asset_class:** ...
+**answerable_questions:** ...
+**trigger_words:** ...
+**Content:**
+&lt;the actual policy text&gt;</pre>
+  <p><code>src/ingest.py::parse_chunk_file()</code> is the strict contract every chunk must satisfy — it validates <code>lenders</code> against a fixed 7-value set and <code>intent</code> against an 11-value set (<code>PRICING</code>, <code>ELIGIBILITY</code>, <code>FEES</code>, <code>EXCLUSIONS</code>, etc.), and prints a warning (not a silent skip) for anything malformed: an empty content section, an unrecognized lender/intent tag, or a duplicate <code>chunk_id</code> that would silently overwrite an earlier one in ChromaDB. <code>answerable_questions</code> and <code>trigger_words</code> get prepended to the chunk's text before embedding specifically so the embedding model associates natural-language phrasings with the chunk, not just its literal policy wording.</p>
+
+  <h2><span class="num">03</span>Retrieval: why every lender's whole pool, not a top-K search</h2>
+  <p><code>detect_lenders(question)</code> is the first and most load-bearing decision in the whole pipeline — it decides both <em>which</em> chunks get retrieved and <em>how hard</em> the model has to think about the answer. Matching runs in two tiers per lender (canonical name, then product/brand variants like <code>flexicommercial</code> or <code>premiumplus</code>), unioned across all 7 lenders rather than stopping at the first match — a single-tier, early-return version of this is what silently dropped FLEXI from comparison questions that named it only by product name, an actual bug found via the 111-question eval. A single-typo fuzzy fallback (edit distance 1, names ≥5 characters) only kicks in when nothing matches on either tier.</p>
+  <p>Once lenders are known, <code>retrieve_nodes()</code> pulls <strong>every</strong> chunk belonging to each detected lender (<code>ALL_LENDER_CHUNKS_K = 20</code>, comfortably above any lender's actual 8–10 chunks) rather than a similarity top-K cutoff. If no lender is named, it does the same for all 7. This replaced an earlier union/rerank pipeline (a cross-encoder reranker, a tighter top-K) that existed to squeeze the right handful of chunks out of a lender's pool under a tight cutoff — its failure mode was that a correct chunk ranked one place past the cutoff simply never reached the model, unrecoverable no matter how good the prompt was downstream. Since each lender only has a handful of chunks (~5–6k tokens total), including everything costs little and makes a retrieval miss for a scoped lender structurally impossible — embedding scores now only decide chunk <em>order</em>, never inclusion.</p>
+  <div class="note"><strong>Single vs. multi-lender context shape:</strong> for one detected lender, chunks are handed to the model as a flat, relevance-ordered list. For anything scoped to more than one lender (a named comparison, or the full 7-lender fan-out), chunks are grouped under a <code>=== LENDER ===</code> heading per lender, and the prompt is given an explicit list of exactly which lenders are present — this concrete checklist is what stops the model quietly stopping after 3–5 of 7 lenders, which a generic "cover every lender" instruction on its own did not reliably prevent.</div>
+
+  <h2><span class="num">04</span>Two small classifier calls that steer the big model</h2>
+  <p>Two purpose-built <code>gpt-4o-mini</code> calls (kept deliberately separate from the answering model — see §5) make small upstream decisions that the main prompt then depends on. Both exist because keyword matching demonstrably missed real phrasings; understanding intent is what an LLM call is for here, not a brittle word list.</p>
+  <div class="cards">
+    <div class="card">
+      <span class="fn">_resolve_followup(question, history) → (standalone_question, wants_more_detail)</span>
+      <p>Rewrites a conversational follow-up ("what about westpac?", "give me more detail") into a question that stands on its own — this rewrite is what then drives lender detection and retrieval, identically to a fresh question.</p>
+      <p>Also flags genuine "give me more detail on that" requests, which switch off every brevity instruction downstream for that one turn. A consistency rule added this session forces <code>wants_more_detail = false</code> whenever any concrete detail (lender, number, asset, term) changed between the previous question and the rewritten one — otherwise a topic change disguised as a follow-up ("what about over 4.4 tonnes?") was misread as "elaborate on the 5.5-tonne answer," reactivating the old, deliberately verbose mode by mistake.</p>
+    </div>
+    <div class="card">
+      <span class="fn">_classify_fanout_effort(question) → "low" | "minimal"</span>
+      <p>Only runs when no lender was named. Decides whether the question needs genuine cross-lender ranking ("which lender is cheapest", "who's the better deal") — which gets bumped to the full <code>REASONING_EFFORT</code> — or is a plain yes/no eligibility scan, which stays at the cheaper <code>FANOUT_REASONING_EFFORT</code>.</p>
+      <p>Exists because a blanket "minimal" effort for every fan-out question caused real ranking mistakes (naming a lender's rate as cheapest without checking every constraint in the question actually still applied to it). Fails toward the higher, correct-but-slower effort on any classifier exception.</p>
+    </div>
+  </div>
+
+  <h2><span class="num">05</span>The answering model and its calling convention</h2>
+  <p>All OpenAI calls — answering, both classifiers above — go through one function, <code>_chat_completion()</code>, specifically because the GPT-5 family and older chat models use different parameters, and hardcoding one style at each call site is how a previous model swap broke silently.</p>
+  <div class="tblwrap"><table>
+    <tr><th>Model</th><th>Role</th><th>Why this one</th></tr>
+    <tr><td><code>gpt-5</code></td><td>Answering (<code>LLM_MODEL</code>)</td><td>Benchmarked head-to-head against gpt-4o-mini and gpt-5-mini on 5 known-ground-truth questions: gpt-4o-mini made factual errors on full-corpus context, gpt-5-mini was correct but slow and verbose, gpt-5 was correct on everything, fastest of the GPT-5 family tested, and the only one that reliably followed the brevity/verdict-first instructions.</td></tr>
+    <tr><td><code>gpt-4o-mini</code></td><td>Follow-up resolver &amp; fan-out classifier (<code>RESOLVER_MODEL</code>)</td><td>GPT-5-family models ignore <code>temperature</code>, so the same follow-up could resolve to a differently-worded standalone question on every run — tolerable for the final answer, not for something that feeds lender detection. 4o-mini at <code>temperature=0</code> is deterministic and was already proven at this exact job.</td></tr>
+  </table></div>
+  <p>For GPT-5-family models specifically, <code>_chat_completion</code> sets <code>max_completion_tokens</code> (reasoning tokens count against this, so it's the visible cap plus 512 headroom), <code>reasoning_effort</code>, and <code>verbosity="low"</code> — the last of these is the actual mechanism that constrains answer length; prompt text about brevity alone was found not to be enough on its own. If a response comes back empty because the whole token budget went to internal reasoning, the cap is doubled and retried exactly once (never in an unbounded loop) rather than surfacing a blank answer.</p>
+  <div class="tblwrap"><table>
+    <tr><th>Setting</th><th>Value</th><th>Scope</th></tr>
+    <tr><td><code>REASONING_EFFORT</code></td><td><code>low</code></td><td>Any question with a named lender. Raised from <code>minimal</code> after a reproducible bug: at <code>minimal</code>, multi-step rate calculations sometimes stated a headline number before the model had actually finished deriving it, and never reconciled the mismatch with its own shown working.</td></tr>
+    <tr><td><code>FANOUT_REASONING_EFFORT</code></td><td><code>minimal</code></td><td>No lender named <em>and</em> the fan-out classifier says the question doesn't need ranking. <code>low</code> effort over all 7 lenders' chunks (~140) measured 20–56s per question — kept cheap specifically because most fan-out questions are yes/no scans, not calculations.</td></tr>
+  </table></div>
+
+  <h2><span class="num">06</span>Prompt assembly: what turns retrieval into an answer</h2>
+  <p><code>query_policies()</code> is the orchestrator. In order:</p>
+  <ul class="flow-list">
+    <li>Resolve follow-ups via <code>_resolve_followup</code> if there's history, producing the standalone question everything below actually runs on.</li>
+    <li>Detect lenders on that standalone question, retrieve every chunk for each.</li>
+    <li>Build the context block — flat for one lender, grouped-by-lender-heading with an explicit checklist for several — and, for a single detected lender, decide whether it needs a targeted "known pitfall" injected (currently CFAL only, see below).</li>
+    <li>Assemble the prompt: role framing, the lead-with-the-answer instruction with its two exceptions (calculations show working before the total; genuinely unanswerable questions get a short clarifying question instead of a guess), the checklist/brevity block when multiple lenders are in play, a block of known cross-lender mixups (bureau differences, CFAL/Westpac rate conflation, exposure vs. transaction limits), and a set of "double-check these common mistakes" bullets that catch things like hard vs. soft exclusions and lender-A's rule leaking into lender-B's answer.</li>
+    <li>Pick the reasoning effort (fixed <code>low</code> if a lender was named, otherwise the fan-out classifier's call) and the output cap (2000 tokens if the broker asked for more detail, 1000 otherwise), then call <code>_chat_completion</code>.</li>
+  </ul>
+  <div class="note"><strong>CFAL single-lender pitfall:</strong> the cross-lender mixup block above is deliberately scoped to multi-lender questions only — unconditional extra bullets previously measured as hurting single-lender arithmetic questions with noise they didn't need. But that meant a CFAL-only question, which never retrieves Westpac's chunks, had no way to recognize a broker quoting Westpac's rate as if it were CFAL's. A CFAL-specific fact (CFAL has no public rate card at all; a quoted headline rate likely belongs to Westpac's shared DriveXpress channel) was added to the single-lender path only when the sole detected lender is CFAL exactly — CFAL has no rates of its own to build up arithmetically, so this doesn't carry the same noise risk.</div>
+
+  <h2><span class="num">07</span>The API layer</h2>
+  <p><code>src/api.py</code> is a thin FastAPI wrapper: one <code>POST /query</code> endpoint taking a question and optional conversation history, returning the answer plus its source chunks (id, lender, intent, retrieval score) and timing. An optional embedding-similarity query cache exists (<code>QUERY_CACHE_ENABLED</code>) but is currently <strong>off</strong> — its similarity threshold (0.97) was calibrated against the old, smaller embedding model and never re-validated after the swap to <code>bge-base</code>, and an uncalibrated cache risks returning a wrong-but-confident stale answer, which is a worse failure in a competition setting than a missed cache hit. Follow-up questions never read from or write to this cache regardless, since a cached answer to a conversational follow-up would make no sense served back as a generic answer later. Errors from the query pipeline (OpenAI down after retries, a ChromaDB hiccup) are caught and returned as an explicit 503 rather than an unhandled exception, so the frontend can tell "the backend is up but this question failed" apart from "the backend isn't running."</p>
+
+  <h2><span class="num">08</span>Config reference</h2>
+  <div class="tblwrap"><table>
+    <tr><th>Constant</th><th>Value</th><th>Purpose</th></tr>
+    <tr><td><code>EMBEDDING_MODEL</code></td><td><code>BAAI/bge-base-en-v1.5</code></td><td>109M-param retrieval embeddings; upgraded from bge-small specifically to strengthen first-pass recall, which is what made a separate reranker stage unnecessary once combined with full-pool retrieval.</td></tr>
+    <tr><td><code>CHUNK_SIZE</code> / <code>CHUNK_OVERLAP</code></td><td>4096 / 100</td><td>A safety-net splitter, not an active splitting step — sized comfortably above the longest real chunk (~3800 chars) so no hand-curated chunk gets silently fragmented across two IDs.</td></tr>
+    <tr><td><code>TOP_K</code></td><td>5</td><td>Legacy constant from the old top-K retrieval path; retrieval today uses <code>ALL_LENDER_CHUNKS_K</code> (20) instead.</td></tr>
+    <tr><td><code>ENUMERATION_GUARDRAILS</code></td><td><code>True</code></td><td>Toggle for the explicit per-lender checklist instructions — built because gpt-4o-mini-era prompting needed them; kept on and re-measured rather than assumed unnecessary now that gpt-5 is the answering model.</td></tr>
+  </table></div>
+
+  <footer class="doc-foot">Reflects src/query.py, src/config.py, src/api.py, and src/ingest.py as of this session's final state.</footer>
+</div>
