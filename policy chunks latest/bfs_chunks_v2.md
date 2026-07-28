@@ -110,12 +110,12 @@ Commercial pricing shows **base rates**. Broker may add margin up to a maximum o
 |-------------|------------|--------|--------|--------|--------|
 | New and Demo | 7.60% | 8.25% | 8.50% | 10.15% | 11.50% |
 | Used 2022–2026 | 7.60% | 8.95% | 10.45% | 12.50% | N/A |
-| Used 2017–2021 | Not available | 10.30% | 11.35% | 12.90% | N/A |
+| Used 2017–2021 | 7.60% | 10.30% | 11.35% | 12.90% | Not available |
 | Used 2016 and older | 9.55% | 11.05% | 11.80% | 13.40% | N/A |
 
-Ultra Prime's base rate is a flat 7.60% for New/Demo and Used 2022–2026 — but Ultra Prime is explicitly **not available** at all for Used 2017–2021 (the next-best tier for that vehicle age band is Tier 1 at 10.30%); Ultra Prime resumes at 9.55% for Used 2016 and older.
+Ultra Prime's base rate is a flat 7.60% covering New/Demo, Used 2022–2026, AND Used 2017–2021 alike (verified against the source PDF's own vector-line table geometry -- there is no dividing line between these three rows in the Ultra Prime column, unlike every other tier's column, confirming they're genuinely one merged cell, not three separate values). It only steps up to 9.55% for Used 2016 and older. It's Tier 4 -- not Ultra Prime -- that is explicitly marked "Not available" for the Used 2017–2021 band specifically.
 
-**Note:** Tier 4 does not accept commercial used vehicle contracts.
+**Note:** Tier 4 does not accept commercial used vehicle contracts (consistent with it showing no rate at all for the other used-vehicle bands, and an explicit "Not available" for Used 2017–2021).
 
 **Commercial rate adjustments:**
 - Maximum broker margin above base: **+6%**
