@@ -109,13 +109,15 @@ Commercial pricing shows **base rates**. Broker may add margin up to a maximum o
 | Vehicle Age | Ultra Prime | Tier 1 | Tier 2 | Tier 3 | Tier 4 |
 |-------------|------------|--------|--------|--------|--------|
 | New and Demo | 7.60% | 8.25% | 8.50% | 10.15% | 11.50% |
-| Used 2022–2026 | 7.60% | 8.95% | 10.45% | 12.50% | N/A |
+| Used 2022–2026 | 7.60% | 8.95% | 10.45% | 12.50% | Not available |
 | Used 2017–2021 | 7.60% | 10.30% | 11.35% | 12.90% | Not available |
-| Used 2016 and older | 9.55% | 11.05% | 11.80% | 13.40% | N/A |
+| Used 2016 and older | 9.55% | 11.05% | 11.80% | 13.40% | Not available |
 
-Ultra Prime's base rate is a flat 7.60% covering New/Demo, Used 2022–2026, AND Used 2017–2021 alike (verified against the source PDF's own vector-line table geometry -- there is no dividing line between these three rows in the Ultra Prime column, unlike every other tier's column, confirming they're genuinely one merged cell, not three separate values). It only steps up to 9.55% for Used 2016 and older. It's Tier 4 -- not Ultra Prime -- that is explicitly marked "Not available" for the Used 2017–2021 band specifically.
+Ultra Prime's base rate is a flat 7.60% covering New/Demo, Used 2022–2026, AND Used 2017–2021 alike -- verified against the source PDF's own vector-line table geometry: there is no dividing line between these three rows in the Ultra Prime column (unlike every other tier's column, which does have dividers there), confirming they're genuinely one merged cell, not three separate values. It only steps up to 9.55% for Used 2016 and older.
 
-**Note:** Tier 4 does not accept commercial used vehicle contracts (consistent with it showing no rate at all for the other used-vehicle bands, and an explicit "Not available" for Used 2017–2021).
+Tier 4's "Not available" is likewise one merged cell -- it spans ALL THREE used-vehicle rows (Used 2022–2026, Used 2017–2021, AND Used 2016 and older), not just one of them, matching the general rule below.
+
+**Note:** Tier 4 does not accept commercial used vehicle contracts at all -- only New and Demo (11.50%).
 
 **Commercial rate adjustments:**
 - Maximum broker margin above base: **+6%**
