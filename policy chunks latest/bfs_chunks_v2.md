@@ -209,6 +209,34 @@ Ultra Prime's max rate is a single flat 9.15% covering New/Demo through Used 201
 
 ---
 
+## chunk_id: bfs_balloons
+**source:** bfs
+**topic:** balloon_payments
+**intent:** LOAN_LIMITS
+**lenders:** BFS
+**borrower_profile:** COMMERCIAL, HIGH_CREDIT, MID_CREDIT
+**asset_class:** MV_NEW, MV_USED, LCV
+**doc_type:** ALL
+**loan_size_band:** ALL
+**answerable_questions:** What balloon percentage can BFS offer? Does balloon availability differ by tier or term? Are BFS Plus or Tier 3/4 deals eligible for a balloon?
+**confidence:** high
+**last_verified:** 2026-07-29
+**policy_fields:** MAX_LOAN
+**trigger_words:** balloon, balloon payment, residual, balloon percentage, Ultra Prime balloon, Tier 1 balloon, Tier 2 balloon, Tier 3 balloon, Tier 4 balloon, BFS Plus balloon
+
+**Content:**
+
+Balloon payments (**commercial only**; excludes courier and ride-share deals) are available for Ultra Prime, Tier 1, and Tier 2 — the same shared table applies to all three of those tiers:
+
+| Vehicle Age | 36 Month Term | 48 Month Term | 60 Month Term |
+|------------|---------------|---------------|---------------|
+| 0–3 years | 50% | 40% | 30% |
+| 3–5 years | 30% | 25% | 20% |
+
+**Not available** for: Tier 3, Tier 4, or BFS Plus — no balloon option exists at these tiers/products regardless of vehicle age or term.
+
+---
+
 ## chunk_id: bfs_commercial_documentation
 **source:** bfs
 **topic:** commercial_documentation
