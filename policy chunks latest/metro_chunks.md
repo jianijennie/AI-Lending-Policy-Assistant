@@ -42,36 +42,38 @@
 **loan_size_band:** MICRO, SMALL, MEDIUM, LARGE
 **answerable_questions:** What is Metro's rate for a passenger vehicle / heavy commercial / wheeled plant? What loadings apply for older assets or private sale? How does brokerage affect the rate?
 **confidence:** high
-**last_verified:** 2026-04-01
+**last_verified:** 2026-07-29
 **trigger_words:** Metro rate, Metro interest rate, Metro prime rate, Metro pricing, Metro passenger vehicle rate, Metro heavy commercial rate, Metro wheeled plant rate, Metro loading, Metro brokerage rate
 
 **Content:**
 
-Metro Finance Commercial Asset Finance rate sheet, effective 01/04/2026. Rates shown for 24–60 month terms.
+Metro Finance Commercial Asset Finance rate sheet, effective 20/07/2026 (updated from a prior 01/04/2026 sheet — see change note below). Rates shown for 24–60 month terms.
 
 | Asset type | Amount | 24–60 months |
 |-----------|--------|-------------|
-| Passenger & Commercial Vehicles (<12t GVM) up to 5 years | > $20k | 8.35% |
-| Passenger & Commercial Vehicles (<12t GVM) up to 5 years | > $10k < $20k | 9.15% |
-| Heavy Commercial Vehicles (above 12t GVM) & trailers up to 5 years | > $20k | 8.60% |
-| Heavy Commercial Vehicles (above 12t GVM) & trailers up to 5 years | > $10k < $20k | 10.30% |
-| Wheeled Plant & Equipment (up to 5 years) | > $20k | 8.65% |
-| Wheeled Plant & Equipment (up to 5 years) | > $10k < $20k | 10.40% |
+| Passenger & Commercial Vehicles (<12t GVM) up to 5 years | > $20k | 8.20% |
+| Passenger & Commercial Vehicles (<12t GVM) up to 5 years | > $10k < $20k | 9.00% |
+| Heavy Commercial Vehicles (above 12t GVM) & trailers up to 5 years, AND Wheeled Plant & Equipment (up to 5 years) — now one shared rate | > $20k | 8.45% |
+| Heavy Commercial Vehicles (above 12t GVM) & trailers up to 5 years, AND Wheeled Plant & Equipment (up to 5 years) — now one shared rate | > $10k < $20k | 10.15% |
 
-**8.35% Prime Rate** — vehicle < 5 years old streamline product:
+**Change note (20/07/2026 sheet vs the prior 01/04/2026 sheet):** all rates decreased (Passenger/Commercial 8.35%→8.20% and 9.15%→9.00%), AND Heavy Commercial Vehicles and Wheeled Plant & Equipment — previously two separate rate rows (8.60%/10.30% and 8.65%/10.40%) — are now merged into a single shared rate (8.45%/10.15%). Don't quote the old split rates for Heavy Commercial vs Wheeled Plant; check which sheet is current before quoting.
+
+**8.20% Prime Rate** — vehicle < 5 years old streamline product:
 - Rate applies to dealer sale
 - All passenger and commercial vehicles < 12t GVM
 - Vehicles > $20k
 - Call your BDM for rates over $250k
 
-**Loadings:**
-- Assets older than 5 years at beginning of term: add extra 0.75%
-- Assets older than 10 years at end of term: add extra 1.50%
-- Private sale: add extra 0.25%
-- Sale / hire backs: add extra 0.75%
-- Other equipment: add 2% to wheeled equipment rate
-- 1% loading on vehicle streamlined non-property product
-- Above rates applicable for 4% brokerage — add 0.5% base rate for every 1.0% of brokerage
+**Loadings (also reduced on the 20/07/2026 sheet):**
+- Assets older than 5 years at beginning of term: add extra 0.25% (was 0.75% on the prior sheet)
+- Assets older than 10 years at end of term: add extra 1.00% (was 1.50%)
+- Private sale: add extra 0.25% (unchanged)
+- Sale / hire backs: add extra 0.75% (unchanged)
+- Other equipment: add 1% to wheeled equipment rate (was 2% on the prior sheet)
+- 1% loading on vehicle streamlined non-property product (unchanged)
+- Above rates applicable for 4% brokerage — add 0.5% base rate for every 1.0% of brokerage (unchanged)
+
+**MetroEco note newly added to this rate sheet:** mentions a 1% discount for new EVs up to $91,661, 1% for eligible wheeled equipment, and 1% for batteries/chargers/solar (wheeled equipment rate +2% loading). This $91,661 EV cap does not match the $91,387 figure in the separate MetroEco product booklet (metro_eco chunk) — that booklet's own content is otherwise unchanged from its prior version, so this looks like a genuine cross-document figure conflict rather than an update to the booklet itself. Flag both figures and confirm the current cap with Metro directly rather than picking one.
 
 **Brokerage:**
 - Advertised rates applicable for brokerage up to 4%
@@ -370,6 +372,8 @@ MetroEco is Metro Finance's green product suite, supported by a relationship wit
 The loan term depends on which of these three borrower types the applicant is: a **Consumer** borrower gets up to 84 months (max 7-year end-of-term) — the longest of the three. A **Commercial** business borrower or a **Novated** lease both get up to 60 months (max 5-year end-of-term) instead. If the borrower type isn't stated, give both the Consumer and Commercial figures rather than assuming one.
 
 Eligibility: electric vehicle, where the vehicle is solely powered by electricity and uses an external electrical plug to charge the battery. Demonstrator electric motor vehicle not more than 12 months old, and odometer not more than 5,000 km.
+
+**Cross-document conflict:** the separate Commercial Rate Sheet (effective 20/07/2026, see metro_interest_rates) states this same EV loan cap as **$91,661**, not $91,387. This booklet's own content is unchanged from its prior version; the rate sheet's figure is more recently dated. Flag both figures rather than confidently quoting one — confirm the current cap with Metro directly.
 
 **MetroEco Electric Trucks (streamlined product) — 1% MetroEco rate discount applies:**
 - Brand new assets only; dealer sale

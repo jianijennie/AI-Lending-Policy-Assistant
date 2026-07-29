@@ -40,19 +40,19 @@
 **loan_size_band:** MEDIUM, LARGE
 **answerable_questions:** What is flexipremium? What rates apply for primary and secondary assets? What time in business is required? Are sole traders eligible? What brokerage cap applies?
 **confidence:** high
-**last_verified:** 2026-05-15
-**trigger_words:** flexipremium, flexi premium, flexicommercial premium rate, flexi established business rate, flexi 7.30%, flexi asset backed 4 years, flexi non-asset backed 8 years, flexi sole trader excluded
+**last_verified:** 2026-07-29
+**trigger_words:** flexipremium, flexi premium, flexicommercial premium rate, flexi established business rate, flexi 7.15%, flexi asset backed 4 years, flexi non-asset backed 8 years, flexi sole trader excluded
 
 **Content:**
 
-flexipremium is flexicommercial's product for more established businesses purchasing newer assets. Rates current as at 15 May 2026.
+flexipremium is flexicommercial's product for more established businesses purchasing newer assets. Rates current as at 13 July 2026 (updated from a prior 15 May 2026 card — Primary dropped from 7.30% to 7.15%; Secondary unchanged).
 
 **Current flexipremium rates (ex brokerage):**
 
 | Amount funded (ex brokerage) | Primary | Secondary |
 |-----------------------------|---------|-----------|
-| $50,000 – $100,000 | 7.30% | 8.69% |
-| $100,001 – $500,000 | 7.30% | 8.19% |
+| $50,000 – $100,000 | 7.15% | 8.69% |
+| $100,001 – $500,000 | 7.15% | 8.19% |
 | $500,001+ | Please contact your flexicommercial BDM | Please contact your flexicommercial BDM |
 
 **Eligibility criteria:**
@@ -87,21 +87,22 @@ The industry of Road Transport/Logistics includes contract road freight, transpo
 **loan_size_band:** MICRO, SMALL, MEDIUM, LARGE
 **answerable_questions:** What are flexicommercial's standard base rates by amount and asset class? What add-ons apply for prime movers, private sales, or non-asset backed? What is the max brokerage?
 **confidence:** high
-**last_verified:** 2026-05-15
+**last_verified:** 2026-07-29
 **trigger_words:** flexicommercial standard rate, flexi base rate, flexi primary rate, flexi secondary rate, flexi tertiary rate, flexi add-on, flexi prime mover loading, flexi non-asset backed loading, flexi brokerage
 
 **Content:**
 
-flexicommercial standard rates, current as at 15 May 2026. All rates ex brokerage.
+flexicommercial standard rates, current as at 13 July 2026 (updated from a prior 15 May 2026 card — see change note below). All rates ex brokerage.
 
 **Base rates:**
 
 | Base rate (ex brokerage) | Primary | Secondary | Tertiary |
 |-------------------------|---------|-----------|----------|
-| $10,000 – $20,000 | 12.85% | 13.50% | 14.35% |
-| $20,001 – $50,000 | 10.35% | 10.80% | 13.35% |
-| $50,001 – $150,000 | 8.60% | 8.85% | 12.35% |
-| $150,001+ | 8.10% | 8.35% | 11.35% |
+| $10,000 – $20,000 | 12.60% | 13.50% | 14.10% |
+| $20,001 – $150,000 | 8.35% | 8.85% | 12.10% |
+| $150,001+ | 7.85% | 8.35% | 11.10% |
+
+**Change note (13 July 2026 card vs the prior 15 May 2026 card):** the middle band structure changed — the old card had two separate bands ($20,001–$50,000 and $50,001–$150,000, at different rates); the new card merges these into one $20,001–$150,000 band. Don't quote the old two-band split for a deal in this range — check which card's rates are actually current before quoting.
 
 **Add additional to base rates in each of the following:**
 
@@ -112,8 +113,10 @@ flexicommercial standard rates, current as at 15 May 2026. All rates ex brokerag
 - Private sales and refinances
 
 *Add 1.25%:*
-- Non-asset backed customers
 - Term of > 60 months
+
+*Add 1.50%:*
+- Non-asset backed customers (increased from 1.25% on the prior 15 May 2026 card)
 
 *Add 2.0%:*
 - Assets > 15 to 20 years old at end of term

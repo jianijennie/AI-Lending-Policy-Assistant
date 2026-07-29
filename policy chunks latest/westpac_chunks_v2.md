@@ -2,9 +2,10 @@
 #
 # source        : westpac
 # documents     : Key Financial Policies Q1 FY26
-#                 Rate Chart 15 June 2026 (Xpress and Standard)
+#                 Rate Chart 13 July 2026 (Xpress and Standard) -- re-issued from
+#                 15 June 2026 with the same effective date only, all rates unchanged
 #                 Equipment Finance Settlement Requirements Update (24 Feb 2025)
-# effective     : 15 June 2026 (rates); 24 Feb 2025 (settlement update)
+# effective     : 13 July 2026 (rates, re-confirmed -- no rate changes from 15 June 2026); 24 Feb 2025 (settlement update)
 # licence       : Australian Credit Licence 233714
 # ABN           : 33 007 457 141
 # last_updated  : 2026-07-01
@@ -256,13 +257,13 @@ Occupational Therapists, Optometrists, Osteopaths, Physiotherapists, Chiropracto
 **loan_size_band:** ALL
 **answerable_questions:** What is the Xpress rate for a car by term (dealer vs private sale)? What is the heavy-equipment Xpress rate? What EV discount applies? What is the max brokerage?
 **confidence:** high
-**last_verified:** 2026-06-15
+**last_verified:** 2026-07-29
 **policy_fields:** BASE_RATE, EV_DISCOUNT, PRIVATE_SALE_LOADING, BROKERAGE_MAX
 **trigger_words:** Xpress rate, DriveXpress rate, car rate, light commercial rate, motor vehicle rate, truck rate, heavy equipment rate, Xpress pricing, fast track rate, dealer rate, private sale Xpress rate, electric vehicle Xpress rate, EV Xpress
 
 **Content:**
 
-**VALID FROM: Monday 15 June 2026**
+**VALID FROM: Monday 13 July 2026** (re-issued from 15 June 2026 — same effective date reset only, all rates below unchanged)
 Rates valid for 7 days subject to settlement within this period.
 Excludes: Novated Leases / Sale & Hirebacks.
 Brokerage limited to a maximum of **3%**.
@@ -306,13 +307,13 @@ Rate: same as heavy equipment category above.
 **loan_size_band:** MICRO, SMALL, MEDIUM
 **answerable_questions:** What is the standard rate for a new motor vehicle / plant by amount and term? What is the used-vehicle loading? What EV discount applies?
 **confidence:** high
-**last_verified:** 2026-06-15
+**last_verified:** 2026-07-29
 **policy_fields:** BASE_RATE, EV_DISCOUNT
 **trigger_words:** standard WEF rate, hire purchase rate, commercial loan rate, finance lease rate, new motor vehicle rate, new plant equipment rate, standard rate table, monthly repayment rate, $15k rate, $20k rate, $50k rate, $150k rate, used vehicle loading
 
 **Content:**
 
-**VALID FROM: Monday 15 June 2026**
+**VALID FROM: Monday 13 July 2026** (re-issued from 15 June 2026 — same effective date reset only, all rates below unchanged)
 Rates valid for 7 days subject to settlement within this period.
 Product types: **Hire Purchase, Commercial Loan and Finance Lease**.
 Rates quoted are for **MONTHLY repayment structures only**.
