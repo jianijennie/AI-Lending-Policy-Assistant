@@ -40,19 +40,19 @@
 **loan_size_band:** MEDIUM, LARGE
 **answerable_questions:** What is flexipremium? What rates apply for primary and secondary assets? What time in business is required? Are sole traders eligible? What brokerage cap applies?
 **confidence:** high
-**last_verified:** 2026-05-15
-**trigger_words:** flexipremium, flexi premium, flexicommercial premium rate, flexi established business rate, flexi 7.30%, flexi asset backed 4 years, flexi non-asset backed 8 years, flexi sole trader excluded
+**last_verified:** 2026-07-29
+**trigger_words:** flexipremium, flexi premium, flexicommercial premium rate, flexi established business rate, flexi 7.15%, flexi asset backed 4 years, flexi non-asset backed 8 years, flexi sole trader excluded
 
 **Content:**
 
-flexipremium is flexicommercial's product for more established businesses purchasing newer assets. Rates current as at 15 May 2026.
+flexipremium is flexicommercial's product for more established businesses purchasing newer assets. Rates current as at 13 July 2026 (updated from a prior 15 May 2026 card — Primary dropped from 7.30% to 7.15%; Secondary unchanged).
 
 **Current flexipremium rates (ex brokerage):**
 
 | Amount funded (ex brokerage) | Primary | Secondary |
 |-----------------------------|---------|-----------|
-| $50,000 – $100,000 | 7.30% | 8.69% |
-| $100,001 – $500,000 | 7.30% | 8.19% |
+| $50,000 – $100,000 | 7.15% | 8.69% |
+| $100,001 – $500,000 | 7.15% | 8.19% |
 | $500,001+ | Please contact your flexicommercial BDM | Please contact your flexicommercial BDM |
 
 **Eligibility criteria:**
@@ -72,7 +72,7 @@ flexipremium is flexicommercial's product for more established businesses purcha
 - Note 01: Maximum 3% brokerage applies to flexipremium deals
 - Note 02: Add-ons for prime movers, private sales, refinances, non-asset backed, terms < 24 months, terms > 60 months apply as per the standard rate add-ons
 
-The industry of Road Transport/Logistics includes contract road freight, transport services, road vehicle towing, log haulage service (road), furniture removal services and truck hire service. It does not include transport assets required to be used directly in a business such as construction services, heavy and civil engineering construction, building construction, agriculture; and civil work (i.e. tippers, dogs).
+The industry of Road Transport/Logistics includes contract road freight, transport services, road vehicle towing, log haulage service (road), furniture removal services and truck hire service. It does not include transport assets required to be used directly in a business such as construction services, heavy and civil engineering construction, building construction, agriculture; and civil work (i.e. tippers, dogs, agitators, and cranes).
 
 ---
 
@@ -87,38 +87,39 @@ The industry of Road Transport/Logistics includes contract road freight, transpo
 **loan_size_band:** MICRO, SMALL, MEDIUM, LARGE
 **answerable_questions:** What are flexicommercial's standard base rates by amount and asset class? What add-ons apply for prime movers, private sales, or non-asset backed? What is the max brokerage?
 **confidence:** high
-**last_verified:** 2026-05-15
+**last_verified:** 2026-07-29
 **trigger_words:** flexicommercial standard rate, flexi base rate, flexi primary rate, flexi secondary rate, flexi tertiary rate, flexi add-on, flexi prime mover loading, flexi non-asset backed loading, flexi brokerage
 
 **Content:**
 
-flexicommercial standard rates, current as at 15 May 2026. All rates ex brokerage.
+flexicommercial standard rates, current as at 13 July 2026 (updated from a prior 15 May 2026 card — see change note below). All rates ex brokerage.
 
 **Base rates:**
 
 | Base rate (ex brokerage) | Primary | Secondary | Tertiary |
 |-------------------------|---------|-----------|----------|
-| $10,000 – $20,000 | 12.85% | 13.50% | 14.35% |
-| $20,001 – $50,000 | 10.35% | 10.80% | 13.35% |
-| $50,001 – $150,000 | 8.60% | 8.85% | 12.35% |
-| $150,001+ | 8.10% | 8.35% | 11.35% |
+| $10,000 – $20,000 | 12.60% | 13.50% | 14.10% |
+| $20,001 – $150,000 | 8.35% | 8.85% | 12.10% |
+| $150,001+ | 7.85% | 8.35% | 11.10% |
+
+**Change note (13 July 2026 card vs the prior 15 May 2026 card):** the middle band structure changed — the old card had two separate bands ($20,001–$50,000 and $50,001–$150,000, at different rates); the new card merges these into one $20,001–$150,000 band. Don't quote the old two-band split for a deal in this range — check which card's rates are actually current before quoting.
 
 **Add additional to base rates in each of the following:**
 
-*Add 1.0%:*
+*Add 1.0% — each of the following independently triggers this add-on:*
 - Prime Movers (excludes tippers, agitators, rigid bodies, etc.)
 - Assets 11–15 years old at end of term
 - Term of < 24 months
+- Private sales and refinances
 
 *Add 1.25%:*
-- Non-asset backed customers
 - Term of > 60 months
+
+*Add 1.50%:*
+- Non-asset backed customers (increased from 1.25% on the prior 15 May 2026 card)
 
 *Add 2.0%:*
 - Assets > 15 to 20 years old at end of term
-
-*Add 1.0% (also listed):*
-- Private sales and refinances
 
 **Other pricing conditions:**
 - Establishment fee of $495 applies to all products; $745 for private sales and refinances
@@ -213,15 +214,15 @@ flexicommercial asset categories, per the Credit Matrix (effective 8 December 20
 - Agricultural machinery and equipment
 - Materials handling / forklifts
 - Access equipment (boom/scissor lifts) — exposures for forklift on-hire businesses are capped at $250K
-- Light trucks < 3.5 tonnes
-- Heavy trucks > 3.5 tonnes
+- Light trucks < 3.5 tonnes — fully eligible, no upper weight restriction
+- Heavy trucks > 3.5 tonnes (including well over 5.5 tonnes) — fully eligible, this is a normal, commonly-financed Primary asset category for flexicommercial, not an edge case
 - Trailers and buses/coaches
 - Commercial motor vehicles (utes, vans and 4WDs)
 - Construction and earth moving equipment (non-mining)
 
 Primary assets can be up to 20 years old at end of term (trailers — 30 years).
 
-**NB: flexicommercial does not fund SUVs or passenger cars (this includes rental car businesses).**
+**The one exclusion that applies to road vehicles is specifically SUVs and passenger cars (this includes rental car businesses) — this does NOT extend to trucks of any weight, which remain fully financeable as shown above. Do not read the SUV/passenger-car exclusion as also excluding light or heavy trucks; they are different, unrelated vehicle categories.**
 
 **Secondary assets:**
 - Medical / dental / laboratory equipment
@@ -258,16 +259,16 @@ Secondary assets can be up to 7 years old at end of term.
 - Food manufacturing equipment
 - Portable buildings
 
-**NB: flexicommercial does not fund photocopiers, MFDs and scaffolding.**
+**NB: the only Tertiary-asset exclusions are photocopiers, MFDs and scaffolding — this does not affect the Tier II categories below (which sit under Secondary), all of which remain normally fundable.**
 
-**Tier II asset categories and brands** include (by category): trucks (e.g. Foton), buses (e.g. Bonluck), utes/vans/4WD (e.g. Dongfeng), materials handling (e.g. Hangcha), construction/earthmoving (e.g. Boleo). Tier II includes (but is not limited to) Chinese branded equipment and electric trucks.
+**Tier II asset categories and brands** (fully eligible, not excluded by the note above) include (by category): trucks (e.g. Foton), buses (e.g. Bonluck), utes/vans/4WD (e.g. Dongfeng), materials handling (e.g. Hangcha), construction/earthmoving (e.g. Boleo). Tier II includes (but is not limited to) Chinese branded equipment and electric trucks.
 
 ---
 
 ## chunk_id: flexi_replacement_policy
 **source:** flexi
 **topic:** flexireplacement_policy
-**intent:** SPECIAL_PROGRAMS
+**intent:** ROLLOVER_REPLACEMENT
 **lenders:** FLEXI
 **borrower_profile:** COMMERCIAL, EXISTING_CLIENT, PROPERTY_BACKED
 **asset_class:** PRIMARY
@@ -306,7 +307,7 @@ flexireplacement is flexicommercial's asset replacement policy (information curr
 ## chunk_id: flexi_refinance_products
 **source:** flexi
 **topic:** refinancing_and_low_start
-**intent:** SPECIAL_PROGRAMS
+**intent:** ROLLOVER_REPLACEMENT
 **lenders:** FLEXI
 **borrower_profile:** COMMERCIAL, EXISTING_CLIENT
 **asset_class:** PRIMARY, SECONDARY
@@ -365,6 +366,7 @@ flexicommercial offers three cash-flow-focused refinancing and repayment product
 - Establishment fee of **$495** applies to all products
 - **$745** for private sales and refinances
 - Minimum deal size of **$10,000**
+- Private sales and refinances also carry a separate **+1.0% interest rate loading** on top of the standard base rate (in addition to the higher $745 establishment fee) — see standard rate add-ons for details
 
 **Brokerage (included in Net Amount Financed):**
 

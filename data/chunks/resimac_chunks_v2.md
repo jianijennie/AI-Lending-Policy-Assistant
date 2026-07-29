@@ -106,7 +106,7 @@ Rates are subject to change without notification. All rates are per annum.
 | Secondary assets | 12.39% | 12.64% |
 | Tertiary assets | 14.09% | 14.34% |
 
-**PremiumPLUS discount:** 25 basis points below Premium/Standard/Basic rates.
+**PremiumPLUS discount:** 25 basis points below Premium/Standard/Basic rates — this note explains *why* the PremiumPLUS column is 0.25% lower, it is not a separate calculation step. Always read a PremiumPLUS client's rate directly from the PremiumPLUS column of the correct age-band row above (e.g. a 4-year-old motor vehicle is ">3 years", so PremiumPLUS = 8.24% directly) — do not take the Premium/Standard/Basic figure from that row and subtract 0.25% yourself, and never borrow a rate from a different age-band row.
 
 **Risk loading of +2% applies to:**
 - Private sales
@@ -176,7 +176,7 @@ NAF = Net Amount Financed (excludes fees and brokerage).
 - Max NAF per passenger vehicle: **$250k**
 - Max NAF per motorbike: **$75k**
 
-**Exposure limits (total across all contracts):**
+**Exposure limits (total across all contracts):** this is a DIFFERENT, unrelated number from the Full Doc NAF caps above — it is the ceiling on a customer's entire combined Resimac lending across every contract they hold, not what a single deal can be. A single transaction is always capped by the per-tier NAF table above ($450k max for PremiumPLUS/Premium Full Doc on one deal) regardless of how much exposure headroom the customer has left.
 - SME: $500k
 - Large corporate: $750k
 - Private school / club / association: $500k
@@ -218,6 +218,8 @@ Three documentation tiers apply across all customer tiers.
 | Two most recent BAS portals | — | ✓ | ✓ |
 | 90-day bank statements | — | On request | ✓ |
 | Financial accounts / tax returns | — | — | ✓ |
+
+Each tier is a superset of the one before it: Low Doc needs only the application and Asset & Liability Statement; Lite Doc adds 12 months of ATO portals and the two most recent BAS portals (bank statements only if specifically requested); Full Doc adds full financial accounts/tax returns on top of everything Lite Doc requires.
 
 **Privacy consent requirement:**
 Must be signed within **90 days** of application and must specifically note:

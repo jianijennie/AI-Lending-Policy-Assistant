@@ -42,36 +42,38 @@
 **loan_size_band:** MICRO, SMALL, MEDIUM, LARGE
 **answerable_questions:** What is Metro's rate for a passenger vehicle / heavy commercial / wheeled plant? What loadings apply for older assets or private sale? How does brokerage affect the rate?
 **confidence:** high
-**last_verified:** 2026-04-01
+**last_verified:** 2026-07-29
 **trigger_words:** Metro rate, Metro interest rate, Metro prime rate, Metro pricing, Metro passenger vehicle rate, Metro heavy commercial rate, Metro wheeled plant rate, Metro loading, Metro brokerage rate
 
 **Content:**
 
-Metro Finance Commercial Asset Finance rate sheet, effective 01/04/2026. Rates shown for 24–60 month terms.
+Metro Finance Commercial Asset Finance rate sheet, effective 20/07/2026 (updated from a prior 01/04/2026 sheet — see change note below). Rates shown for 24–60 month terms.
 
 | Asset type | Amount | 24–60 months |
 |-----------|--------|-------------|
-| Passenger & Commercial Vehicles (<12t GVM) up to 5 years | > $20k | 8.35% |
-| Passenger & Commercial Vehicles (<12t GVM) up to 5 years | > $10k < $20k | 9.15% |
-| Heavy Commercial Vehicles (above 12t GVM) & trailers up to 5 years | > $20k | 8.60% |
-| Heavy Commercial Vehicles (above 12t GVM) & trailers up to 5 years | > $10k < $20k | 10.30% |
-| Wheeled Plant & Equipment (up to 5 years) | > $20k | 8.65% |
-| Wheeled Plant & Equipment (up to 5 years) | > $10k < $20k | 10.40% |
+| Passenger & Commercial Vehicles (<12t GVM) up to 5 years | > $20k | 8.20% |
+| Passenger & Commercial Vehicles (<12t GVM) up to 5 years | > $10k < $20k | 9.00% |
+| Heavy Commercial Vehicles (above 12t GVM) & trailers up to 5 years, AND Wheeled Plant & Equipment (up to 5 years) — now one shared rate | > $20k | 8.45% |
+| Heavy Commercial Vehicles (above 12t GVM) & trailers up to 5 years, AND Wheeled Plant & Equipment (up to 5 years) — now one shared rate | > $10k < $20k | 10.15% |
 
-**8.35% Prime Rate** — vehicle < 5 years old streamline product:
+**Change note (20/07/2026 sheet vs the prior 01/04/2026 sheet):** all rates decreased (Passenger/Commercial 8.35%→8.20% and 9.15%→9.00%), AND Heavy Commercial Vehicles and Wheeled Plant & Equipment — previously two separate rate rows (8.60%/10.30% and 8.65%/10.40%) — are now merged into a single shared rate (8.45%/10.15%). Don't quote the old split rates for Heavy Commercial vs Wheeled Plant; check which sheet is current before quoting.
+
+**8.20% Prime Rate** — vehicle < 5 years old streamline product:
 - Rate applies to dealer sale
 - All passenger and commercial vehicles < 12t GVM
 - Vehicles > $20k
 - Call your BDM for rates over $250k
 
-**Loadings:**
-- Assets older than 5 years at beginning of term: add extra 0.75%
-- Assets older than 10 years at end of term: add extra 1.50%
-- Private sale: add extra 0.25%
-- Sale / hire backs: add extra 0.75%
-- Other equipment: add 2% to wheeled equipment rate
-- 1% loading on vehicle streamlined non-property product
-- Above rates applicable for 4% brokerage — add 0.5% base rate for every 1.0% of brokerage
+**Loadings (also reduced on the 20/07/2026 sheet):**
+- Assets older than 5 years at beginning of term: add extra 0.25% (was 0.75% on the prior sheet)
+- Assets older than 10 years at end of term: add extra 1.00% (was 1.50%)
+- Private sale: add extra 0.25% (unchanged)
+- Sale / hire backs: add extra 0.75% (unchanged)
+- Other equipment: add 1% to wheeled equipment rate (was 2% on the prior sheet)
+- 1% loading on vehicle streamlined non-property product (unchanged)
+- Above rates applicable for 4% brokerage — add 0.5% base rate for every 1.0% of brokerage (unchanged)
+
+**MetroEco note newly added to this rate sheet:** mentions a 1% discount for new EVs up to $91,661, 1% for eligible wheeled equipment, and 1% for batteries/chargers/solar (wheeled equipment rate +2% loading). This $91,661 EV cap does not match the $91,387 figure in the separate MetroEco product booklet (metro_eco chunk) — that booklet's own content is otherwise unchanged from its prior version, so this looks like a genuine cross-document figure conflict rather than an update to the booklet itself. Flag both figures and confirm the current cap with Metro directly rather than picking one.
 
 **Brokerage:**
 - Advertised rates applicable for brokerage up to 4%
@@ -170,10 +172,10 @@ Metro's Trucks, Trailers & Wheeled Equipment Streamlined Product covers medium &
 **asset_class:** PRIMARY, TERTIARY
 **doc_type:** LOW_DOC
 **loan_size_band:** MEDIUM, LARGE
-**answerable_questions:** What is Metro's agri streamlined limit? What GST registration is required for agri? What is the minimum farm size? Which agricultural assets are excluded?
+**answerable_questions:** What is Metro's agri streamlined limit? What GST registration is required for agri? What is the minimum farm size? Which agricultural assets are excluded? What repayment frequency applies to Agri streamlined?
 **confidence:** high
-**last_verified:** 2026-07-09
-**trigger_words:** Metro agri, Metro agriculture, Metro tractor, Metro harvester, Metro farm, Metro primary producer, Metro implements, Metro dairy excluded, Metro irrigation excluded
+**last_verified:** 2026-07-29
+**trigger_words:** Metro agri, Metro agriculture, Metro tractor, Metro harvester, Metro farm, Metro primary producer, Metro implements, Metro dairy excluded, Metro irrigation excluded, Metro monthly payments only
 
 **Content:**
 
@@ -206,6 +208,7 @@ Metro's Agri Streamlined Product. Property equity must be scaled to be greater t
 - Satisfactory Equifax on applicants/guarantors
 - Goods being purchased are of the type normally used by the business as part of its normal trading activities
 - Goods are required to be serial numbered and cannot be fixed
+- **Monthly payments only** (no other repayment frequency under this streamlined product)
 - Excluded: sheds, silos, yards; testing and measurement equipment (can be done under "Other Equipment" streamlined policy < $100k); dairy equipment; irrigation equipment; bikes & ATVs (ATVs can be done under "Other Equipment" streamlined policy < $100k); forestry industry and assets
 
 ---
@@ -221,8 +224,8 @@ Metro's Agri Streamlined Product. Property equity must be scaled to be greater t
 **loan_size_band:** SMALL, MEDIUM
 **answerable_questions:** What is Metro's Other Equipment streamlined limit? What asset age applies? Which equipment is eligible vs non-eligible? Is private sale allowed?
 **confidence:** high
-**last_verified:** 2026-07-09
-**trigger_words:** Metro other equipment, Metro tools of trade, Metro manufacturing equipment, Metro workshop equipment, Metro non-eligible equipment, Metro no private sale equipment
+**last_verified:** 2026-07-29
+**trigger_words:** Metro other equipment, Metro tools of trade, Metro manufacturing equipment, Metro workshop equipment, Metro non-eligible equipment, Metro no private sale equipment, Metro CNC, Metro drones, Metro racking, Metro scaffolding
 
 **Content:**
 
@@ -243,16 +246,16 @@ Metro's Other Equipment Streamlined Product. Property equity must be scaled to b
 - Credit reserves the right to request further information
 - Goods being purchased are of the type normally used by the business as part of its normal trading activities
 
-**Eligible assets:** tools of trade; earthmoving & construction equipment; manufacturing & workshop equipment; agricultural and forestry equipment. Also (including but not limited to): attachments, surveying equipment, large engineering equipment, manufacturing lines, packing, robotic packaging/stacking.
+**Eligible assets:** tools of trade; earthmoving & construction equipment; manufacturing & workshop equipment; agricultural and forestry equipment. Eligible Equipment Guide (illustrative, not exhaustive): attachments, surveying equipment, large engineering equipment, manufacturing lines, packing/robotic packaging/wrapping/weighing equipment, workshop equipment, vacuum excavators, CNC, dust extractors, dustless sandblasters, edge banders, lasers, lathes, machining centres, ATVs, augers, pumps and power equipment, direction drills, farming implements & machinery, feeding equipment, grain handling, portable dipping/testing, GPS equipment, generators/welders/pumps/plumbing equipment, dynamometers, radios (UHF/VF/HF), routers, medical and dental equipment, panel saws.
 
-**Non-eligible assets:** fixtures & fittings; IT, AV, telephony & printing; retail, health/beauty & fitness; mining; intangible assets. Also: air conditioning units & ducting, audio visual equipment, blinds, carpets, catering, coffee machines.
+**Non-eligible assets:** fixtures & fittings; IT, AV, telephony & printing; retail, health/beauty & fitness; mining; intangible assets. Also (illustrative, not exhaustive): air conditioning units & ducting, audio visual equipment, blinds, carpets, catering, coffee machines, desks, display units, drones, furniture, gym equipment, kitchen, LED lighting, partitions, printers, racking (fixed and freestanding), safes and strong rooms, scaffolding, solar (has its own MetroEco product — see metro_eco).
 
 ---
 
 ## chunk_id: metro_replacement_policy
 **source:** metro
 **topic:** replacement_policy
-**intent:** SPECIAL_PROGRAMS
+**intent:** ROLLOVER_REPLACEMENT
 **lenders:** METRO
 **borrower_profile:** COMMERCIAL, NEW_CLIENT, EXISTING_CLIENT, PROPERTY_BACKED, NON_PROPERTY_BACKED, SPOUSE_OWNED
 **asset_class:** MV_NEW, MV_USED, LCV, PRIMARY
@@ -295,7 +298,7 @@ Metro's Replacement Policy Streamlined Product.
 ## chunk_id: metro_balloon_refinance
 **source:** metro
 **topic:** balloon_residual_refinance
-**intent:** SPECIAL_PROGRAMS
+**intent:** ROLLOVER_REPLACEMENT
 **lenders:** METRO
 **borrower_profile:** COMMERCIAL, NEW_CLIENT, EXISTING_CLIENT, PROPERTY_BACKED, NON_PROPERTY_BACKED, SPOUSE_OWNED
 **asset_class:** MV_NEW, MV_USED, PRIMARY, PRIME_MOVER
@@ -367,7 +370,11 @@ MetroEco is Metro Finance's green product suite, supported by a relationship wit
 | Age of asset | New or Demo | New or Demo | New or Demo |
 | Supplier | Dealer | Dealer | Dealer |
 
+The loan term depends on which of these three borrower types the applicant is: a **Consumer** borrower gets up to 84 months (max 7-year end-of-term) — the longest of the three. A **Commercial** business borrower or a **Novated** lease both get up to 60 months (max 5-year end-of-term) instead. If the borrower type isn't stated, give both the Consumer and Commercial figures rather than assuming one.
+
 Eligibility: electric vehicle, where the vehicle is solely powered by electricity and uses an external electrical plug to charge the battery. Demonstrator electric motor vehicle not more than 12 months old, and odometer not more than 5,000 km.
+
+**Cross-document conflict:** the separate Commercial Rate Sheet (effective 20/07/2026, see metro_interest_rates) states this same EV loan cap as **$91,661**, not $91,387. This booklet's own content is unchanged from its prior version; the rate sheet's figure is more recently dated. Flag both figures rather than confidently quoting one — confirm the current cap with Metro directly.
 
 **MetroEco Electric Trucks (streamlined product) — 1% MetroEco rate discount applies:**
 - Brand new assets only; dealer sale

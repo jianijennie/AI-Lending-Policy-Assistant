@@ -48,7 +48,7 @@ CFAL finances commercial equipment only. All applicants must be commercial entit
 
 **Universal eligibility criteria (all transaction sizes):**
 - ABN registered for **≥ 2 years** and currently GST registered
-- Statutory lodgements and payments (tax, GST, employee entitlements) must be up to date — no payment arrangements in place
+- Statutory lodgements and payments (tax, GST, employee entitlements) must be up to date, with no payment arrangements in place — a payment arrangement itself is not an accepted substitute for being up to date.
 - Where financial data is not obtained: verbal confirmation of compliance is required
 - All directors and individual guarantors must provide current Asset & Liability Statements
 - Signed Privacy Form required from ALL individuals
@@ -104,6 +104,12 @@ CFAL has no Low Doc option. Documentation requirements scale with transaction si
 | Cash flow projections (with assumptions) | — | — | — | ✓ |
 | Current Aged Debtor & Creditors Listing | — | — | ✓ | ✓ |
 
+**Full requirement list per size band, spelled out** (each band's checklist is everything checked in its column above — every band also requires client information, ABN 2yrs+GST, full description of goods, reason of purchase, signed Privacy Form, last 2 years financial statements + tax returns, Asset & Liability Statement, and Commitment Schedule):
+- **≤ $250k:** the universal items above, plus only a **brief** background of business/directors.
+- **$250k–$500k:** the universal items, plus a **detailed** (not brief) background of business/directors, and the current Tax Portal (Integrated Client Account).
+- **$500k–$1m:** everything in the $250k–$500k band, plus: succession planning details; list of major competitors and major clients; last 3 years' financial statements; interim/management accounts (if year-end is over 6 months old); commentary on movements ≥10% in financials; and a current Aged Debtor & Creditors Listing.
+- **> $1m:** everything in the $500k–$1m band, plus cash flow projections with assumptions — this is the only requirement unique to deals over $1m.
+
 **Note:** Matrix policies (Motor Vehicle, Small Ticket, Replacement, Roll-Over) may have different requirements. Refer to respective policy documentation.
 Contact your Credit Manager if any of the above requirements cannot be met.
 
@@ -158,7 +164,7 @@ CFAL operates the DriveXpress fast-track channel (shared with Westpac Group). No
 ## chunk_id: cfal_rollover_policy
 **source:** cfal
 **topic:** rollover_policy
-**intent:** SPECIAL_PROGRAMS
+**intent:** ROLLOVER_REPLACEMENT
 **lenders:** CFAL
 **borrower_profile:** COMMERCIAL, EXISTING_CLIENT
 **asset_class:** MV_NEW, MV_USED, LCV, PRIMARY
@@ -195,7 +201,7 @@ The Rollover channel allows existing clients to extend or replace an existing eq
 ## chunk_id: cfal_replacement_policy
 **source:** cfal
 **topic:** replacement_policy
-**intent:** SPECIAL_PROGRAMS
+**intent:** ROLLOVER_REPLACEMENT
 **lenders:** CFAL
 **borrower_profile:** COMMERCIAL, NEW_CLIENT, EXISTING_CLIENT, PROPERTY_BACKED
 **asset_class:** MV_NEW, MV_USED, LCV, PRIMARY
@@ -219,7 +225,9 @@ The Replacement channel allows borrowers to replace a finalised or near-finalise
 | Existing Clients (12 months current WEF history or finalised EF contract within last 12 months) | $200k (A) / $650k (B & C) | A / B & C |
 
 **Additional Category B (Replacement only):**
-Trucks > 4.5T, trailers, forklifts/telehandlers, boom/scissor/spider lifts, backhoe loaders, dozers, tippers, dump trucks (heavy duty), excavators, graders, scrapers, skid steers/wheel loaders, mobile/tight access cranes and rollers — up to 7 years old (dealer only).
+Trucks > 4.5T, trailers, forklifts/telehandlers, boom/scissor/spider lifts, backhoe loaders, dozers, tippers, dump trucks (heavy duty), excavators, graders, scrapers, skid steers/wheel loaders, mobile/tight access cranes and rollers — up to **5 years old** (dealer only); mobile/tight access cranes up to **3 years old**.
+
+Also under Category B, a separate agricultural-equipment list carries its own **7-year** age limit (dealer only): tractors, headers, harvesters, cotton pickers, balers, mower conditioners, ploughs, seeders, sprayers, spreaders, windrowers, all-terrain vehicles and feed wagons.
 
 **Additional Category C (Replacement only):**
 Government / school / local route buses (excludes charter) — up to 5 years old; up to **10-year loan term** (dealer only).
@@ -240,7 +248,7 @@ Government / school / local route buses (excludes charter) — up to 5 years old
 ## chunk_id: cfal_medical_policy
 **source:** cfal
 **topic:** medical_policy
-**intent:** SPECIAL_PROGRAMS
+**intent:** MEDICAL_PROGRAMS
 **lenders:** CFAL
 **borrower_profile:** COMMERCIAL, MEDICAL_PROFESSIONAL, NEW_CLIENT, PROPERTY_BACKED
 **asset_class:** MV_NEW, MV_USED, MEDICAL_EQUIP, OFFICE_EQUIP

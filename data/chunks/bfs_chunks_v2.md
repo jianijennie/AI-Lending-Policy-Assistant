@@ -32,11 +32,11 @@
 **asset_class:** MV_NEW, MV_USED, LCV, MOTORBIKE, CARAVAN
 **doc_type:** ALL
 **loan_size_band:** ALL
-**answerable_questions:** Which BFS tier does my Experian score qualify for? What deposit is required by tier? What are the auto-decline triggers? What RHI standards apply?
+**answerable_questions:** Which BFS tier does my Experian score qualify for? What deposit is required by tier? What are the auto-decline triggers? What RHI standards apply? What minimum income do non-resident visa holders need for PRIME vs BFS Plus?
 **confidence:** high
 **last_verified:** 2026-06-28
 **policy_fields:** MIN_CREDIT_SCORE, DEPOSIT_REQUIRED
-**trigger_words:** customer tier, Ultra Prime, Tier 1, Tier 2, Tier 3, Tier 4, BFS Plus, Experian, CCR score, credit score, eligibility, qualify, deposit required, PRIME, PLUS
+**trigger_words:** customer tier, Ultra Prime, Tier 1, Tier 2, Tier 3, Tier 4, BFS Plus, Experian, CCR score, credit score, eligibility, qualify, deposit required, PRIME, PLUS, visa, non-resident, temporary visa, work visa, visa holder, visa expiry
 
 **Content:**
 
@@ -52,11 +52,15 @@ BFS uses a two-group system (PRIME and PLUS) based on Experian CCR score of the 
 | Tier 3 | 550 | + 20% deposit required |
 | Tier 4 | 400 | + 20% deposit required; no commercial used contracts |
 
+Note on Tier 3 and Tier 4: the **20% deposit applies to every application in these tiers** — consumer and commercial, new and used vehicles alike. It is not conditional on contract type. Tier 4's "no commercial used contracts" is a separate, additional restriction (Tier 4 borrowers cannot finance used vehicles on commercial contracts at all); it does **not** narrow or remove the deposit requirement for the applications Tier 4 can do.
+
 **PLUS Group:**
 
 | Tier | Minimum CCR | Notes |
 |------|------------|-------|
 | BFS Plus | 400 (consumer) / 550 (commercial used) | Passenger & light commercial vehicles only; 12–60 months max term |
+
+**Which group applies:** PRIME (Ultra Prime–Tier 4) is the default product line — a standard applicant with no bankruptcy history and no other special circumstances is assessed under PRIME, using whichever tier their CCR score qualifies for (e.g. a plain CCR 420 consumer applicant is **Tier 4**, not BFS Plus). BFS Plus is a separate, secondary product line for applicants who need its specific accommodations — most notably the discharged-bankrupt pathway below, or an arrears history that would fail PRIME's stricter conduct standard (see Conduct/Arrears table) even though their CCR score alone would meet a PRIME threshold.
 
 **Auto-decline triggers (no resubmission available):**
 - All individuals and guarantors CCR < 400 (consumer + commercial new/demo)
@@ -68,6 +72,11 @@ BFS uses a two-group system (PRIME and PLUS) based on Experian CCR score of the 
 - 20% deposit required
 - More than 12 months since discharge
 - No adverse credit history since discharge
+
+**Non-resident visa holders:**
+- **PRIME:** minimum income **$100,000** p.a.; loan term must end one month before visa expiry; Low Doc is not available to visa holders.
+- **BFS Plus:** minimum income **$50,000** p.a. (the lower bar than PRIME); loan term must end one month before visa expiry.
+- Visa holders must be legally able to drive in Australia, including converting to a local licence where required by the state; an international-licence driver needs evidence of insurance at settlement.
 
 **CCR Repayment History (RHI) standards:**
 
@@ -95,16 +104,20 @@ BFS uses a two-group system (PRIME and PLUS) based on Experian CCR score of the 
 
 **Content:**
 
-Commercial pricing shows **base rates**. Broker may add margin up to a maximum of +6% above base. Maximum rate cap across all tiers: **17.15%**.
+Commercial pricing shows **base rates**. Broker may add margin up to a maximum of +6% above base, plus applicable loadings below — for PRIME tiers, the combined base + margin + loadings is not capped at 17.15%; that figure is BFS Plus's own flat maximum rate (see below), not a ceiling on PRIME pricing.
 
 | Vehicle Age | Ultra Prime | Tier 1 | Tier 2 | Tier 3 | Tier 4 |
 |-------------|------------|--------|--------|--------|--------|
 | New and Demo | 7.60% | 8.25% | 8.50% | 10.15% | 11.50% |
-| Used 2022–2026 | 7.60% | 8.95% | 10.45% | 12.50% | N/A |
-| Used 2017–2021 | N/A | 10.30% | 11.35% | 12.90% | N/A |
-| Used 2016 and older | 9.55% | 11.05% | 11.80% | 13.40% | N/A |
+| Used 2022–2026 | 7.60% | 8.95% | 10.45% | 12.50% | Not available |
+| Used 2017–2021 | 7.60% | 10.30% | 11.35% | 12.90% | Not available |
+| Used 2016 and older | 9.55% | 11.05% | 11.80% | 13.40% | Not available |
 
-**Note:** Tier 4 does not accept commercial used vehicle contracts.
+Ultra Prime's base rate is a flat 7.60% covering New/Demo, Used 2022–2026, AND Used 2017–2021 alike -- verified against the source PDF's own vector-line table geometry: there is no dividing line between these three rows in the Ultra Prime column (unlike every other tier's column, which does have dividers there), confirming they're genuinely one merged cell, not three separate values. It only steps up to 9.55% for Used 2016 and older.
+
+Tier 4's "Not available" is likewise one merged cell -- it spans ALL THREE used-vehicle rows (Used 2022–2026, Used 2017–2021, AND Used 2016 and older), not just one of them, matching the general rule below.
+
+**Note:** Tier 4 does not accept commercial used vehicle contracts at all -- only New and Demo (11.50%).
 
 **Commercial rate adjustments:**
 - Maximum broker margin above base: **+6%**
@@ -139,8 +152,10 @@ Consumer pricing shows **maximum rates** (borrower pays at or below the listed r
 |-------------|------------|--------|--------|--------|--------|
 | New and Demo | 9.15% | 9.29% | 10.15% | 11.50% | 12.50% |
 | Used 2022–2026 | 9.15% | 9.75% | 10.55% | 12.00% | 13.20% |
-| Used 2017–2021 | — | 10.35% | 11.35% | 12.25% | 13.70% |
+| Used 2017–2021 | 9.15% | 10.35% | 11.35% | 12.25% | 13.70% |
 | Used 2016 and older | 10.15% | 11.35% | 11.65% | 13.00% | 13.90% |
+
+Ultra Prime's max rate is a single flat 9.15% covering New/Demo through Used 2017–2021 (it only steps up to 10.15% for Used 2016 and older).
 
 **Consumer rate adjustments:**
 - Discount of up to **2%** may be applied to the maximum rate
@@ -173,7 +188,7 @@ Consumer pricing shows **maximum rates** (borrower pays at or below the listed r
 **PRIME (all tiers):**
 - Standard loans: $5,000–**$250,000**
 - Private sales: $5,000–**$150,000**
-- High value loans: **$250,000–$400,000** (Ultra Prime–Tier 2 only; assessed case-by-case; minimum 20% deposit; asset-backed applicants only)
+- High value loans: **$250,000–$400,000** (Ultra Prime–Tier 2 only; assessed case-by-case; minimum 20% deposit; asset-backed applicants only). "Ultra Prime–Tier 2" is an inclusive range spanning three tiers, not just the Ultra Prime tier alone — per the tier table above (Ultra Prime 960 / Tier 1 800 / Tier 2 600), any applicant scoring **600 or higher** (Ultra Prime, Tier 1, or Tier 2) qualifies for High Value lending. A CCR of 850 (Tier 1) qualifies just as much as a 960.
 
 **BFS Plus:**
 - $5,000–**$100,000**
@@ -191,6 +206,34 @@ Consumer pricing shows **maximum rates** (borrower pays at or below the listed r
 **LVR:**
 - Maximum **120%** for no-deposit applications
 - Glass's Retail Value applied to used vehicles
+
+---
+
+## chunk_id: bfs_balloons
+**source:** bfs
+**topic:** balloon_payments
+**intent:** LOAN_LIMITS
+**lenders:** BFS
+**borrower_profile:** COMMERCIAL, HIGH_CREDIT, MID_CREDIT
+**asset_class:** MV_NEW, MV_USED, LCV
+**doc_type:** ALL
+**loan_size_band:** ALL
+**answerable_questions:** What balloon percentage can BFS offer? Does balloon availability differ by tier or term? Are BFS Plus or Tier 3/4 deals eligible for a balloon?
+**confidence:** high
+**last_verified:** 2026-07-29
+**policy_fields:** MAX_LOAN
+**trigger_words:** balloon, balloon payment, residual, balloon percentage, Ultra Prime balloon, Tier 1 balloon, Tier 2 balloon, Tier 3 balloon, Tier 4 balloon, BFS Plus balloon
+
+**Content:**
+
+Balloon payments (**commercial only**; excludes courier and ride-share deals) are available for Ultra Prime, Tier 1, and Tier 2 — the same shared table applies to all three of those tiers:
+
+| Vehicle Age | 36 Month Term | 48 Month Term | 60 Month Term |
+|------------|---------------|---------------|---------------|
+| 0–3 years | 50% | 40% | 30% |
+| 3–5 years | 30% | 25% | 20% |
+
+**Not available** for: Tier 3, Tier 4, or BFS Plus — no balloon option exists at these tiers/products regardless of vehicle age or term.
 
 ---
 
@@ -219,6 +262,8 @@ Consumer pricing shows **maximum rates** (borrower pays at or below the listed r
 | **Max loan size** | $150k (total exposure) | $250k standard / $400k high value | $100k (total exposure) |
 | **Trading history** | 2+ years ABN + GST registered | 12+ months ABN | Less than 12 months ABN |
 | **Min deposit** | 0% | 20% for Tier 3 and 4 | 20% for Tier 3 and 4 |
+
+Each "TierA–TierB" entry above is an inclusive range, not a single tier: Low Doc's "Ultra Prime–Tier 2 only" means Ultra Prime, Tier 1, **and** Tier 2 can all use Low Doc (Tier 3 and Tier 4 cannot); Full Doc and New Business Ventures cover every PRIME tier (Ultra Prime through Tier 4).
 
 **Income evidence:**
 
@@ -303,15 +348,15 @@ Consumer loans are for individuals where the vehicle is for **personal use** (no
 **asset_class:** MV_NEW, MV_USED, LCV, MOTORBIKE, CARAVAN
 **doc_type:** ALL
 **loan_size_band:** ALL
-**answerable_questions:** What vehicles can BFS finance? Can I finance a motorcycle / caravan / campervan? What conditions apply to electric motorcycles? Does BFS finance heavy equipment?
+**answerable_questions:** What vehicles can BFS finance? Can I finance a motorcycle / caravan / campervan? What conditions apply to electric motorcycles? Does BFS finance heavy equipment? Can BFS Plus lend in a remote area?
 **confidence:** high
-**last_verified:** 2026-06-28
+**last_verified:** 2026-07-29
 **policy_fields:** ASSET_AGE_MAX
 **trigger_words:** vehicle types, eligible vehicles, passenger vehicle, light commercial, motorcycle, motorhome, campervan, caravan, camper trailer, Tier 4 vehicle, BFS Plus vehicle, electric motorcycle, ride share vehicle, hire car, what vehicles can be financed, eligible assets BFS
 
 **Content:**
 
-BFS finances **motor vehicles only** (all under 4.5T GVM). No heavy equipment, plant or agriculture.
+BFS finances **motor vehicles only** (all under 4.5T GVM). No heavy equipment, plant or agriculture. This is a hard ceiling, not a starting point: **any truck, van, or vehicle at or above 4.5 tonnes GVM is outside BFS's eligibility entirely** — including trucks well over 5 or 6 tonnes, which BFS cannot finance under any product or tier. BFS is a lender for lighter vehicles only, not a heavy-truck lender.
 
 **PRIME (Ultra Prime–Tier 3) — accepted vehicles:**
 - New, demo and used passenger vehicles
@@ -345,7 +390,8 @@ BFS finances **motor vehicles only** (all under 4.5T GVM). No heavy equipment, p
 **Remote areas:**
 - Defined as "Remote" per ABS 2021 Remoteness Area classification
 - Not available in "Very Remote" areas
-- Non-asset backed in remote areas requires 20% deposit
+- Prime: non-asset backed in remote areas requires 20% deposit
+- BFS Plus: remote area lending not available at all, under any circumstances (no deposit-based workaround)
 
 ---
 
@@ -358,11 +404,11 @@ BFS finances **motor vehicles only** (all under 4.5T GVM). No heavy equipment, p
 **asset_class:** ALL
 **doc_type:** ALL
 **loan_size_band:** ALL
-**answerable_questions:** Is this loan purpose excluded (debt consolidation, cash-out, refinance)? What triggers an auto-decline? Are interlock licences accepted? What can't Tier 4 / BFS Plus do?
+**answerable_questions:** Is this loan purpose excluded (debt consolidation, cash-out, refinance)? What triggers an auto-decline? Are interlock licences accepted? Is a learner licence accepted? What can't Tier 4 / BFS Plus do? Can BFS Plus lend in a remote area?
 **confidence:** high
-**last_verified:** 2026-06-28
+**last_verified:** 2026-07-29
 **policy_fields:** PRIVATE_SALE_LOADING
-**trigger_words:** excluded, not eligible, debt consolidation, cash raising, top-up loan, sale and buyback, sale and leaseback, mid-term refinance, interlock licence, auto decline, bankrupt, current bankrupt, ride share excluded, very remote
+**trigger_words:** excluded, not eligible, debt consolidation, cash raising, top-up loan, sale and buyback, sale and leaseback, mid-term refinance, interlock licence, learner licence, co-borrower, auto decline, bankrupt, current bankrupt, ride share excluded, very remote, remote area, BFS Plus remote
 
 **Content:**
 
@@ -382,13 +428,15 @@ BFS finances **motor vehicles only** (all under 4.5T GVM). No heavy equipment, p
 
 **Driver licence exclusions:**
 - Licences with interlock conditions: **NOT accepted**
+- Australian learner licence: accepted only with a co-borrower, and only for passenger vehicles (not commercial vehicles or motorcycles)
 
 **Geographic exclusions:**
-- "Very Remote" areas per ABS 2021 classification: not available
+- "Very Remote" areas per ABS 2021 classification: not available (all tiers)
+- BFS Plus: remote area lending excluded entirely, even where not "Very Remote" (see bfs_vehicle_types)
 
 **Tier-specific exclusions:**
 - Tier 4: no commercial contracts for used vehicles
-- BFS Plus: no commercial contracts; passenger and light commercial only; no high-value loans; no Low Doc
+- BFS Plus: commercial contracts on used vehicles require minimum CCR 550 (not the standard 400 — see bfs_customer_tiers); passenger and light commercial only; no high-value loans; no Low Doc; remote area lending excluded entirely
 
 ---
 

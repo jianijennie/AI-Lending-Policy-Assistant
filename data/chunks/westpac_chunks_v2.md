@@ -2,9 +2,10 @@
 #
 # source        : westpac
 # documents     : Key Financial Policies Q1 FY26
-#                 Rate Chart 15 June 2026 (Xpress and Standard)
+#                 Rate Chart 13 July 2026 (Xpress and Standard) -- re-issued from
+#                 15 June 2026 with the same effective date only, all rates unchanged
 #                 Equipment Finance Settlement Requirements Update (24 Feb 2025)
-# effective     : 15 June 2026 (rates); 24 Feb 2025 (settlement update)
+# effective     : 13 July 2026 (rates, re-confirmed -- no rate changes from 15 June 2026); 24 Feb 2025 (settlement update)
 # licence       : Australian Credit Licence 233714
 # ABN           : 33 007 457 141
 # last_updated  : 2026-07-01
@@ -100,8 +101,7 @@ DriveXpress is Westpac's fast-track, simplified approval channel. No financial s
 
 **Documentation required:**
 - Signed Affordability Declaration
-- Satisfactory credit bureau and ASIC search
-- 90-day bank statements (mandatory for all Plus applications)
+- Satisfactory credit bureau reports (ASIC search is not part of DriveXpress's own criteria — it applies to Rollover and Replacement, not DriveXpress)
 - If fast-track criteria NOT met: last 2 years financials + 2 years directors' ITRs → standard application
 
 **Asset notes:**
@@ -114,7 +114,7 @@ DriveXpress is Westpac's fast-track, simplified approval channel. No financial s
 ## chunk_id: westpac_rollover
 **source:** westpac
 **topic:** rollover_policy
-**intent:** SPECIAL_PROGRAMS
+**intent:** ROLLOVER_REPLACEMENT
 **lenders:** WESTPAC
 **borrower_profile:** COMMERCIAL, EXISTING_CLIENT
 **asset_class:** MV_NEW, MV_USED, LCV, PRIMARY
@@ -151,7 +151,7 @@ The Rollover channel allows existing clients to extend or replace an existing eq
 ## chunk_id: westpac_replacement
 **source:** westpac
 **topic:** replacement_policy
-**intent:** SPECIAL_PROGRAMS
+**intent:** ROLLOVER_REPLACEMENT
 **lenders:** WESTPAC
 **borrower_profile:** COMMERCIAL, NEW_CLIENT, EXISTING_CLIENT, PROPERTY_BACKED
 **asset_class:** MV_NEW, MV_USED, LCV, PRIMARY
@@ -174,11 +174,15 @@ The Replacement channel allows borrowers to replace a finalised or near-finalise
 | New Clients (owns residential property) | $150k | A & B |
 | Existing Clients (12 months current WEF history or finalised EF contract within last 12 months) | $200k (A) / $650k (B & C) | A / B & C |
 
-**Asset categories (same A/B/C as DriveXpress, with addition):**
+**Asset categories — Category A is the same as DriveXpress; Categories B and C differ:**
 
 | Category | Details |
 |---------|---------|
+| A | Same as DriveXpress: MV car (not taxi/hire/import/exotic; price ≤ $250k), Light Commercial < 4.5T GVM — up to 5 years old |
+| B | Broader than DriveXpress's Category B: trucks > 4.5T, trailers, forklifts/telehandlers, boom/scissor/spider lifts, backhoe loaders, dozers, **tippers, dump trucks (heavy duty)**, excavators, graders, scrapers, skid steers/wheel loaders, mobile/tight access cranes, rollers — up to 5 years old (cranes up to 3 years). Under Replacement, Category B **also includes** a separate agricultural-equipment list at a different age ceiling: tractors, headers, harvesters, cotton pickers, balers, mower conditioners, ploughs, seeders, sprayers, spreaders, **windrowers**, all-terrain vehicles, feed wagons — up to **7 years old**. (Under DriveXpress this agricultural list sits under Category C instead, and doesn't include windrowers.) |
 | C (Replacement only) | Government / school / local route buses (excludes charter); up to 5 years old; up to **10-year loan term** |
+
+**Key difference from DriveXpress:** don't assume Replacement's Category B/C split matches DriveXpress's — Replacement adds tippers/dump trucks to the heavy-equipment list, folds the agricultural-equipment list into "B" (at 7 years, with windrowers added) rather than "C", and reserves "C" solely for buses.
 
 **Replacement criteria:**
 - > 2 years in business with valid ABN and currently GST registered
@@ -196,7 +200,7 @@ The Replacement channel allows borrowers to replace a finalised or near-finalise
 ## chunk_id: westpac_medical
 **source:** westpac
 **topic:** medical_channel_policy
-**intent:** SPECIAL_PROGRAMS
+**intent:** MEDICAL_PROGRAMS
 **lenders:** WESTPAC
 **borrower_profile:** COMMERCIAL, MEDICAL_PROFESSIONAL, NEW_CLIENT, PROPERTY_BACKED
 **asset_class:** MV_NEW, MV_USED, MEDICAL_EQUIP, OFFICE_EQUIP
@@ -221,12 +225,14 @@ The Medical channel provides specialist finance for healthcare professionals wit
 
 | Asset Type | Medical Specialist / GP / Dental / Vet | Allied Health Practitioner |
 |-----------|--------------------------------------|--------------------------|
-| Motor vehicle (≤ 5 years old) | < $250,000 | < $150,000 |
-| New office equipment and fittings | < $150,000 | < $150,000 |
-| New medical equipment | < $350,000 | < $150,000 |
+| Motor vehicle (≤ 5 years old) + New office equipment and fittings | < $250,000 (combined cap for these two) | < $150,000 (combined cap — see note below) |
+| New medical equipment | < $350,000 (separate, additional cap) | included in the < $150,000 combined cap above |
 | **Max cumulative approvals** | **< $500,000** | **< $250,000** |
 
+**Note:** For Medical Specialist/GP/Dental/Vet, motor vehicle and office equipment share one combined $250,000 cap, while new medical equipment has its own separate $350,000 cap. For Allied Health Practitioners there is no separate/higher medical-equipment limit — motor vehicle, office equipment, and medical equipment all draw from a single combined $150,000 cap.
+
 **Medical channel criteria:**
+- **> 3 years industry experience** (required for both Medical Specialist/GP/Dental/Vet and Allied Health Practitioner)
 - Borrower / Guarantor credit bureau satisfactory
 - In business > 2 years and registered for GST
 - Statutory obligations up to date; no payment arrangements
@@ -251,13 +257,13 @@ Occupational Therapists, Optometrists, Osteopaths, Physiotherapists, Chiropracto
 **loan_size_band:** ALL
 **answerable_questions:** What is the Xpress rate for a car by term (dealer vs private sale)? What is the heavy-equipment Xpress rate? What EV discount applies? What is the max brokerage?
 **confidence:** high
-**last_verified:** 2026-06-15
+**last_verified:** 2026-07-29
 **policy_fields:** BASE_RATE, EV_DISCOUNT, PRIVATE_SALE_LOADING, BROKERAGE_MAX
 **trigger_words:** Xpress rate, DriveXpress rate, car rate, light commercial rate, motor vehicle rate, truck rate, heavy equipment rate, Xpress pricing, fast track rate, dealer rate, private sale Xpress rate, electric vehicle Xpress rate, EV Xpress
 
 **Content:**
 
-**VALID FROM: Monday 15 June 2026**
+**VALID FROM: Monday 13 July 2026** (re-issued from 15 June 2026 — same effective date reset only, all rates below unchanged)
 Rates valid for 7 days subject to settlement within this period.
 Excludes: Novated Leases / Sale & Hirebacks.
 Brokerage limited to a maximum of **3%**.
@@ -301,13 +307,13 @@ Rate: same as heavy equipment category above.
 **loan_size_band:** MICRO, SMALL, MEDIUM
 **answerable_questions:** What is the standard rate for a new motor vehicle / plant by amount and term? What is the used-vehicle loading? What EV discount applies?
 **confidence:** high
-**last_verified:** 2026-06-15
+**last_verified:** 2026-07-29
 **policy_fields:** BASE_RATE, EV_DISCOUNT
 **trigger_words:** standard WEF rate, hire purchase rate, commercial loan rate, finance lease rate, new motor vehicle rate, new plant equipment rate, standard rate table, monthly repayment rate, $15k rate, $20k rate, $50k rate, $150k rate, used vehicle loading
 
 **Content:**
 
-**VALID FROM: Monday 15 June 2026**
+**VALID FROM: Monday 13 July 2026** (re-issued from 15 June 2026 — same effective date reset only, all rates below unchanged)
 Rates valid for 7 days subject to settlement within this period.
 Product types: **Hire Purchase, Commercial Loan and Finance Lease**.
 Rates quoted are for **MONTHLY repayment structures only**.
@@ -400,19 +406,13 @@ Where the financed asset is a motor vehicle with a VIN and the sale is a buyback
 **Excluded loan structures (all channels):**
 - Novated leases
 - Sale and hirebacks (exception: Medical channel permits if < 30 days past acquisition date)
-- Mid-term refinancing
 
 **Excluded vehicles/assets:**
 - Taxis and hire cars
 - Imported and exotic cars (Category A)
-- Repairable write-offs
 - Computers and IT hardware (excluded from Standard Plant & Equipment rates)
 - Fixtures and fittings (excluded from Standard Plant & Equipment rates)
 - Charter buses (Replacement channel Category C accepts government/school/local route buses only)
-
-**Geographic exclusions:**
-- "Very Remote" areas per ABS 2021 Remoteness Area classification: not available
-- "Remote" areas: non-asset backed applications require 20% deposit
 
 **Private sale restrictions:**
 - Private sales available for **Category A assets only** (passenger cars and light commercial < 4.5T GVM)

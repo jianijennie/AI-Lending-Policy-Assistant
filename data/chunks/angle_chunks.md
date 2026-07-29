@@ -51,7 +51,7 @@ Angle Finance operates three documentation tiers. Requirements scale with exposu
 |-----------|-------------------|---------------------------|-------------------|
 | ABN | 2+ years | 2+ years | 2+ years |
 | GST registration | Not essential | 1+ years | 1+ years |
-| Credit score (Veda 1:1) | 550+ (Corporate & Individual) | 600+ (Corporate & Individual) | 650+ (Individual & Corporate) |
+| Credit score (Veda 1:1) | 550+ (Corporate & Individual) | Corporate 550+; Individual 600+ | 650+ (Individual & Corporate) |
 | Property status | Property backed or Non-Property Owner (spousal property accepted) | Property backed (spousal property accepted) | Property backed (spousal property accepted) |
 | Asset types (max finance amount) | Primary & Secondary $100k; Motor Vehicles $100k; Tertiary $50k | Primary & Secondary $250k; Motor Vehicles $200k | Primary & Secondary $500k; Motor Vehicles $250k; Tertiary $250k |
 | Credit references | Not essential | Asset Finance Credit Reference or Mortgage Statements | Asset Finance Credit Reference or Mortgage Statements |
@@ -86,13 +86,15 @@ Deals over $500k refer to the Full Doc checklist on MyHub.
 
 | Requirement | Under $250k | $250k–$500k | $500k–$1m | Over $1m |
 |------------|:-----------:|:-----------:|:---------:|:--------:|
-| 6 months+ bank statements OR FY2024 + FY2023 accountant-prepared financials | ✓ | ✓ | — | — |
-| FY2024 + FY2023 accountant-prepared financials only | — | — | ✓ | ✓ |
+| 6 months+ bank statements OR FY2024 + FY2023 accountant-prepared financials | ✓ | — | — | — |
+| FY2024 + FY2023 accountant-prepared financials only | — | ✓ | ✓ | ✓ |
 | Commitment Schedule | ✓ | ✓ | ✓ | ✓ |
-| Current ATO portal statements (last 12 months good payment history) | ✓ | ✓ | ✓ | ✓ |
+| Current ATO portal statements (last 12 months good payment history) | — | ✓ | ✓ | ✓ |
 | Detailed business background + list of major clients | — | ✓ | ✓ | ✓ |
 | Aged Debtor + Creditor listing | — | — | ✓ | ✓ |
-| Cashflow projections (if available) | — | — | ✓ | ✓ |
+| Cashflow projections (if available) | — | — | — | ✓ |
+
+Under $250k: bank statements/financials + Commitment Schedule only (no ATO portals or business background). $250k–$500k: financials-only + Commitment Schedule + ATO portals + business background. $500k–$1m: same plus Aged Debtor + Creditor listing. Over $1m: same plus cashflow projections.
 
 ---
 
@@ -132,6 +134,8 @@ Motor Vehicle maximum asset price remains unchanged. Multiple vehicles accepted.
 - Prime Movers
 - Buses
 
+Note: this bare "Buses" exclusion is the ONLY place any of Angle's documentation mentions buses at all. It rules buses out of this specific $400k Low Doc program — it is not a statement that buses are a Primary (or any other) asset category for Angle generally, and must not be read or repeated as one. Don't describe buses as a fundable Angle asset anywhere else based on this line.
+
 **Accepted lenders for the $400k Low Doc credit reference:**
 Westpac / Capital Finance, NAB, ANZ, CBA, BOQ, Judo, DLL, Suncorp, Bendigo / Adelaide Bank, Macquarie Bank, Flexi Commercial, Metro Finance, Pepper Money, Toyota Finance.
 
@@ -152,7 +156,7 @@ Westpac / Capital Finance, NAB, ANZ, CBA, BOQ, Judo, DLL, Suncorp, Bendigo / Ade
 **loan_size_band:** ALL
 **answerable_questions:** What rate does Angle charge for primary / secondary / tertiary assets by end-of-term age? What is the prime mover rate? What loadings apply? What has no rate loading?
 **confidence:** high
-**last_verified:** 2026-07-09
+**last_verified:** 2026-07-26
 **trigger_words:** Angle rate, Angle interest rate, Angle pricing, Angle primary asset rate, Angle secondary rate, Angle tertiary rate, Angle prime mover rate, Angle start-up rate, Angle rate loading, Angle property backed rate
 
 **Content:**
@@ -166,16 +170,20 @@ Angle Finance Rate Card, April 2026 (Version 02.04.26). All rates per annum.
 | 8+ year ABN, 4+ year GST; primary assets only; new assets (YOM 2023); entity types sole trader, company, trust, partnership; strong credit score | 7.79% | 8.79% |
 | 4+ year ABN, 2+ year GST; primary & secondary assets; end of term 10 years; entity types sole trader, company, trust, partnership; strong credit score | 8.29% | 9.29% |
 
-**Standard rate card — for 2+ year ABN & 1+ year GST registration, by asset class and end-of-term (EOT) age:**
+If the client's profile matches one of the two rows in the Profile-based headline rates table above (by ABN/GST age, asset type and age), use that rate and stop there — do not also look up a rate in the Standard rate card below for the same client. The Standard rate card below is the fallback for clients who don't match either headline-profile row, not an alternative to check every time.
 
-| Asset class | 10 years (EOT) | 15 years (EOT) | 20 years (EOT) | 25 years (EOT) |
-|------------|---------------|---------------|---------------|---------------|
-| Primary assets | 8.39% | 9.65% | 10.65% | 12.65% |
-| Secondary assets | 10.95% / 11.35% | 11.45% / 13.35% | 17.15% | — |
-| Tertiary assets | 11.85% / 12.15% | — | — | — |
-| Tertiary (upper band) | 17.85% | — | — | — |
+**Standard rate card — for 2+ year ABN & 1+ year GST registration, by asset class, property status, and end-of-term (EOT) age:**
 
-Note: the rate card presents multiple sub-rows per asset class; where two figures appear, the applicable rate depends on the specific sub-band shown on the card. Confirm the exact sub-band with Angle where a deal sits near a boundary.
+| Asset class | Owner status | 10 years (EOT) | 15 years (EOT) | 20 years (EOT) | 25 years (EOT) |
+|------------|-------------|---------------|---------------|---------------|---------------|
+| Primary assets | Property Owner | 8.39% | 9.65% | 10.65% | 12.65% (NEW) |
+| Primary assets | Non-Property Owner | 10.95% | 11.45% | 17.15% | — |
+| Secondary assets | Property Owner | 11.35% | 13.35% (NEW) | — | — |
+| Secondary assets | Non-Property Owner | 12.15% | — | — | — |
+| Tertiary assets | Property Owner | 11.85% | — | — | — |
+| Tertiary assets | Non-Property Owner | 17.85% | — | — | — |
+
+Read the row for the correct asset class AND the correct property-owner status — these are two independent rows per asset class, not sub-bands of one row. A non-property-backed client asking about a primary asset at 15yr EOT is 11.45%, not 9.65% (that's the property-owner rate).
 
 **Prime Movers:** starting from 9.39%. A 1% rate loading applies to standard primary asset rates.
 
@@ -274,7 +282,7 @@ Note: the Rate Card's Start-Up qualifying criteria states a 500+ credit score; t
 **Bank statement requirements:** Minimum 6 months required, unless the ABN has been trading for less than 6 months.
 
 **Customer eligibility questions** — a customer qualifies when the answer is *yes* to all of the below:
-- Can the customer demonstrate an average bank balance over the last 3 months equal to at least 10%–20% of the loan amount, excluding ATO refunds, asset sales, business loans, PAYG income and director cash injections?
+- Can the customer demonstrate an average bank balance over the last 3–6 months equal to at least 10%–20% of the loan amount, excluding ATO refunds, asset sales, business loans, PAYG income and director cash injections?
 - Do the customer's bank statements show clean conduct, with no overdraws, dishonours, debt collection payments, superannuation withdrawals or ATO payment arrangements?
 - Can the customer provide proof of previous industry experience, such as PAYG employment history, prior work contracts or relevant qualifications?
 - Is the customer purchasing a primary asset? Examples include wood chippers, tippers, excavators, ride-on lawn mowers and caravans.
