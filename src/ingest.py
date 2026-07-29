@@ -11,8 +11,30 @@ from llama_index.core import Settings
 import chromadb
 from src.config import CHUNKS_DIR, CHROMA_DIR, EMBEDDING_MODEL, CHUNK_SIZE, CHUNK_OVERLAP
 
-def parse_chunk_file(filepath):
-    """Parse a markdown chunk file into a list of Document objects."""
+# Must stay in sync with LENDER_KEYWORDS / INTENT_KEYWORDS keys in src/query.py.
+# A typo'd lenders/intent value in a chunk file doesn't raise an error on its
+# own — ChromaDB will happily store any string — it just silently breaks
+# metadata-filtered retrieval for that one chunk. Validating against this
+# known-good set catches that at ingest time instead of a broker getting a
+# wrong answer weeks later.
+VALID_LENDERS = {"WESTPAC", "BFS", "RESIMAC", "CFAL", "ANGLE", "FLEXI", "METRO"}
+VALID_INTENTS = {
+    "PRICING", "ELIGIBILITY", "LOAN_LIMITS", "DOCUMENTATION", "FEES",
+    "SETTLEMENT", "EXCLUSIONS", "SPECIAL_PROGRAMS", "ASSET_ELIGIBILITY",
+    "MEDICAL_PROGRAMS", "ROLLOVER_REPLACEMENT",
+}
+
+
+def parse_chunk_file(filepath, warnings=None):
+    """Parse a markdown chunk file into a list of Document objects.
+
+    `warnings` (optional list) collects human-readable problems found along
+    the way instead of silently skipping them — a malformed or mistagged
+    chunk otherwise vanishes with no trace beyond a lower total chunk count.
+    """
+    if warnings is None:
+        warnings = []
+    filename = os.path.basename(filepath)
     with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
 
@@ -28,6 +50,7 @@ def parse_chunk_file(filepath):
         # Extract chunk_id
         chunk_id_match = re.search(r'## chunk_id:\s*(\S+)', raw)
         if not chunk_id_match:
+            warnings.append(f"{filename}: found a '## chunk_id:' marker but couldn't parse an ID from it — section skipped: {raw[:80]!r}...")
             continue
         chunk_id = chunk_id_match.group(1).strip()
 
@@ -53,8 +76,20 @@ def parse_chunk_file(filepath):
         # Extract content (everything after **Content:**)
         content_match = re.search(r'\*\*Content:\*\*\s*\n(.*?)(?=\n---|\Z)', raw, re.DOTALL)
         if not content_match:
+            warnings.append(f"{filename}: chunk_id '{chunk_id}' has no '**Content:**' section — chunk skipped entirely")
             continue
         chunk_content = content_match.group(1).strip()
+
+        if not chunk_content:
+            warnings.append(f"{filename}: chunk_id '{chunk_id}' has an empty Content section")
+        if not lenders:
+            warnings.append(f"{filename}: chunk_id '{chunk_id}' has no lenders field — will never be retrieved by lender-scoped search")
+        elif lenders not in VALID_LENDERS:
+            warnings.append(f"{filename}: chunk_id '{chunk_id}' has lenders='{lenders}', not one of {sorted(VALID_LENDERS)} — check for a typo")
+        if not intent:
+            warnings.append(f"{filename}: chunk_id '{chunk_id}' has no intent field — will only surface via lender-only search, never lender+intent")
+        elif intent not in VALID_INTENTS:
+            warnings.append(f"{filename}: chunk_id '{chunk_id}' has intent='{intent}', not one of {sorted(VALID_INTENTS)} — check for a typo")
 
         # Build enriched text for embedding
         # Prepend answerable_questions and trigger_words so the
@@ -78,7 +113,7 @@ Key terms: {trigger_words}
             "last_verified": last_verified,
             "policy_fields": policy_fields,
             "source": source,
-            "file_name": os.path.basename(filepath)
+            "file_name": filename
         }
 
         documents.append(Document(
@@ -93,15 +128,34 @@ Key terms: {trigger_words}
 def ingest_chunks():
     print("Parsing chunk files...")
     all_documents = []
+    warnings = []
 
     chunk_files = [f for f in os.listdir(CHUNKS_DIR) if f.endswith('.md')]
     for filename in sorted(chunk_files):
         filepath = os.path.join(CHUNKS_DIR, filename)
-        docs = parse_chunk_file(filepath)
+        docs = parse_chunk_file(filepath, warnings)
         print(f"  {filename}: {len(docs)} chunks parsed")
         all_documents.extend(docs)
 
     print(f"\nTotal chunks: {len(all_documents)}")
+
+    # Duplicate chunk_ids silently overwrite each other in ChromaDB (id_ is
+    # the primary key) — one of the two chunks would simply never be
+    # retrievable, with no error at ingest time to explain why.
+    seen_ids = {}
+    for doc in all_documents:
+        cid = doc.metadata["chunk_id"]
+        if cid in seen_ids:
+            warnings.append(f"Duplicate chunk_id '{cid}' in {seen_ids[cid]} and {doc.metadata['file_name']} — one will silently overwrite the other")
+        else:
+            seen_ids[cid] = doc.metadata["file_name"]
+
+    if warnings:
+        print(f"\n{len(warnings)} WARNING(S):")
+        for w in warnings:
+            print(f"  ! {w}")
+    else:
+        print("\nNo validation warnings — all chunk_ids unique, all lenders/intent values recognised.")
 
     print("\nSetting up embedding model...")
     embed_model = HuggingFaceEmbedding(model_name=EMBEDDING_MODEL)

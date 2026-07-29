@@ -1,147 +1,94 @@
+"""
+Runs the scenario question bank (policy_question_bank.xlsx, 41 questions
+across 6 lenders) against the live backend and saves the raw results for
+manual grading.
+
+Usage:
+    1. Start the backend: uvicorn src.api:app --port 8000
+    2. python tests/test_queries.py
+
+There's no auto-scoring here on purpose. An earlier version of this script
+scored answers by keyword/number overlap against a gold answer, which is
+exactly the kind of heuristic that gave false confidence during this
+project (e.g. scoring a wrong lender's answer as correct because it happened
+to share enough words with the reference). The current question bank also
+has no exact chunk_id column to check retrieval against directly. Read the
+reference_answer against model_answer yourself, or hand the output file to
+an LLM to grade — don't trust a keyword-match score to replace that.
+"""
+import json
 import os
 import sys
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
+import urllib.request
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import openpyxl
-from src.query import query_policies
-from src.config import QUESTION_BANK_PATH
+from src.config import SCENARIO_QUESTION_BANK_PATH, PROJECT_ROOT
 
-MAX_WORKERS = 4
+API_URL = "http://127.0.0.1:8000/query"
+RESULTS_PATH = str(PROJECT_ROOT / "tests" / "last_run_results.json")
+
 
 def load_questions():
-    wb = openpyxl.load_workbook(QUESTION_BANK_PATH)
-    ws = wb["QuestionBank"]
+    wb = openpyxl.load_workbook(SCENARIO_QUESTION_BANK_PATH)
+    ws = wb["Question Bank"]
     questions = []
     for row in ws.iter_rows(min_row=2, values_only=True):
-        if row[0] and row[4]:  # must have ID and question
+        if row[0] and row[3]:
             questions.append({
-                "id": row[0],
-                "lender": row[1],
-                "category": row[2],
-                "difficulty": row[3],
-                "question": row[4],
-                "gold_answer": row[5],
-                "source_chunk_id": row[6]
+                "id": row[0], "lender": row[1], "category": row[2],
+                "question": row[3], "reference_answer": row[4], "source_ref": row[5],
             })
     return questions
 
-def score_answer(answer: str, gold_answer: str, source_chunk_id: str, nodes):
-    answer_lower = answer.lower()
-    gold_lower = gold_answer.lower()
 
-    # Extract key numbers and terms from gold answer
-    import re
-    gold_numbers = re.findall(r'\d+\.?\d*%?', gold_lower)
-    gold_numbers += re.findall(r'\$[\d,]+k?', gold_lower)
+def run_one(question_text: str):
+    body = json.dumps({"question": question_text}).encode("utf-8")
+    req = urllib.request.Request(
+        API_URL, data=body, headers={"Content-Type": "application/json"}, method="POST"
+    )
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        return json.loads(resp.read().decode("utf-8"))
 
-    numbers_found = sum(1 for n in gold_numbers if n in answer_lower)
-    number_score = numbers_found / len(gold_numbers) if gold_numbers else 1.0
 
-    # Check if correct source chunk was retrieved
-    retrieved_chunks = [n.metadata.get('chunk_id', '') for n in nodes]
-    source_hit = source_chunk_id in retrieved_chunks
+def run_all(questions=None):
+    questions = questions or load_questions()
+    print(f"Loaded {len(questions)} questions from {SCENARIO_QUESTION_BANK_PATH}", flush=True)
 
-    # Simple keyword overlap
-    gold_words = set(gold_lower.split())
-    answer_words = set(answer_lower.split())
-    overlap = len(gold_words & answer_words) / len(gold_words) if gold_words else 0
+    results = []
+    for i, q in enumerate(questions):
+        try:
+            data = run_one(q["question"])
+            result = {
+                **q,
+                "model_answer": data["answer"],
+                "sources": [s["chunk_id"] for s in data["sources"]],
+                "response_time": data["response_time"],
+                "from_cache": data["from_cache"],
+            }
+        except Exception as e:
+            result = {**q, "model_answer": f"ERROR: {e}", "sources": [], "response_time": 0, "from_cache": False}
 
-    # Score 1-4
-    if source_hit and number_score >= 0.8 and overlap >= 0.3:
-        return 4
-    elif source_hit and number_score >= 0.5:
-        return 3
-    elif source_hit or number_score >= 0.5:
-        return 2
-    else:
-        return 1
+        results.append(result)
+        status = "CACHED" if result.get("from_cache") else f"{result['response_time']:.1f}s"
+        print(f"[{i+1}/{len(questions)}] {q['id']} done ({status})", flush=True)
 
-def _run_one(test):
-    try:
-        answer, nodes = query_policies(test["question"], verbose=False)
-        score = score_answer(
-            answer,
-            test["gold_answer"],
-            test["source_chunk_id"],
-            nodes
-        )
-        retrieved_chunks = [n.metadata.get('chunk_id', '') for n in nodes]
-        correct_source = test["source_chunk_id"] in retrieved_chunks
-        return {"test": test, "score": score, "correct_source": correct_source,
-                "answer": answer, "retrieved_chunks": retrieved_chunks, "error": None}
-    except Exception as e:
-        return {"test": test, "score": 1, "correct_source": False,
-                "answer": None, "retrieved_chunks": [], "error": str(e)}
+        with open(RESULTS_PATH, "w", encoding="utf-8") as f:
+            json.dump(results, f, indent=2)
 
-def run_tests(max_questions=None, max_workers=MAX_WORKERS):
-    print("=" * 70)
-    print("RETRIEVAL ACCURACY TEST SUITE")
-    print("Project CMAP 2026 — Group 2")
-    print("=" * 70)
+    print(f"\nAll done. Results saved to {RESULTS_PATH}")
+    print("Grade each answer against its reference_answer yourself — no auto-score is produced.")
+    return results
 
-    questions = load_questions()
-    if max_questions:
-        questions = questions[:max_questions]
-
-    outcomes = [None] * len(questions)
-    done = 0
-
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_idx = {executor.submit(_run_one, test): i for i, test in enumerate(questions)}
-        for future in as_completed(future_to_idx):
-            i = future_to_idx[future]
-            result = future.result()
-            outcomes[i] = result
-            done += 1
-            test = result["test"]
-            status = "ERROR" if result["error"] else ("PASS" if result["correct_source"] else "FAIL")
-            print(f"[{done}/{len(questions)}] [{test['id']}] {test['lender']} | "
-                  f"{test['category']} | {test['difficulty']} | score={result['score']} | "
-                  f"source={status}" + (f" | error={result['error']}" if result["error"] else ""),
-                  flush=True)
-
-    scores = []
-    source_hits = 0
-    by_lender = {}
-    by_category = {}
-
-    for result in outcomes:
-        test = result["test"]
-        scores.append(result["score"])
-        if result["correct_source"]:
-            source_hits += 1
-
-        lender = test["lender"]
-        by_lender.setdefault(lender, []).append(result["score"])
-
-        cat = test["category"]
-        by_category.setdefault(cat, []).append(result["score"])
-
-    # Summary
-    total = len(scores)
-    avg_score = sum(scores) / total
-    perfect = sum(1 for s in scores if s == 4)
-    source_hit_rate = source_hits / total * 100
-
-    print(f"\n{'=' * 70}")
-    print(f"FINAL RESULTS")
-    print(f"{'=' * 70}")
-    print(f"Questions tested:     {total}")
-    print(f"Average score:        {avg_score:.2f}/4")
-    print(f"Perfect scores (4/4): {perfect}/{total} ({perfect/total*100:.0f}%)")
-    print(f"Source hit rate:      {source_hit_rate:.0f}%")
-
-    print(f"\nBy lender:")
-    for lender, s in by_lender.items():
-        print(f"  {lender}: avg {sum(s)/len(s):.2f}/4 ({len(s)} questions)")
-
-    print(f"\nBy category:")
-    for cat, s in sorted(by_category.items()):
-        print(f"  {cat}: avg {sum(s)/len(s):.2f}/4 ({len(s)} questions)")
-
-    print(f"{'=' * 70}")
 
 if __name__ == "__main__":
-    # Run first 10 questions to test, then remove the limit for full run
-    run_tests(max_questions=None)
+    try:
+        urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=3)
+    except Exception:
+        print("Backend isn't responding at http://127.0.0.1:8000 — start it first:")
+        print("  uvicorn src.api:app --port 8000")
+        sys.exit(1)
+
+    run_all()
