@@ -275,6 +275,31 @@ def _sources_for_chunk_ids(chunk_ids: list) -> list:
 def query(request: QueryRequest):
     start = time.time()
 
+    history = [h.model_dump() for h in request.history]
+
+    # A broker correcting the assistant's last answer directly in chat
+    # ("no, that rate is actually 7.15%") is not a new question, so it must
+    # be checked before anything else -- otherwise it would either get
+    # matched against the library/cache as if it were a real query, or fall
+    # through to the main pipeline and get answered as one. Per-project
+    # decision: chat corrections are saved and served back immediately, no
+    # separate approval step (unlike the Review tab's AI-generated answers).
+    if history:
+        correction = query_module.detect_and_apply_correction(request.question, history)
+        if correction:
+            entry = answer_library.save_entry(
+                correction["original_question"],
+                correction["corrected_answer"],
+                correction["chunk_ids"],
+            )
+            return QueryResponse(
+                answer="Got it — I've corrected that and saved it, so future questions like this will get the updated answer.",
+                sources=_sources_for_chunk_ids(entry.get("chunk_ids", [])),
+                response_time=time.time() - start,
+                from_cache=False,
+                answer_source="correction_saved",
+            )
+
     # Both checks below are skipped for follow-ups -- a follow-up only
     # makes sense in the context of its own conversation, so matching it
     # against an unrelated standalone question's cached/corrected answer
@@ -302,7 +327,6 @@ def query(request: QueryRequest):
                     answer_source="cache",
                 )
 
-    history = [h.model_dump() for h in request.history]
     try:
         answer, nodes = query_policies(request.question, verbose=False, history=history)
     except Exception as e:

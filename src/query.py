@@ -459,6 +459,82 @@ def retrieve_nodes(question: str, lenders: list, log):
     return list(seen.values())
 
 
+def detect_and_apply_correction(question: str, history: list):
+    """Check whether the broker's latest message is correcting the
+    assistant's previous answer -- as opposed to a new question, a
+    follow-up about something else, or a "give me more detail" request --
+    and if so, produce the corrected answer ready to save into the answer
+    library immediately (per-project decision: chat corrections go live
+    right away, unlike Review-tab entries which wait for approval).
+
+    Returns None if this isn't a correction. Otherwise a dict:
+    {"original_question": str, "corrected_answer": str, "chunk_ids": [...]}
+    -- the caller (api.py's /query handler) is responsible for actually
+    calling answer_library.save_entry with this.
+
+    Deliberately narrow, same pattern as _resolve_followup/
+    _check_profile_threshold: one small classifier call rather than folding
+    "was this a correction?" detection into the main answering prompt.
+    """
+    if not history:
+        return None
+    prev = history[-1]
+    prompt = f"""Conversation between a finance broker and a lending-policy assistant:
+
+Broker: {prev['question']}
+Assistant: {prev['answer']}
+
+The broker's next message: "{question}"
+
+Decide whether the broker's next message is CORRECTING the assistant -- explicitly or clearly stating that the previous answer was wrong, inaccurate, or outdated, AND asserting what the correct information actually is.
+
+This is NOT a correction (answer false):
+- A new question, even about a related or different lender/topic ("what about Metro instead?", "and Westpac?") -- these are follow-up questions, not corrections, even though they change the subject rather than repeating it.
+- A request for more detail, clarification, or reformatting of the same answer.
+- Mere skepticism, doubt, or a request to double-check or re-verify, WITHOUT the broker's message itself stating a specific replacement fact -- e.g. "are you sure about that?", "can you double check that rate?", "that doesn't sound right, can you confirm?". These express doubt but supply no new value to correct to, so there is nothing to save -- answer false even though the broker may be right to be suspicious.
+
+This IS a correction (answer true) ONLY when the broker's own message states or unambiguously implies the specific correct value itself -- e.g. "no, that's wrong, the actual rate is 7.15%", "actually the max term is 72 months, not 60", "that's incorrect, BFS doesn't offer that at all." The replacement fact must come from the broker's message, not be inferred or invented by you.
+
+First, extract the specific new value or fact the broker's message ITSELF states, quoting it directly from their message ("broker_stated_value"). If their message doesn't actually contain a specific replacement value -- only doubt, a question, or a request to verify -- leave this null; do not paraphrase, infer, or invent one just because the assistant's answer might plausibly be wrong.
+
+Only if broker_stated_value is non-null: write out the FULL corrected version of the assistant's last answer, keeping everything that wasn't wrong exactly as it was, and changing only what broker_stated_value actually addresses. Never introduce a number or fact that isn't traceable to broker_stated_value.
+
+Reply with only JSON: {{"broker_stated_value": "..." or null, "is_correction": true or false, "corrected_answer": "..." or null}}"""
+    try:
+        raw = _chat_completion(RESOLVER_MODEL, prompt, max_output_tokens=600, json_mode=True)
+        parsed = json.loads(raw)
+        # broker_stated_value is the load-bearing check, not is_correction --
+        # forcing the model to first quote something concrete from the
+        # broker's own message (rather than jump straight to a verdict)
+        # is what actually suppresses the fabrication failure mode measured
+        # during testing (gpt-4o-mini invented a specific replacement number
+        # for pure-skepticism messages like "are you sure about that?" when
+        # only asked for a true/false verdict directly).
+        if not parsed.get("broker_stated_value") or not parsed.get("is_correction") or not parsed.get("corrected_answer"):
+            return None
+    except Exception:
+        # A failed classifier call should fall through to the normal
+        # pipeline, not silently drop what might be a real correction.
+        return None
+
+    # Conversation history only carries {question, answer}, not chunk_ids,
+    # so re-retrieve for the ORIGINAL question to snapshot what it's based
+    # on -- retrieval is deterministic and nothing chunk-wise has changed
+    # between the previous turn and now within the same conversation, so
+    # this reproduces the same sources that answer actually drew on.
+    lenders = detect_lenders(prev["question"])
+    nodes = retrieve_nodes(prev["question"], lenders, lambda *a, **k: None)
+    chunk_ids = list(dict.fromkeys(
+        node.metadata.get("chunk_id") for node in nodes if node.metadata.get("chunk_id")
+    ))
+
+    return {
+        "original_question": prev["question"],
+        "corrected_answer": parsed["corrected_answer"],
+        "chunk_ids": chunk_ids,
+    }
+
+
 def query_policies(question: str, verbose: bool = True, history: list = None):
     def log(*args, **kwargs):
         if verbose:
