@@ -125,6 +125,25 @@ Key terms: {trigger_words}
     return documents
 
 
+def get_all_chunk_blocks() -> dict:
+    """Flat {chunk_id: raw_markdown_block} across every file in CHUNKS_DIR --
+    the raw '## chunk_id: ...' section text, not the Document objects
+    parse_chunk_file returns (those hold the embedding-ready enriched text,
+    not the original block). Used by the answer library's staleness check
+    to snapshot/compare a chunk's exact content over time, independent of
+    which physical file it lives in."""
+    blocks = {}
+    chunk_files = [f for f in os.listdir(CHUNKS_DIR) if f.endswith('.md')]
+    for filename in sorted(chunk_files):
+        with open(os.path.join(CHUNKS_DIR, filename), "r", encoding="utf-8") as f:
+            content = f.read()
+        for raw in re.split(r'\n---\n', content):
+            match = re.search(r'## chunk_id:\s*(\S+)', raw)
+            if match:
+                blocks[match.group(1).strip()] = raw.strip("\n")
+    return blocks
+
+
 def ingest_chunks():
     print("Parsing chunk files...")
     all_documents = []

@@ -93,6 +93,17 @@ QUERY_CACHE_SIMILARITY_THRESHOLD = 0.97
 # it's recalibrated.
 QUERY_CACHE_ENABLED = False
 
+# Unlike the raw semantic query cache above, every answer_library.json entry
+# has already been through a human review/approval step in the frontend's
+# Review tab (and may have been hand-corrected there) before it's ever
+# saved -- that's a fundamentally different trust level than caching every
+# unreviewed LLM output, so it's safe to actually serve these back at query
+# time. Still uses the same conservative threshold as QUERY_CACHE (same
+# uncalibrated-embedding caveat applies), since a wrongly-matched *human
+# correction* served to an unrelated question is just as bad a failure mode.
+ANSWER_LIBRARY_SIMILARITY_THRESHOLD = 0.97
+ANSWER_LIBRARY_ENABLED = True
+
 # Each chunk in data/chunks/*.md is already a hand-curated atomic unit with
 # its own chunk_id, lender/intent/trigger-word metadata — SentenceSplitter's
 # job here is only to be a safety net, never to actually re-split one.

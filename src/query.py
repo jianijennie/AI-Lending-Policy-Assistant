@@ -35,6 +35,27 @@ _openai_client = OpenAI(api_key=OPENAI_API_KEY)
 print("Ready.\n")
 # ────────────────────────────────────────────────────────────────────────────
 
+
+def reload_index():
+    """Re-point the module-level Chroma collection/index at the on-disk
+    collection after it's been rebuilt by src.ingest.ingest_chunks() in this
+    same process (e.g. via the /chunks/promote or /admin/reingest API
+    endpoints). ingest_chunks() deletes and recreates the "lifex_policies"
+    collection through its own chromadb client -- without this, the
+    _chroma_collection/_index built once at module import time would keep
+    referencing the now-deleted collection instead of the freshly rebuilt
+    one, and every /query call after a promotion would break or silently
+    serve stale data."""
+    global _chroma_client, _chroma_collection, _vector_store, _storage_context, _index
+    _chroma_client = chromadb.PersistentClient(path=CHROMA_DIR)
+    _chroma_collection = _chroma_client.get_collection("lifex_policies")
+    _vector_store = ChromaVectorStore(chroma_collection=_chroma_collection)
+    _storage_context = StorageContext.from_defaults(vector_store=_vector_store)
+    _index = VectorStoreIndex.from_vector_store(
+        _vector_store,
+        storage_context=_storage_context
+    )
+
 # First keyword for each lender is its canonical name; the rest are product
 # names / brand variants that also identify it. All matching is on word
 # boundaries — "metro" must appear as its own word, so "metropolitan area"
@@ -313,6 +334,69 @@ Reply with only JSON: {{"note": "..."}}"""
         return str(parsed.get("note") or "").strip()
     except Exception:
         return ""
+
+
+def refresh_answer_with_new_chunk(question: str, current_answer: str,
+                                   old_chunk_text: str, new_chunk_text: str) -> dict:
+    """Check whether a previously human-corrected library answer still holds
+    after its source chunk was edited, and if not, produce an updated
+    version with just the outdated facts replaced.
+
+    This exists for the answer library's promote-time refresh: a broker
+    correction saved against chunk content that later changes (a rate
+    update, a threshold change) would otherwise silently go stale with no
+    signal to anyone. Deliberately narrow and conservative rather than
+    freely rewriting the answer -- a wrong "helpful" rewrite is worse than
+    leaving a stale answer flagged for a human, so the model is asked to
+    change only what the chunk update actually requires and to say so
+    plainly when it isn't sure.
+
+    Returns {"status": "unchanged"|"updated"|"unclear", "updated_answer":
+    str|None, "note": str} -- "unchanged" means the chunk edit didn't
+    actually affect anything this answer stated (e.g. a different section of
+    the same chunk changed); "updated" means updated_answer replaces the old
+    one; "unclear" means don't auto-apply anything, surface for review.
+    """
+    prompt = f"""A broker asked a lending-policy assistant this question:
+
+"{question}"
+
+This is the previously-approved, human-corrected answer that was given:
+
+{current_answer}
+
+That answer was based on this policy chunk:
+
+--- OLD CHUNK CONTENT ---
+{old_chunk_text}
+
+The chunk has since been edited to this:
+
+--- NEW CHUNK CONTENT ---
+{new_chunk_text}
+
+Decide whether the approved answer above is still accurate given the new chunk content.
+
+- If nothing the answer actually states was affected by the edit (the changed part of the chunk is unrelated to what this answer covers), respond with status "unchanged".
+- If a number, rate, threshold, date, or eligibility fact the answer states has changed in the new chunk, respond with status "updated" and provide the full corrected answer text, preserving the original wording and structure exactly except for the specific outdated facts -- change only what the chunk update actually requires, don't rewrite unrelated phrasing.
+- If you cannot confidently tell whether the answer is still accurate (the change is structural, ambiguous, or the answer's claim can't be cleanly mapped to a single new value), respond with status "unclear" and explain why in one sentence -- do not guess.
+
+Reply with only JSON: {{"status": "unchanged" or "updated" or "unclear", "updated_answer": "..." or null, "note": "..."}}"""
+    try:
+        raw = _chat_completion(RESOLVER_MODEL, prompt, max_output_tokens=800, json_mode=True)
+        parsed = json.loads(raw)
+        status = parsed.get("status")
+        if status not in ("unchanged", "updated", "unclear"):
+            return {"status": "unclear", "updated_answer": None, "note": "Refresh check returned an unrecognised status."}
+        return {
+            "status": status,
+            "updated_answer": parsed.get("updated_answer") if status == "updated" else None,
+            "note": str(parsed.get("note") or "").strip(),
+        }
+    except Exception as e:
+        # A failed check should never silently keep serving a possibly-stale
+        # answer as if it were still verified -- surface it for review.
+        return {"status": "unclear", "updated_answer": None, "note": f"Refresh check failed: {type(e).__name__}"}
 
 
 def get_retriever(where_filter=None, top_k=TOP_K):

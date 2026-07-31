@@ -135,16 +135,18 @@ Here is one real, verified-accurate example chunk showing the exact format to pr
 Now transcribe ALL the page images you are shown into this same format. Output ONLY the chunk markdown (starting with the first "## chunk_id:" line) -- no preamble, no explanation, no markdown code fences around the whole output."""
 
 
-def draft_chunks_for_lender(lender_code: str, model: str, reasoning_effort: str = None) -> str:
+def _build_content_parts(lender_code: str, pdf_files: list[tuple[str, bytes]]) -> list[dict]:
+    """pdf_files is a list of (filename, raw_pdf_bytes) -- decoupled from
+    DOCUMENTS_DIR/LENDER_SOURCE_PDFS so callers (e.g. the /chunks/draft API
+    endpoint) can pass in an arbitrary uploaded file, not just the
+    pre-registered per-lender PDF set."""
     import base64
 
-    pdf_filenames = LENDER_SOURCE_PDFS[lender_code]
     content_parts = [{"type": "text", "text": f"Lender: {lender_code}. Source PDFs follow, in order."}]
 
-    for filename in pdf_filenames:
-        pdf_path = os.path.join(DOCUMENTS_DIR, filename)
+    for filename, pdf_bytes in pdf_files:
         content_parts.append({"type": "text", "text": f"--- Document: {filename} ---"})
-        doc = fitz.open(pdf_path)
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         for i, page in enumerate(doc, 1):
             pix = page.get_pixmap(matrix=fitz.Matrix(2.5, 2.5))
             b64 = base64.b64encode(pix.tobytes("png")).decode("utf-8")
@@ -198,6 +200,21 @@ def draft_chunks_for_lender(lender_code: str, model: str, reasoning_effort: str 
                 })
         doc.close()
 
+    return content_parts
+
+
+def draft_chunks_from_pdfs(
+    lender_code: str,
+    pdf_files: list[tuple[str, bytes]],
+    model: str = VISION_MODEL,
+    reasoning_effort: str = None,
+) -> str:
+    """Core entry point, decoupled from disk paths. Takes raw PDF bytes
+    directly so it can draft chunks from an arbitrary uploaded file (the
+    /chunks/draft API endpoint) as well as the CLI's pre-registered,
+    on-disk PDF sets (draft_chunks_for_lender below)."""
+    content_parts = _build_content_parts(lender_code, pdf_files)
+
     kwargs = {
         "model": model,
         "messages": [
@@ -222,6 +239,15 @@ def draft_chunks_for_lender(lender_code: str, model: str, reasoning_effort: str 
     # ground truth in the first pass, testing showed it gets every cell
     # right without a follow-up call (see BFS pilot, 2026-07-29).
     return choice.message.content or ""
+
+
+def draft_chunks_for_lender(lender_code: str, model: str, reasoning_effort: str = None) -> str:
+    pdf_files = []
+    for filename in LENDER_SOURCE_PDFS[lender_code]:
+        pdf_path = os.path.join(DOCUMENTS_DIR, filename)
+        with open(pdf_path, "rb") as f:
+            pdf_files.append((filename, f.read()))
+    return draft_chunks_from_pdfs(lender_code, pdf_files, model, reasoning_effort)
 
 
 def main():
