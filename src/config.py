@@ -27,14 +27,25 @@ CHROMA_DIR = str(PROJECT_ROOT / "chroma_db")
 # (335M) given this machine's prior history of memory-pressure issues
 # (see chat history) — base is a safer size increase, not the largest one.
 EMBEDDING_MODEL = "BAAI/bge-base-en-v1.5"
-# Answering model. Benchmarked head-to-head on 5 known-ground-truth
+# Answering model. Originally benchmarked head-to-head on 5 known-ground-truth
 # questions (2026-07-22): gpt-4o-mini made 3 factual errors with the
 # full-corpus context, gpt-5-mini was correct but verbose and slow
 # (2-14s, up to 4k-char answers), gpt-5 was correct on everything,
 # fastest of the GPT-5 family here (2.4-7.4s), and the only one that
-# reliably followed the verdict-first/brevity instructions. ~$0.01-0.05
-# per question at gpt-5 input pricing — irrelevant against the budget.
-LLM_MODEL = "gpt-5"
+# reliably followed the verdict-first/brevity instructions.
+#
+# Switched gpt-5 -> gpt-5.5 on 2026-07-31 after a second head-to-head, this
+# time across 11 questions (one per complexity type in the 111-question
+# stress bank): identical correctness on 10/11, and gpt-5.5 caught a real
+# gap gpt-5 missed on the 11th (CQ-102, "cheapest lender for a $200k primary
+# asset") — gpt-5 quoted Flexi's standard-tier rate (7.85%) and missed the
+# cheaper flexipremium tier entirely (7.15%, this project's own corrected
+# rate), while gpt-5.5 correctly identified flexipremium as the applicable
+# tier. gpt-5.5 was also faster on every single question tested, often by
+# 2x+. ~$0.01-0.05 per question at gpt-5 input pricing — irrelevant against
+# the budget, and gpt-5.5 is the same non-mini/non-pro tier so priced
+# similarly.
+LLM_MODEL = "gpt-5.5"
 # Small utility model for the follow-up resolver — rewrites "details" /
 # "what about westpac?" into standalone questions. Kept on gpt-4o-mini
 # deliberately: GPT-5 family models ignore temperature, so the same
@@ -62,8 +73,18 @@ REASONING_EFFORT = "low"
 # single-lender case, for a question type (broad eligibility scans: "which
 # lenders can do X", "best-fit across the panel") that's mostly yes/no
 # verdicts, not the numeric rate build-ups "low" was raised to fix. Falls
-# back to "minimal" specifically for that no-lender-detected fan-out path.
-FANOUT_REASONING_EFFORT = "minimal"
+# back to the cheapest tier specifically for that no-lender-detected
+# fan-out path.
+#
+# Was "minimal" under gpt-5 -- gpt-5.5 doesn't support that value at all
+# (hard 400 error; its scale is none/low/medium/high/xhigh, no "minimal").
+# Re-benchmarked "none" vs "low" head-to-head on 6 genuine fan-out questions
+# before picking "none": both gave equivalent-quality answers with no
+# regressions vs the old gpt-5/minimal baseline, but "none" was faster in
+# 4/6 cases and never worse -- "none" is the correct like-for-like mapping
+# of "minimal"'s original intent (cheapest/fastest tier for this
+# mostly-yes/no question type), not an arbitrary substitute.
+FANOUT_REASONING_EFFORT = "none"
 
 CHUNKS_DIR = str(PROJECT_ROOT / "data" / "chunks")
 METADATA_PATH = str(PROJECT_ROOT / "data" / "Metadata" / "Metadata.csv")
