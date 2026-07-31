@@ -170,11 +170,11 @@ CFAL operates the DriveXpress fast-track channel (shared with Westpac Group). No
 **asset_class:** MV_NEW, MV_USED, LCV, PRIMARY
 **doc_type:** LOW_DOC
 **loan_size_band:** LARGE, XLARGE
-**answerable_questions:** Can I roll over a contract with CFAL? What is the max loan by original funder? Are new-to-bank clients eligible?
+**answerable_questions:** Can I roll over a contract with CFAL? What is the max loan by original funder? Are new-to-bank clients eligible? Does the $500k cap apply to CFAL-originated contracts?
 **confidence:** high
-**last_verified:** 2026-06-28
+**last_verified:** 2026-07-31
 **policy_fields:** MAX_LOAN, MIN_ABN
-**trigger_words:** rollover CFAL, roll over Capital Finance, extend contract CFAL, existing contract CFAL, refinance CFAL, other financier rollover CFAL
+**trigger_words:** rollover CFAL, roll over Capital Finance, extend contract CFAL, existing contract CFAL, refinance CFAL, other financier rollover CFAL, Westpac originated rollover
 
 **Content:**
 
@@ -184,8 +184,10 @@ The Rollover channel allows existing clients to extend or replace an existing eq
 
 | Original Funder | Max Loan | Eligible Goods |
 |----------------|---------|---------------|
-| Westpac / CFAL | $500k | All (A, B & C) |
+| Westpac | $500k | All (A, B & C) |
 | Other financier (inspection required) | $250k | A & B (refer to DriveXpress) |
+
+Verified against the source table (Westpac Equipment Finance Key Policies): the $500k row is listed under "Westpac" only — CFAL is never mentioned in that table. There is currently no evidence that CFAL-originated contracts qualify for the same $500k cap; treat this as Westpac-originated only until an official CFAL rollover policy is located.
 
 **Rollover criteria:**
 - Borrower must have 12 months current WEF history OR finalised WEF contract within last 12 months
@@ -297,20 +299,17 @@ CFAL operates a Medical specialist channel for healthcare professionals.
 **asset_class:** MV_NEW, MV_USED, LCV, PRIMARY
 **doc_type:** ALL
 **loan_size_band:** ALL
-**answerable_questions:** What is required to settle with CFAL? When is a Certificate of Currency needed and what is the fleet-policy exemption? When is a PPSR search not required?
-**confidence:** high
-**last_verified:** 2026-06-28
+**answerable_questions:** What is required to settle with CFAL? When is a Certificate of Currency needed and what is the fleet-policy exemption? When is a PPSR search not required? What platform is used to submit CFAL settlement documents?
+**confidence:** medium
+**last_verified:** 2026-07-31
 **policy_fields:** PPSR
-**trigger_words:** settlement CFAL, PPSR CFAL, insurance CFAL, Certificate of Currency CFAL, CoC fleet CFAL, VIN CFAL, settle loan CFAL, what do I need to settle CFAL
+**trigger_words:** settlement CFAL, PPSR CFAL, insurance CFAL, Certificate of Currency CFAL, CoC fleet CFAL, VIN CFAL, settle loan CFAL, what do I need to settle CFAL, DriveOnline
 
 **Content:**
 
-**Standard settlement requirements:**
-- All payout documents submitted via QuickSell / DriveOnline
-- Completion of biometrics (link provided in approval confirmation)
-- Asset must be insured with CFAL / Westpac noted as an interested party; insurance details loaded in system
-- Tax invoice or private sale agreement
-- Fully signed loan documents (ink signature or e-sign)
+Payout documents are submitted via **DriveOnline** (CFAL/Westpac's own settlement platform — distinct from BFS's QuickSell, which is a separate lender's system and does not apply here). Asset must be insured with CFAL/Westpac noted as an interested party; insurance details loaded in DriveOnline.
+
+We don't currently have a source document for a fuller CFAL/Westpac settlement checklist beyond this — a "QuickSell / biometrics / tax invoice / fully signed documents" list previously in this chunk was found to be copied from BFS's own documentation requirements almost word-for-word and has been removed pending an actual CFAL/Westpac source.
 
 **Certificate of Currency (CoC) — assets above $150k:**
 - CoC required to confirm insurance details and must note the lender's interest
@@ -333,11 +332,11 @@ For motor vehicles with a VIN in buyback or private sale transactions:
 **asset_class:** ALL
 **doc_type:** ALL
 **loan_size_band:** ALL
-**answerable_questions:** Is this asset or structure excluded by CFAL? Are private sales allowed for heavy equipment? What geographic restrictions apply? What if DriveXpress criteria aren't met?
+**answerable_questions:** Is this asset or structure excluded by CFAL? Are private sales allowed for heavy equipment? What if DriveXpress criteria aren't met?
 **confidence:** high
-**last_verified:** 2026-06-28
+**last_verified:** 2026-07-31
 **policy_fields:** ASSET_AGE_MAX
-**trigger_words:** excluded CFAL, not eligible CFAL, novated lease CFAL, sale hireback CFAL, charter bus CFAL, minus equity CFAL, private sale restriction CFAL, very remote CFAL, repairable writeoff CFAL, exotic car CFAL
+**trigger_words:** excluded CFAL, not eligible CFAL, novated lease CFAL, sale hireback CFAL, charter bus CFAL, minus equity CFAL, private sale restriction CFAL, exotic car CFAL
 
 **Content:**
 
@@ -348,12 +347,9 @@ For motor vehicles with a VIN in buyback or private sale transactions:
 **Excluded vehicles/assets:**
 - Taxis and hire cars
 - Imported and exotic cars
-- Repairable write-offs
 - Charter buses (Replacement Category C accepts government/school/local route only)
 
-**Geographic exclusions:**
-- "Very Remote" areas per ABS 2021 Remoteness Area classification: not available
-- "Remote" areas: non-asset backed applications require 20% deposit
+Note: "Repairable write-offs" and a "Remote / Very Remote" geographic exclusion previously appeared in this chunk but have been removed — verified as belonging to Resimac's Commercial Product Guide and BFS's Product Guide respectively, not CFAL. No CFAL source document currently available supports either as CFAL policy.
 
 **Private sale restrictions:**
 - Private sales for motor vehicles and light commercial vehicles < 4.5T GVM only

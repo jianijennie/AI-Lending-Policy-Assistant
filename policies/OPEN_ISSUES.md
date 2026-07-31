@@ -17,18 +17,20 @@ Two kinds of items below:
 
 ## A. Unresolved in our own chunks (need source material)
 
-### CFAL
+### CFAL — RESOLVED 2026-07-31, thanks to your `policies/rectification for chunking/Part A.md`
 
-1. **"Repairable write-offs" exclusion** (`data/chunks/cfal_chunks_v2.md`, `cfal_exclusions` chunk) — listed as an excluded vehicle/asset type, but this phrase doesn't appear anywhere in any of our 5 CFAL/Westpac source PDFs. Might be a real CFAL policy from a document we don't have, or might be an unsupported addition — we can't tell which.
-2. **Geographic exclusions — "Remote" / "Very Remote" areas** (same chunk) — a rule requiring 20% deposit in "Remote" areas (ABS 2021 classification) and unavailability in "Very Remote" areas. Same situation: not found in any source PDF we have. (Your Exceptions Catalog doesn't have this either — we checked.)
-3. **"Standard settlement requirements" bullets** (`cfal_settlement` chunk) — QuickSell/DriveOnline payout docs, biometrics, tax invoice, fully-signed loan documents. `UPDATEDEquipmentFinanceSettlementRequirements.pdf` only covers two specific 2025 changes (PPSR simplification, CoC fleet exemption) — none of these bullets are in it or anywhere else we have.
-4. **Rollover "Original Funder" attribution** (`cfal_rollover_policy` chunk) — our chunk lists the $500k/all-goods rollover cap as available to "Westpac / CFAL" originated contracts, but the actual source table (Key Financial Policies) only shows "Westpac" in that cell. We don't know whether CFAL-originated rollovers actually get the same cap, or whether this was an assumption by whoever wrote the chunk originally.
+All four CFAL items previously listed here have been traced and fixed:
+
+1. ~~"Repairable write-offs" exclusion~~ — confirmed as **Resimac** policy (Commercial Product Guide, p.7), not CFAL. Removed from `cfal_exclusions`.
+2. ~~Geographic "Remote" / "Very Remote" rules~~ — confirmed as **BFS** policy (BFS Product Guide). Removed from `cfal_exclusions`; already correctly present in `bfs_chunks_v2.md` with the accurate "non-asset-backed" nuance (not "all Remote areas").
+3. ~~"Standard settlement requirements" (QuickSell/biometrics/etc.)~~ — confirmed as **BFS** documentation requirements, mixed up with CFAL/Westpac's actual platform (DriveOnline). Removed from `cfal_settlement`; replaced with a short accurate note pointing to DriveOnline, since we still don't have a full CFAL/Westpac settlement checklist source.
+4. **Rollover "Westpac / CFAL" attribution** — confirmed the source table only lists Westpac. `cfal_rollover_policy` now says Westpac-originated only, with a note that CFAL eligibility for the same cap is unconfirmed.
+
+Re-ingested and live. Nice catch tracing all four back to their real source documents.
 
 ### Metro
 
 5. **MetroEco EV loan cap conflict** — the MetroEco product booklet says **$91,387**; the newer Commercial Rate Sheet (effective 20/07/2026) says **$91,661**. Both are real, dated source documents; we don't know which is current. Flagged (not resolved) in both `metro_interest_rates` and `metro_eco` chunks. Your new Metro reference doc has both figures too, but doesn't flag them as conflicting — worth fixing there either way (see B.7 below).
-
-If any of these five turn out to be genuinely unsupported (not just missing from our document set), the right fix is probably to just remove the claim rather than keep it — but we didn't want to delete something that might be true just because we personally couldn't verify it.
 
 ---
 
