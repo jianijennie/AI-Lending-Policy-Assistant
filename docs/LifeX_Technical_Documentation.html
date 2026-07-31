@@ -1,0 +1,570 @@
+<!doctype html>
+<title>LifeX Policy Assistant — Technical Documentation</title>
+<meta name="description" content="System architecture, module-by-module code reference, and model selection rationale for the LifeX Policy Assistant RAG pipeline.">
+<style>
+:root {
+  --bg: #FAFAF9; --surf: #FFFFFF; --surf2: #F3F1EC;
+  --ink: #1B2130; --ink2: #4B5468; --ink3: #8891A0;
+  --rule: #E6E3DB; --rule2: #D6D2C6;
+  --navy: #0F1F3D; --navy2: #16294A;
+  --accent: #6E2FBE; --accent2: #8B4FD9; --accent-lt: #F1E9FB;
+  --code-bg: #10162B; --code-ink: #D8DEEF; --code-accent: #9F7FE8; --code-str: #7FD8A8; --code-num: #E8B563;
+  --good: #0A6E40; --good-lt: #DEF3E6;
+  --warn: #92400E; --warn-lt: #FBEBCF;
+  --bad: #A3231F; --bad-lt: #FBE3E1;
+  --r: 10px; --r-sm: 6px;
+  --sh: 0 1px 2px rgba(20,20,10,.05), 0 0 0 1px rgba(20,20,10,.04);
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14161C; --surf: #1B1E27; --surf2: #21242F;
+    --ink: #E7E7EA; --ink2: #A9ADBB; --ink3: #767C8C;
+    --rule: #2C303B; --rule2: #383D4A;
+    --navy: #0B1526; --navy2: #101E38;
+    --accent: #B48CF0; --accent2: #C7A6F5; --accent-lt: #241C38;
+    --code-bg: #0B0E1A; --code-ink: #D8DEEF; --code-accent: #B598F2; --code-str: #8FE8B4; --code-num: #F0C578;
+    --good: #4ADE95; --good-lt: #10261B;
+    --warn: #F0B457; --warn-lt: #2E2210;
+    --bad: #F0857F; --bad-lt: #2E1614;
+    --sh: 0 1px 2px rgba(0,0,0,.3), 0 0 0 1px rgba(255,255,255,.05);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14161C; --surf: #1B1E27; --surf2: #21242F;
+  --ink: #E7E7EA; --ink2: #A9ADBB; --ink3: #767C8C;
+  --rule: #2C303B; --rule2: #383D4A;
+  --navy: #0B1526; --navy2: #101E38;
+  --accent: #B48CF0; --accent2: #C7A6F5; --accent-lt: #241C38;
+  --code-bg: #0B0E1A; --code-ink: #D8DEEF; --code-accent: #B598F2; --code-str: #8FE8B4; --code-num: #F0C578;
+  --good: #4ADE95; --good-lt: #10261B;
+  --warn: #F0B457; --warn-lt: #2E2210;
+  --bad: #F0857F; --bad-lt: #2E1614;
+  --sh: 0 1px 2px rgba(0,0,0,.3), 0 0 0 1px rgba(255,255,255,.05);
+}
+:root[data-theme="light"] {
+  --bg: #FAFAF9; --surf: #FFFFFF; --surf2: #F3F1EC;
+  --ink: #1B2130; --ink2: #4B5468; --ink3: #8891A0;
+  --rule: #E6E3DB; --rule2: #D6D2C6;
+  --navy: #0F1F3D; --navy2: #16294A;
+  --accent: #6E2FBE; --accent2: #8B4FD9; --accent-lt: #F1E9FB;
+  --code-bg: #10162B; --code-ink: #D8DEEF; --code-accent: #9F7FE8; --code-str: #7FD8A8; --code-num: #E8B563;
+  --good: #0A6E40; --good-lt: #DEF3E6;
+  --warn: #92400E; --warn-lt: #FBEBCF;
+  --bad: #A3231F; --bad-lt: #FBE3E1;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--font-ui);background:var(--bg);color:var(--ink);font-size:15px;line-height:1.62;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--font-ui);color:var(--ink);text-wrap:balance;line-height:1.25}
+a{color:var(--accent)}
+code,pre{font-family:var(--font-mono)}
+.shell{display:flex;max-width:1360px;margin:0 auto}
+
+/* ── Sidebar ── */
+.sidebar{width:270px;min-width:270px;position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--navy);padding:28px 0 40px;color:#fff}
+.sidebar::-webkit-scrollbar{width:6px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:3px}
+.sb-brand{padding:0 24px 20px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:8px}
+.sb-brand-top{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+.sb-mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#A855F7);flex-shrink:0;box-shadow:0 2px 8px rgba(123,47,190,.4)}
+.sb-word{font-size:16px;font-weight:800;letter-spacing:-.02em;color:#fff}
+.sb-word span{color:#C084FC}
+.sb-sub{font-size:11.5px;color:rgba(255,255,255,.4);line-height:1.5}
+.sb-nav{padding:8px 12px}
+.sb-group{margin-bottom:4px}
+.sb-group-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.32);padding:14px 12px 6px}
+.sb-link{display:block;padding:6px 12px;font-size:13px;color:rgba(255,255,255,.62);text-decoration:none;border-radius:7px;border-left:2px solid transparent}
+.sb-link:hover{background:rgba(255,255,255,.06);color:#fff}
+.sb-link.sub{padding-left:24px;font-size:12.3px;color:rgba(255,255,255,.44)}
+
+/* ── Main ── */
+.main{flex:1;min-width:0;padding:48px 56px 100px;max-width:900px}
+.doc-header{margin-bottom:44px}
+.eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+h1.title{font-size:34px;font-weight:800;letter-spacing:-.02em;margin:0 0 12px}
+.doc-sub{font-size:16px;color:var(--ink2);max-width:640px;margin:0 0 18px}
+.meta-row{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--ink3)}
+.meta-row b{color:var(--ink2)}
+
+section{margin-bottom:56px;scroll-margin-top:20px}
+section > h2{font-size:23px;font-weight:800;letter-spacing:-.01em;margin:0 0 6px;padding-top:8px;border-top:1px solid var(--rule)}
+section > h2:first-child{border-top:none;padding-top:0}
+.section-dek{font-size:14.5px;color:var(--ink2);margin:0 0 22px;max-width:620px}
+h3{font-size:17px;font-weight:750;margin:30px 0 10px}
+h3 .filepath{font-family:var(--font-mono);font-size:14px;font-weight:500;color:var(--accent);background:var(--accent-lt);padding:2px 8px;border-radius:5px;margin-left:8px}
+h4{font-size:14px;font-weight:750;margin:20px 0 8px;color:var(--ink2)}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:22px}
+li{margin-bottom:6px}
+strong{font-weight:650;color:var(--ink)}
+
+.card{background:var(--surf);border:1px solid var(--rule);border-radius:var(--r);padding:18px 20px;margin:16px 0;box-shadow:var(--sh)}
+.card.note{border-left:3px solid var(--accent)}
+.card.warn{border-left:3px solid var(--warn);background:var(--warn-lt)}
+.card.good{border-left:3px solid var(--good);background:var(--good-lt)}
+
+pre.code{background:var(--code-bg);color:var(--code-ink);border-radius:var(--r-sm);padding:16px 18px;overflow-x:auto;font-size:12.6px;line-height:1.62;margin:14px 0}
+pre.code .c{color:#7A8296;font-style:italic}
+pre.code .k{color:var(--code-accent)}
+pre.code .s{color:var(--code-str)}
+pre.code .n{color:var(--code-num)}
+code.inline{background:var(--surf2);border:1px solid var(--rule);border-radius:4px;padding:1px 6px;font-size:.87em;color:var(--accent)}
+
+.tbl-wrap{overflow-x:auto;margin:16px 0;border:1px solid var(--rule);border-radius:var(--r-sm)}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:560px}
+th{background:var(--surf2);text-align:left;font-weight:700;padding:9px 14px;border-bottom:1px solid var(--rule);white-space:nowrap;font-size:11.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink2)}
+td{padding:9px 14px;border-bottom:1px solid var(--rule);vertical-align:top;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:none}
+td.num,th.num{text-align:right}
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:650}
+.pill.good{background:var(--good-lt);color:var(--good)}
+.pill.warn{background:var(--warn-lt);color:var(--warn)}
+.pill.bad{background:var(--bad-lt);color:var(--bad)}
+.pill.neutral{background:var(--surf2);color:var(--ink2)}
+
+.flow{display:flex;flex-wrap:wrap;gap:0;align-items:center;margin:20px 0}
+.flow-step{background:var(--surf);border:1px solid var(--rule);border-radius:var(--r-sm);padding:11px 14px;font-size:12.5px;font-weight:600;box-shadow:var(--sh);text-align:center;min-width:110px}
+.flow-arrow{color:var(--ink3);padding:0 8px;font-size:15px}
+.flow-step.accent{border-color:var(--accent);color:var(--accent);background:var(--accent-lt)}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:18px 0}
+.stat{background:var(--surf);border:1px solid var(--rule);border-radius:var(--r-sm);padding:14px 16px;box-shadow:var(--sh)}
+.stat-num{font-size:26px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.1}
+.stat-label{font-size:11.5px;color:var(--ink3);margin-top:3px}
+
+.func-list{list-style:none;padding:0;margin:14px 0}
+.func-list li{margin-bottom:10px;padding-left:0}
+.func-list code.fn{font-family:var(--font-mono);font-weight:700;color:var(--ink);background:var(--surf2);border:1px solid var(--rule);border-radius:5px;padding:2px 7px;font-size:12.8px}
+.func-list .fn-desc{display:block;margin-top:3px;color:var(--ink2);font-size:13.3px;padding-left:2px}
+
+.toc-jump{font-size:12.5px;color:var(--ink3);margin-bottom:24px}
+
+@media (max-width: 880px){
+  .shell{flex-direction:column}
+  .sidebar{position:relative;height:auto;width:100%;min-width:0}
+  .main{padding:32px 20px 80px;max-width:100%}
+}
+</style>
+
+<div class="shell">
+<nav class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-brand-top">
+      <div class="sb-mark"></div>
+      <div class="sb-word">LifeX<span>·</span>Docs</div>
+    </div>
+    <div class="sb-sub">Policy Assistant — technical reference</div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-group">
+      <div class="sb-group-label">Overview</div>
+      <a class="sb-link" href="#architecture">System architecture</a>
+      <a class="sb-link" href="#chunk-schema">Chunk schema</a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-label">Core pipeline</div>
+      <a class="sb-link" href="#config">config.py</a>
+      <a class="sb-link" href="#ingest">ingest.py</a>
+      <a class="sb-link" href="#query">query.py</a>
+      <a class="sb-link sub" href="#query-lenders">— lender detection</a>
+      <a class="sb-link sub" href="#query-retrieval">— retrieval</a>
+      <a class="sb-link sub" href="#query-prompt">— prompt & guardrails</a>
+      <a class="sb-link sub" href="#query-helpers">— narrow LLM helpers</a>
+      <a class="sb-link" href="#api">api.py</a>
+      <a class="sb-link" href="#answer-library">answer_library.py</a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-label">Automation & tools</div>
+      <a class="sb-link" href="#draft-chunks">draft_chunks.py</a>
+      <a class="sb-link" href="#table-geometry">table_geometry.py</a>
+      <a class="sb-link" href="#testing">tests/ infrastructure</a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-label">Model selection</div>
+      <a class="sb-link" href="#models-embedding">Embedding model</a>
+      <a class="sb-link" href="#models-answering">Answering model journey</a>
+      <a class="sb-link" href="#models-gpt55">Why gpt-5.5</a>
+      <a class="sb-link" href="#models-cost">Speed & cost analysis</a>
+      <a class="sb-link" href="#models-reasoning">Reasoning-effort tuning</a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-label">Results</div>
+      <a class="sb-link" href="#eval-results">Evaluation results</a>
+      <a class="sb-link" href="#principles">Engineering principles</a>
+    </div>
+  </div>
+</nav>
+
+<main class="main">
+
+<div class="doc-header">
+  <div class="eyebrow">Project CMAP 2026 · Internal Reference</div>
+  <h1 class="title">LifeX Policy Assistant — Technical Documentation</h1>
+  <p class="doc-sub">How the retrieval-augmented lending-policy assistant is built: every module, why it's shaped the way it is, and the evidence behind each model choice.</p>
+  <div class="meta-row">
+    <span><b>Panel:</b> 7 lenders (Westpac, BFS, Resimac, CFAL, Angle, Flexi, Metro)</span>
+    <span><b>Stack:</b> FastAPI · LlamaIndex · ChromaDB · OpenAI</span>
+    <span><b>Last updated:</b> 2026-07-31</span>
+  </div>
+</div>
+
+<section id="architecture">
+  <h2>System architecture</h2>
+  <p class="section-dek">Five moving parts: a hand-curated (and now partly automated) knowledge base, a vector store, a retrieval + prompting pipeline, a FastAPI layer, and a self-correcting answer library sitting on top.</p>
+
+  <div class="flow">
+    <div class="flow-step">Source PDFs<br><span style="font-weight:400;color:var(--ink3)">data/documents/</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step accent">Chunk files<br><span style="font-weight:400">data/chunks/*.md</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">ingest.py<br><span style="font-weight:400;color:var(--ink3)">embed + store</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">ChromaDB<br><span style="font-weight:400;color:var(--ink3)">chroma_db/</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step accent">query.py<br><span style="font-weight:400">retrieve + prompt</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">api.py<br><span style="font-weight:400;color:var(--ink3)">FastAPI</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Frontend<br><span style="font-weight:400;color:var(--ink3)">broker chat UI</span></div>
+  </div>
+
+  <p>Two more subsystems attach to that spine:</p>
+  <ul>
+    <li><strong>Answer library</strong> (<code class="inline">answer_library.py</code>) — a persisted, embedding-matched store of human-reviewed and chat-corrected answers that gets checked <em>before</em> the LLM runs, and is kept in sync with chunk edits automatically.</li>
+    <li><strong>Automated chunk-drafting pipeline</strong> (<code class="inline">scripts/draft_chunks.py</code> + <code class="inline">table_geometry.py</code>, wired into the API as <code class="inline">/chunks/draft</code> and <code class="inline">/chunks/promote</code>) — upload a lender PDF, get chunks drafted by a vision model grounded in deterministic table geometry, review the diff, approve some or all of it.</li>
+  </ul>
+
+  <div class="card note">
+    <strong>Design principle that shows up everywhere in this codebase:</strong> nothing auto-promotes into the live knowledge base without an explicit human (or, for in-chat corrections, the broker themselves) approval step. Chunk drafts land in <code class="inline">data/chunks_draft/</code>, never <code class="inline">data/chunks/</code>, until <code class="inline">/chunks/promote</code> is called. The one deliberate exception is chat corrections (see <a href="#answer-library">answer_library.py</a>), which go live immediately by explicit product decision.
+  </div>
+</section>
+
+<section id="chunk-schema">
+  <h2>Chunk schema</h2>
+  <p class="section-dek">Every fact the assistant can cite lives in <code class="inline">data/chunks/*.md</code> — one markdown file per lender (some split across "_v2" files from earlier corrections), each containing several chunks separated by a line containing only <code class="inline">---</code>.</p>
+  <pre class="code"><span class="c">## chunk_id: bfs_customer_tiers</span>
+<span class="k">**source:**</span> bfs
+<span class="k">**topic:**</span> customer_tiers
+<span class="k">**intent:**</span> ELIGIBILITY
+<span class="k">**lenders:**</span> BFS
+<span class="k">**borrower_profile:**</span> CONSUMER, COMMERCIAL, ...
+<span class="k">**asset_class:**</span> MV_NEW, MV_USED, LCV, ...
+<span class="k">**doc_type:**</span> ALL
+<span class="k">**loan_size_band:**</span> ALL
+<span class="k">**answerable_questions:**</span> Which BFS tier does my Experian score qualify for?
+<span class="k">**confidence:**</span> high
+<span class="k">**last_verified:**</span> 2026-07-29
+<span class="k">**trigger_words:**</span> customer tier, Ultra Prime, Tier 1, ...
+
+<span class="k">**Content:**</span>
+
+BFS uses a two-group system (PRIME and PLUS) based on Experian CCR score...</pre>
+  <p><code class="inline">src/ingest.py::parse_chunk_file()</code> is the one place that understands this format — it validates <code class="inline">lenders</code> against <code class="inline">VALID_LENDERS</code> and <code class="inline">intent</code> against <code class="inline">VALID_INTENTS</code> at ingest time (a typo'd value doesn't error, it just silently makes that chunk unfindable by lender/intent-scoped search), and builds the metadata dict every retrieval filter runs against.</p>
+  <p>The <code class="inline">answerable_questions</code> and <code class="inline">trigger_words</code> fields aren't just documentation — they get prepended to the chunk's text before embedding (<code class="inline">enriched_text</code> in <code class="inline">parse_chunk_file</code>), so the embedding model learns to associate broker phrasing with the right chunk even when the chunk's own prose doesn't use those words.</p>
+</section>
+
+<section id="config">
+  <h2><code>src/config.py</code></h2>
+  <p class="section-dek">Single source of truth for every model, path, and tuning constant. Every value below has a comment explaining <em>why</em> it's set the way it is — that history is as important as the value itself.</p>
+
+  <div class="tbl-wrap"><table>
+    <tr><th>Constant</th><th>Value</th><th>Purpose</th></tr>
+    <tr><td><code class="inline">LLM_MODEL</code></td><td>gpt-5.5</td><td>Main answering model — generates the actual broker-facing response</td></tr>
+    <tr><td><code class="inline">RESOLVER_MODEL</code></td><td>gpt-4o-mini</td><td>Every narrow classifier call (follow-ups, corrections, fan-out routing, staleness checks)</td></tr>
+    <tr><td><code class="inline">EMBEDDING_MODEL</code></td><td>BAAI/bge-base-en-v1.5</td><td>Retrieval embeddings (local, HuggingFace, no API cost)</td></tr>
+    <tr><td><code class="inline">REASONING_EFFORT</code></td><td>low</td><td>gpt-5-family reasoning depth when a lender IS named</td></tr>
+    <tr><td><code class="inline">FANOUT_REASONING_EFFORT</code></td><td>none</td><td>Reasoning depth for no-lender-detected, mostly yes/no fan-out questions</td></tr>
+    <tr><td><code class="inline">TOP_K</code></td><td>5</td><td>Legacy retriever default (superseded by the "retrieve everything per lender" strategy — see <a href="#query-retrieval">retrieval</a>)</td></tr>
+    <tr><td><code class="inline">CHUNK_SIZE</code> / <code class="inline">CHUNK_OVERLAP</code></td><td>4096 / 100</td><td>SentenceSplitter safety net — sized above the longest real chunk so it never actually re-splits one</td></tr>
+    <tr><td><code class="inline">QUERY_CACHE_ENABLED</code></td><td>False</td><td>Raw semantic cache of every LLM answer — off pending similarity-threshold recalibration for bge-base</td></tr>
+    <tr><td><code class="inline">ANSWER_LIBRARY_ENABLED</code></td><td>True</td><td>Human-reviewed/corrected answers — trusted enough to serve automatically (see <a href="#answer-library">answer_library.py</a>)</td></tr>
+    <tr><td><code class="inline">QUERY_CACHE_SIMILARITY_THRESHOLD</code> / <code class="inline">ANSWER_LIBRARY_SIMILARITY_THRESHOLD</code></td><td>0.97</td><td>Deliberately conservative — bge-family embeddings don't reliably separate genuine paraphrases from same-wording-different-detail questions ("Tier 2" vs "Tier 3") below this band</td></tr>
+  </table></div>
+
+  <div class="card warn">
+    <strong>Why the embedding threshold is so high:</strong> a wrong cached/corrected answer served with confidence is a worse failure than a missed cache hit. The 0.90–0.96 similarity band was found to conflate genuine paraphrases with detail-changing near-duplicates for this domain's short, structurally similar questions — this trades recall for precision on purpose.
+  </div>
+</section>
+
+<section id="ingest">
+  <h2><code>src/ingest.py</code></h2>
+  <p class="section-dek">Turns <code class="inline">data/chunks/*.md</code> into embedded, queryable vectors in ChromaDB. Pure and deterministic — no LLM calls, no network dependency beyond downloading the embedding model once.</p>
+
+  <ul class="func-list">
+    <li><code class="fn">parse_chunk_file(filepath, warnings=None)</code><span class="fn-desc">Splits one file on <code class="inline">\n---\n</code>, extracts every <code class="inline">**field:**</code>, validates lender/intent against the known-good sets, and returns a list of LlamaIndex <code class="inline">Document</code> objects with <code class="inline">id_=chunk_id</code>. Populates <code class="inline">warnings</code> instead of raising — a malformed chunk gets flagged loudly rather than silently vanishing.</span></li>
+    <li><code class="fn">get_all_chunk_blocks()</code><span class="fn-desc">Flat <code class="inline">{chunk_id: raw_markdown_block}</code> across every chunk file — the exact original text, not the embedding-ready enriched version. Added for the answer library's staleness snapshots (see <a href="#answer-library">answer_library.py</a>).</span></li>
+    <li><code class="fn">ingest_chunks()</code><span class="fn-desc">The full rebuild: parses every file, checks for duplicate chunk_ids across files (a real failure mode — ChromaDB just lets the second one silently overwrite the first), deletes and recreates the <code class="inline">lifex_policies</code> collection, embeds everything through a <code class="inline">SentenceSplitter</code> safety net, and prints a verification sample. Run via <code class="inline">python -m src.ingest</code> after any manual chunk edit, or automatically inside <code class="inline">/chunks/promote</code>.</span></li>
+  </ul>
+
+  <div class="card">
+    <strong>A subtlety that matters elsewhere in the codebase:</strong> ChromaDB's own primary IDs are auto-generated per-node UUIDs from the <code class="inline">SentenceSplitter</code> transformation, not the chunk_id — <code class="inline">chunk_id</code> only survives as a metadata field. Looking a chunk up by its human-readable ID means filtering on <code class="inline">where={"chunk_id": ...}</code>, never <code class="inline">collection.get(ids=[chunk_id])</code>. This tripped up an early version of the answer-library source lookup in <code class="inline">api.py</code> (caught and fixed during testing — see that section).
+  </div>
+</section>
+
+<section id="query">
+  <h2><code>src/query.py</code></h2>
+  <p class="section-dek">The actual RAG pipeline. Everything downstream of "a broker typed a question" happens here: understanding what's being asked, deciding what to retrieve, building the prompt, and calling the answering model.</p>
+
+  <h3 id="query-lenders">Lender detection</h3>
+  <p><code class="fn">detect_lenders(question)</code> returns <strong>every</strong> lender a question names, not just the first match — a two-tier keyword system (canonical name, then product/brand variants like "flexicommercial" or "metroeco"), unioned across lenders rather than short-circuiting on the first hit. A single-typo fuzzy fallback (Levenshtein distance ≤ 1) only kicks in when nothing matches at all, and is deliberately skipped for short codes like BFS/CFAL where a 1-edit match collides with ordinary words.</p>
+  <div class="card warn">
+    <strong>Bug this replaced:</strong> an earlier version returned as soon as any lender matched tier 1, which meant naming one lender by its canonical name silently suppressed a second lender mentioned only by product name. Confirmed via the 111-question eval — "Cross-lender comparison (2)" was the worst-scoring category specifically because of this.
+  </div>
+
+  <h3 id="query-retrieval">Retrieval strategy</h3>
+  <p><code class="fn">retrieve_nodes(question, lenders, log)</code> retrieves <strong>every</strong> chunk for each relevant lender (up to <code class="inline">ALL_LENDER_CHUNKS_K = 20</code> per lender — comfortably above any single lender's real chunk count of 8–10), letting embedding scores decide only the <em>display order</em>, never whether a chunk is included at all.</p>
+  <p>This replaced an earlier union/rerank/fan-out setup (including a cross-encoder reranker) built around a tight top-K cutoff. Its failure mode: a correct chunk ranked one place past the cutoff simply never reached the model — unrecoverable no matter how good the prompt was. Since each lender's whole chunk pool costs only ~5–6k tokens, including everything makes a retrieval miss for a scoped lender structurally impossible, and made the reranker (load time, ~1GB RAM, its own known demote-a-correct-chunk bug) unnecessary.</p>
+
+  <h3 id="query-prompt">Prompt construction & guardrails</h3>
+  <p><code class="fn">query_policies(question, verbose, history)</code> is the orchestrator. In order:</p>
+  <ol>
+    <li>Resolves conversational follow-ups into a standalone question (<code class="inline">_resolve_followup</code>).</li>
+    <li>Detects lenders, retrieves nodes.</li>
+    <li>Builds context — a flat list for a single lender, or grouped under per-lender headings for multiple (a flat mixed list measurably caused the model to skip lenders when enumerating a panel-wide answer).</li>
+    <li>Runs the profile-threshold check (<code class="inline">_check_profile_threshold</code>) and injects a note if relevant.</li>
+    <li>Assembles the full prompt: verdict-first/brevity instructions, a lender enumeration checklist (only for multi-lender questions), known cross-lender pitfalls, conversation history, and the retrieved excerpts.</li>
+    <li>Picks reasoning effort (<code class="inline">REASONING_EFFORT</code> if a lender is named, else a per-question classifier — see <a href="#models-reasoning">reasoning-effort tuning</a>) and calls the answering model.</li>
+  </ol>
+  <p>The prompt itself encodes a long list of hard-won, specific rules rather than generic instructions — e.g. "work the calculation breakdown before stating a headline number," "a hard exclusion can't be satisfied by a bigger deposit," "don't apply lender A's category rule to lender B just because the names are similar." Every one of these traces back to a confirmed wrong-answer bug in this project's own testing history; none are hypothetical.</p>
+
+  <h3 id="query-helpers">Narrow LLM helpers</h3>
+  <p>A recurring pattern in this file: rather than growing one giant prompt to handle every edge case, narrow, single-purpose classifier calls (all on <code class="inline">RESOLVER_MODEL</code>, cheap and fast) handle one well-defined judgment each.</p>
+  <ul class="func-list">
+    <li><code class="fn">_resolve_followup(question, history)</code><span class="fn-desc">Rewrites a follow-up ("what about westpac?", "give me more detail") into a standalone question, and flags whether the broker wants elaboration on the same answer (which turns brevity instructions <em>off</em> for that one turn) vs. a genuinely new question.</span></li>
+    <li><code class="fn">_classify_fanout_effort(question)</code><span class="fn-desc">For no-lender-detected questions, decides whether this specific one needs real cross-lender ranking (higher reasoning effort) or is a plain yes/no eligibility scan (cheapest tier). Built after finding that a blanket cheap tier missed constraint checks on genuine ranking questions.</span></li>
+    <li><code class="fn">_check_profile_threshold(question, context)</code><span class="fn-desc">General-purpose replacement for one-off "check field X against threshold Y" prompt bullets — looks for any customer-profile threshold table (ABN age, credit score, deposit...) and whether the question's wording places the customer against it.</span></li>
+    <li><code class="fn">detect_and_apply_correction(question, history)</code><span class="fn-desc">Detects whether a broker's message in chat is correcting the previous answer (not a new question, not "are you sure?" skepticism with no stated fact) — see <a href="#answer-library">answer_library.py</a> for the full story and the fabrication bug this had to be re-engineered around.</span></li>
+    <li><code class="fn">refresh_answer_with_new_chunk(question, current_answer, old_chunk_text, new_chunk_text)</code><span class="fn-desc">Given a saved answer and its chunk's old/new content, decides: unaffected, needs a specific factual update, or too ambiguous to auto-apply. Powers the answer library's self-healing.</span></li>
+  </ul>
+  <p>All narrow helpers share <code class="fn">_chat_completion(model, prompt, max_output_tokens, json_mode, reasoning_effort)</code> — the one place that knows the GPT-5 family's different calling convention (<code class="inline">max_completion_tokens</code>/<code class="inline">reasoning_effort</code>/<code class="inline">verbosity</code> vs. <code class="inline">max_tokens</code>/<code class="inline">temperature</code>), retries rate limits with the server-suggested backoff, and retries once (with a doubled token cap) if a GPT-5 model burns its entire budget on internal reasoning and returns an empty visible answer.</p>
+</section>
+
+<section id="api">
+  <h2><code>src/api.py</code></h2>
+  <p class="section-dek">FastAPI layer. Thin where possible — most real logic lives in <code class="inline">query.py</code>/<code class="inline">answer_library.py</code>/<code class="inline">scripts/draft_chunks.py</code> — but owns request/response shapes, the promotion workflow's file-merge logic, and orchestrating the pieces together.</p>
+
+  <div class="tbl-wrap"><table>
+    <tr><th>Endpoint</th><th>Purpose</th></tr>
+    <tr><td><code class="inline">POST /query</code></td><td>Main entry point. Checks (in order): is this a chat correction? → is there a matching answer-library entry? → is there a query-cache hit (disabled)? → run the full pipeline.</td></tr>
+    <tr><td><code class="inline">GET /health</code></td><td>Status + live chunk count, for the frontend's connectivity check.</td></tr>
+    <tr><td><code class="inline">POST /answer-library/save</code></td><td>Same contract the frontend's Review tab already called — now additionally embeds the question and snapshots chunk content for staleness tracking.</td></tr>
+    <tr><td><code class="inline">POST /answer-library/refresh</code></td><td>Manually re-check every saved answer against current chunk content — for the "edited chunks by hand, didn't go through /chunks/promote" path.</td></tr>
+    <tr><td><code class="inline">POST /chunks/draft</code></td><td>Upload a PDF + lender code → auto-drafted chunk markdown, diffed against the current live version. Never touches <code class="inline">data/chunks/</code>.</td></tr>
+    <tr><td><code class="inline">POST /chunks/promote</code></td><td>Approve some or all drafted chunk_ids → upserts into the lender's live file, re-ingests, reloads the live index, and cascades an answer-library staleness check scoped to exactly the chunks that changed.</td></tr>
+  </table></div>
+
+  <h4>The promotion merge (<code class="fn">_split_raw_chunks</code> / <code class="fn">_render_chunk_file</code>)</h4>
+  <p>Promotion is an <strong>upsert by chunk_id</strong>, not a file overwrite — it parses both the draft and the live file into <code class="inline">{chunk_id: raw_block}</code> maps, replaces or appends only the selected chunk_ids, and re-renders the file. Untouched chunks in that file are preserved byte-for-byte. The merged result is validated (<code class="inline">parse_chunk_file</code>) against a temp file <em>before</em> it ever overwrites the live one — a bad promotion aborts with nothing changed, rather than leaving a broken production chunk file.</p>
+
+  <h4>Why <code class="fn">reload_index()</code> exists</h4>
+  <p><code class="inline">query.py</code> builds its Chroma collection/index once at process start. <code class="inline">ingest_chunks()</code> deletes and recreates that collection through its <em>own</em> separate client — so without an explicit reload, the already-running process's in-memory objects would keep referencing a now-deleted collection, and every <code class="inline">/query</code> call after a promotion would break or silently serve stale data. <code class="inline">reload_index()</code> (in <code class="inline">query.py</code>) re-points every module-level global at the freshly rebuilt collection; <code class="inline">/chunks/promote</code> calls it immediately after re-ingesting.</p>
+</section>
+
+<section id="answer-library">
+  <h2><code>src/answer_library.py</code> — self-correcting answers</h2>
+  <p class="section-dek">Closes a real gap: the frontend's Review tab already let a reviewer edit and approve an AI answer, but approved answers were write-only — never read back, and never checked against later chunk edits.</p>
+
+  <h4>The three jobs this module does</h4>
+  <ul>
+    <li><strong><code class="fn">save_entry(question, answer, chunk_ids)</code></strong> — embeds the question and snapshots the exact current content of every chunk_id the answer depends on. That snapshot is the baseline for staleness detection.</li>
+    <li><strong><code class="fn">find_best_match(question)</code></strong> — checked at the top of every <code class="inline">/query</code> call with no conversation history. Same conservative 0.97 similarity threshold as the query cache, but actually served, since these are human-reviewed (or broker-corrected) entries, not raw unverified LLM output. Entries flagged <code class="inline">needs_review</code> are never served automatically.</li>
+    <li><strong><code class="fn">refresh_stale_entries(changed_chunk_ids=None)</code></strong> — compares snapshots against current chunk content. For anything changed, calls <code class="inline">query.refresh_answer_with_new_chunk</code> to decide: unaffected (just refresh the snapshot), needs a specific update (<code class="inline">auto_updated</code>), or too ambiguous to auto-apply (<code class="inline">needs_review</code>, and stops being served until a human clears it). <code class="inline">changed_chunk_ids</code> scopes this to exactly what <code class="inline">/chunks/promote</code> just changed; <code class="inline">None</code> checks everything (the manual-edit path via <code class="inline">/answer-library/refresh</code>).</li>
+  </ul>
+
+  <div class="card good">
+    <strong>Verified live:</strong> a saved answer citing "7.30%" was automatically rewritten to "7.15%" after that exact rate changed in its source chunk — and a separate, unrelated addition to the same chunk correctly left the saved answer untouched (the refresh check judged it "unaffected" rather than rewriting something that didn't need it).
+  </div>
+
+  <h4>Chat corrections — the harder half</h4>
+  <p>A broker can correct the assistant directly in conversation ("no, that's wrong, the max term is actually 72 months") and it saves <strong>immediately</strong> — a deliberate product decision that chat corrections don't wait in the Review queue the way AI-generated answers do.</p>
+  <p>Getting the classifier (<code class="inline">query.detect_and_apply_correction</code>) reliable took three iterations:</p>
+  <div class="tbl-wrap"><table>
+    <tr><th>Version</th><th>Approach</th><th>Result</th></tr>
+    <tr><td>v1</td><td>Plain true/false + corrected_answer, asked directly</td><td>Correctly rejected "what about Metro instead?" — but classified <em>"are you sure about that?"</em> as a correction and <strong>fabricated</strong> a specific replacement number with no basis</td></tr>
+    <tr><td>v2</td><td>Added explicit contrastive examples, including that exact skepticism case</td><td>Still fabricated on that case; newly misfired on a close variant ("that doesn't sound right, can you confirm?")</td></tr>
+    <tr><td>v3 (shipped)</td><td>Structural fix: the model must first extract <code class="inline">broker_stated_value</code> — quoting the specific new fact directly from the broker's own message — before it's allowed to answer <code class="inline">is_correction: true</code></td><td><strong>11/11</strong> test cases pass, including both fabrication triggers</td></tr>
+  </table></div>
+  <p>The lesson (consistent with this project's general experience): when a model reliably fails at making a judgment directly, forcing it to first produce a concrete, checkable artifact — a quote, a value, a structure — tends to suppress the failure in a way that more prompt wording alone doesn't.</p>
+</section>
+
+<section id="draft-chunks">
+  <h2><code>scripts/draft_chunks.py</code></h2>
+  <p class="section-dek">Automated chunk drafting: render a lender's PDF pages to images, hand them to a vision-capable model alongside deterministic ground truth, and get back chunk markdown in the exact schema — instead of a human retyping tables by hand.</p>
+
+  <ul class="func-list">
+    <li><code class="fn">_build_content_parts(lender_code, pdf_files)</code><span class="fn-desc">For every page: renders a 2.5x-scale PNG, computes <code class="inline">table_geometry.describe_tables_on_page()</code>, and includes the exact digital text layer (<code class="inline">page.get_text()</code>) — three independent views of the same page handed to the model together.</span></li>
+    <li><code class="fn">draft_chunks_from_pdfs(lender_code, pdf_files, model, reasoning_effort)</code><span class="fn-desc">Core entry point, decoupled from disk paths — takes raw PDF bytes, so it works both for the CLI's pre-registered on-disk PDFs and for an arbitrary file uploaded through <code class="inline">/chunks/draft</code>.</span></li>
+  </ul>
+
+  <p>The system prompt encodes the exact failure modes this pipeline exists to prevent — most importantly rule 9: whenever a <code class="inline">DETERMINISTIC TABLE STRUCTURE</code> block appears (from <code class="inline">table_geometry.py</code>), it is <strong>ground truth</strong>, overriding the model's own visual read of merged cells wherever the two disagree.</p>
+
+  <div class="card warn">
+    <strong>Why this exists as a separate, deterministic layer rather than trusting the vision model alone:</strong> six different model/config combinations (gpt-5 at high and low reasoning effort, gpt-4o, a two-pass merged-cell recheck, and two newer model variants) were tried against a real BFS rate table with a merged cell spanning three rows. None reliably told "merged across 2 rows" apart from "merged across 3 rows" from pixels alone — including reproducing the exact dangerous original bug. PDF table borders are usually real vector line objects, not just visual style, so whether a divider exists between two rows in a specific column is something code can check exactly instead of something a vision model has to guess.
+  </div>
+</section>
+
+<section id="table-geometry">
+  <h2><code>scripts/table_geometry.py</code></h2>
+  <p class="section-dek">Deterministic table-structure extraction from a PDF page's actual vector line data. Public entry point: <code class="fn">describe_tables_on_page(page, page_label) → str</code>.</p>
+  <p>The technique: <code class="fn">_extract_grid_lines()</code> finds every thin filled rectangle on the page (PDF's usual way of drawing a ruled line) and separates them into horizontal/vertical candidates; <code class="fn">_find_tables()</code> unions nearby segments into distinct tables via a simple union-find over bounding boxes; then for each column, the code walks the row boundaries and merges any consecutive rows where <em>that specific column's</em> divider is missing — even though the table overall has a boundary there, evidenced by other columns having a divider at the same y-coordinate.</p>
+  <p>This was cross-validated two independent ways on the real BFS bug: divider-line absence across all three row boundaries in the merged column (vs. present in an adjacent, correctly-per-row column at the same boundaries), and separately via text-centering math — the ambiguous value's actual y-position matched a 3-row-span hypothesis to within 1.6pt, against 12pt/3.4pt for the 2-row/1-row alternatives, calibrated against a known-unambiguous reference value sitting only 0.02pt off-center.</p>
+</section>
+
+<section id="testing">
+  <h2>Testing & evaluation infrastructure</h2>
+  <p class="section-dek">Everything under <code class="inline">tests/</code> runs against the <em>live backend</em> over HTTP (<code class="inline">uvicorn src.api:app --port 8000</code> must be running first) — these are integration tests of the real pipeline, not unit tests of pure functions.</p>
+  <ul class="func-list">
+    <li><code class="fn">tests/test_queries.py</code><span class="fn-desc">Runs the 41-question scenario bank (<code class="inline">policy_question_bank.xlsx</code>). No auto-scoring — a heuristic keyword/number-overlap scorer was tried early on and gave false confidence (scoring a wrong lender's answer as correct because it happened to share enough words with the reference).</span></li>
+    <li><code class="fn">tests/run_complex_questions.py</code><span class="fn-desc">Runs the full 111-question adversarial stress bank (<code class="inline">ComplexQuestions.xlsx</code>) — cross-lender comparisons, multi-filter, contradiction detection, negative/trap constraints. Reserved for milestone checkpoints, not every small fix.</span></li>
+    <li><code class="fn">tests/run_quick_regression.py</code><span class="fn-desc">A curated 14-question subset covering every complexity type, every lender, and every question that's previously caught a real regression — for verifying a fix without paying for the full 111-question suite.</span></li>
+    <li><code class="fn">tests/grade_complex_questions.py</code><span class="fn-desc">LLM-judge grading against the CMAP 2026 four-point rubric (4 = completely right … 1 = completely wrong), using a model independent of the answerer so it isn't marking its own homework. Reference answer and documented failure mode are given verbatim so the grader has a fixed target, and the raw transcript is kept alongside scores specifically so a human can spot-check any grade.</span></li>
+  </ul>
+</section>
+
+<section id="models-embedding">
+  <h2>Model selection — embedding model</h2>
+  <p class="section-dek"><code class="inline">BAAI/bge-base-en-v1.5</code> (109M params), swapped up from <code class="inline">bge-small</code> (33M).</p>
+  <p>bge-small's retrieval recall in the 0.90–0.96 similarity band was the root cause behind needing a cross-encoder reranker at all — the reranker can only re-score chunks bge-small's first pass already found, so a chunk missed entirely at that stage was unrecoverable. bge-base is the same BAAI family (drop-in via <code class="inline">HuggingFaceEmbedding</code>, no new network dependency, no API cost) and scores meaningfully higher on retrieval benchmarks. bge-large (335M) was considered and rejected given this machine's prior history of memory-pressure issues — base was the safer size increase.</p>
+  <p>Combined with the "retrieve everything per lender" strategy (see <a href="#query-retrieval">retrieval</a>), the embedding model's job narrowed to <em>ordering</em> chunks rather than gatekeeping them — which meaningfully lowered the stakes of this choice, and made the reranker's removal safe.</p>
+</section>
+
+<section id="models-answering">
+  <h2>Model selection — answering model journey</h2>
+  <p class="section-dek">Four models tested head-to-head over the project's life, each swap driven by a specific measured problem, not a general upgrade impulse.</p>
+
+  <div class="tbl-wrap"><table>
+    <tr><th>Model</th><th>Result (5 known-ground-truth questions, 2026-07-22)</th><th>Verdict</th></tr>
+    <tr><td>gpt-4o-mini</td><td>3 factual errors with full-corpus context</td><td><span class="pill bad">Rejected</span></td></tr>
+    <tr><td>gpt-5-mini</td><td>Correct on all 5, but verbose (up to 4k-char answers) and slow (2–14s)</td><td><span class="pill warn">Rejected — too slow/verbose</span></td></tr>
+    <tr><td>gpt-5</td><td>Correct on all 5; fastest of the GPT-5 family (2.4–7.4s); only one that reliably followed verdict-first/brevity instructions</td><td><span class="pill good">Adopted (2026-07-22)</span></td></tr>
+    <tr><td>gpt-5.5</td><td>See <a href="#models-gpt55">next section</a></td><td><span class="pill good">Adopted (2026-07-31)</span></td></tr>
+  </table></div>
+
+  <p>Notably, gpt-5-mini's failure wasn't correctness — it was <em>verbosity and latency</em>, which is why "smaller/cheaper" wasn't automatically the right axis to optimize. This shaped every later evaluation to weigh speed and instruction-following alongside raw correctness, not correctness alone.</p>
+</section>
+
+<section id="models-gpt55">
+  <h2>Why gpt-5.5</h2>
+  <p class="section-dek">A second head-to-head, prompted by discovering the account had access to the full gpt-5.1–5.6 family. Run across 11 questions — one from each complexity type in the 111-question stress bank — comparing gpt-5 (then-current) against gpt-5.5 (newest same-tier release; gpt-5.6 exists only as three unlabeled variants, not a standard release).</p>
+
+  <div class="stat-grid">
+    <div class="stat"><div class="stat-num">10/11</div><div class="stat-label">Identical correctness</div></div>
+    <div class="stat"><div class="stat-num">1</div><div class="stat-label">Real gap gpt-5.5 caught that gpt-5 missed</div></div>
+    <div class="stat"><div class="stat-num">11/11</div><div class="stat-label">Questions where gpt-5.5 was faster or tied</div></div>
+    <div class="stat"><div class="stat-num">~34%</div><div class="stat-label">Average latency reduction</div></div>
+  </div>
+
+  <h4>The one case that wasn't a tie: CQ-102</h4>
+  <p><em>"Which lender is cheapest for a $200k primary asset (new, dealer) for an established property-backed company?"</em></p>
+  <div class="tbl-wrap"><table>
+    <tr><th>Model</th><th>Answer</th><th>Assessment</th></tr>
+    <tr><td>gpt-5</td><td>Flexi at <strong>7.85%</strong> (standard tier)</td><td><span class="pill bad">Missed the cheaper flexipremium tier entirely</span></td></tr>
+    <tr><td>gpt-5.5</td><td>Flexi at <strong>7.15%</strong> (flexipremium tier)</td><td><span class="pill good">Correct — matches this project's own corrected rate</span></td></tr>
+  </table></div>
+  <p>This wasn't a stale-reference artifact (unlike one other question in the same batch, CQ-029, where <em>both</em> models correctly used this project's own updated Metro rates and simply disagreed with an outdated written reference answer). CQ-102 was a genuine reasoning gap: gpt-5 picked a valid but non-optimal Flexi tier and never checked whether a cheaper one applied; gpt-5.5 correctly identified that an established, property-backed company qualifies for flexipremium.</p>
+
+  <h4>Full 11-question timing comparison</h4>
+  <div class="tbl-wrap"><table>
+    <tr><th>ID</th><th>Complexity type</th><th class="num">gpt-5</th><th class="num">gpt-5.5</th><th>Correctness</th></tr>
+    <tr><td>CQ-001</td><td>Cross-lender comparison (2)</td><td class="num">13.5s</td><td class="num">5.4s</td><td><span class="pill good">Tied</span></td></tr>
+    <tr><td>CQ-006</td><td>Cross-lender comparison (3+)</td><td class="num">8.1s</td><td class="num">5.3s</td><td><span class="pill good">Tied</span></td></tr>
+    <tr><td>CQ-011</td><td>Multi-filter (single lender)</td><td class="num">7.7s</td><td class="num">4.1s</td><td><span class="pill good">Tied</span></td></tr>
+    <tr><td>CQ-016</td><td>Conditional scenario chain</td><td class="num">5.5s</td><td class="num">3.8s</td><td><span class="pill good">Tied</span></td></tr>
+    <tr><td>CQ-021</td><td>Negative / trap constraint</td><td class="num">11.1s</td><td class="num">6.0s</td><td><span class="pill good">Tied</span></td></tr>
+    <tr><td>CQ-026</td><td>Best-fit recommendation</td><td class="num">15.6s</td><td class="num">11.7s*</td><td><span class="pill good">Tied</span></td></tr>
+    <tr><td>CQ-029</td><td>Calculation / arithmetic</td><td class="num">14.0s</td><td class="num">5.7s</td><td><span class="pill neutral">Tied (both vs. stale reference)</span></td></tr>
+    <tr><td>CQ-034</td><td>Ambiguous / needs clarification</td><td class="num">5.8s</td><td class="num">3.8s</td><td><span class="pill good">Tied</span></td></tr>
+    <tr><td>CQ-037</td><td>Contradiction detection</td><td class="num">8.8s</td><td class="num">7.5s</td><td><span class="pill good">Tied</span></td></tr>
+    <tr><td>CQ-041</td><td>Cross-lender + multi-filter</td><td class="num">14.2s</td><td class="num">15.6s</td><td><span class="pill good">Tied</span></td></tr>
+    <tr><td>CQ-044</td><td>Policy-interaction edge case</td><td class="num">4.6s</td><td class="num">3.1s</td><td><span class="pill good">Tied</span></td></tr>
+    <tr><td>CQ-102</td><td>Best-fit recommendation</td><td class="num">56.7s</td><td class="num">18.7s</td><td><span class="pill bad">gpt-5.5 wins</span></td></tr>
+  </table></div>
+  <p style="font-size:12.5px;color:var(--ink3)">*CQ-026 initially hard-errored on gpt-5.5 (see below) — 11.7s is the re-run after fixing reasoning-effort compatibility.</p>
+
+  <div class="card warn">
+    <strong>Compatibility break found during testing:</strong> gpt-5.5 does not support <code class="inline">reasoning_effort="minimal"</code> at all — a hard HTTP 400 (its scale is <code class="inline">none/low/medium/high/xhigh</code>). The no-lender-detected fan-out path was hardcoded to <code class="inline">"minimal"</code>, so CQ-026 (a genuine fan-out question) crashed outright on first attempt. See <a href="#models-reasoning">reasoning-effort tuning</a> for how this was resolved — deliberately re-benchmarked, not guessed.
+  </div>
+</section>
+
+<section id="models-cost">
+  <h2>Speed & cost analysis</h2>
+  <p class="section-dek">gpt-5.5 sits in the same non-mini/non-pro pricing tier as gpt-5 (OpenAI's naming convention distinguishes <code class="inline">-mini</code>/<code class="inline">-nano</code> as cheaper and <code class="inline">-pro</code> as more expensive within a generation) — this project doesn't have programmatic access to exact per-token pricing for point releases this new, so the honest comparison is the one actually measured: real latency across real questions, run against the live pipeline.</p>
+
+  <div class="tbl-wrap"><table>
+    <tr><th>Model</th><th>Tier</th><th class="num">Avg. latency (11-Q sample)</th><th>Cost basis</th></tr>
+    <tr><td>gpt-4o-mini</td><td>Mini</td><td class="num">Fast</td><td>Cheapest — but rejected on correctness, not cost</td></tr>
+    <tr><td>gpt-5-mini</td><td>Mini</td><td class="num">2–14s</td><td>Cheaper tier, but slow/verbose enough that wall-clock cost (a broker waiting) outweighed the token-price saving</td></tr>
+    <tr><td>gpt-5</td><td>Standard</td><td class="num">9.9s</td><td>~$0.01–0.05/question at gpt-5 input pricing (previously measured) — immaterial against this project's budget</td></tr>
+    <tr><td>gpt-5.5</td><td>Standard (same as gpt-5)</td><td class="num">6.5s</td><td>Same tier as gpt-5, therefore assumed similar unit price; fewer seconds of compute per question in practice</td></tr>
+  </table></div>
+
+  <p>Two things worth being precise about:</p>
+  <ul>
+    <li><strong>Latency is a reasonable proxy for compute cost here, not a proof of it.</strong> Prompt sizes are near-identical between the two models (same retrieval, same context-building code), so the gap is dominated by each model's own generation/reasoning time — which is what OpenAI's usage-based pricing actually meters. A ~34% average latency reduction is suggestive of a real cost reduction, not just a UX win, but this project has not pulled an OpenAI billing-dashboard reconciliation to confirm the exact dollar delta.</li>
+    <li><strong>The fan-out reasoning-effort remap (<code class="inline">"minimal" → "none"</code>) was cost-relevant on its own</strong> — see below — and was validated with the same head-to-head discipline rather than assumed.</li>
+  </ul>
+  <div class="card note">Recommended follow-up, not yet done: pull actual per-model token/dollar usage from the OpenAI usage dashboard after a few days running on gpt-5.5 in production, to replace this latency-proxy estimate with real billing data.</div>
+</section>
+
+<section id="models-reasoning">
+  <h2>Reasoning-effort tuning history</h2>
+  <p class="section-dek">The GPT-5 family exposes a <code class="inline">reasoning_effort</code> dial, and this project's history with it is a useful case study in "benchmark before trusting a default."</p>
+
+  <h4>REASONING_EFFORT: minimal → low (2026-07-25)</h4>
+  <p>At <code class="inline">"minimal"</code>, multi-step rate calculations had a reproducible bug: the model would state a headline number before actually working out the right table row, then correctly derive a <em>different</em> number in its own shown breakdown and never reconcile the two (e.g. answering "9.64% p.a." as the headline while the working two lines later computes "12.64% + 2.00% = 14.64%"). Verified 3/3 that <code class="inline">"low"</code> eliminates this. Latency cost was real (~2–3x slower, 2–3s → 6–8s) but judged worth it over silently wrong headline numbers.</p>
+
+  <h4>FANOUT_REASONING_EFFORT: kept at "minimal" separately (same date)</h4>
+  <p>Applying <code class="inline">"low"</code> uniformly cost far more than 2–3x for the no-lender-detected fan-out path specifically — retrieval there spans all 7 lenders (~140 chunks vs. ~8–20 for a single named lender), and <code class="inline">"low"</code> effort over that much context measured 20–56s per question. Since this question type (broad eligibility scans) is mostly yes/no verdicts rather than the numeric rate build-ups <code class="inline">"low"</code> was raised to fix, it was scoped back down to <code class="inline">"minimal"</code>.</p>
+
+  <h4>A later, narrower fix: per-question fan-out classification (2026-07-27)</h4>
+  <p>A blanket <code class="inline">"minimal"</code> for fan-out turned out too low specifically for <em>ranking</em> questions ("which lender is cheapest") — A/B tested: at <code class="inline">"low"</code> effort the model correctly excluded a lender whose discount only applied at a shorter term than asked for; at <code class="inline">"minimal"</code> it didn't always. Rather than reintroduce <code class="inline">"low"</code> for every fan-out question (reinstating the latency blowout), <code class="inline">_classify_fanout_effort()</code> now decides per-question whether a fan-out needs the deeper tier or can stay cheap.</p>
+
+  <h4>FANOUT_REASONING_EFFORT: minimal → none (2026-07-31, the gpt-5.5 switch)</h4>
+  <p>gpt-5.5 doesn't support <code class="inline">"minimal"</code> at all. Rather than pick a replacement by assumption, both plausible mappings were re-benchmarked head-to-head across 6 genuine fan-out questions:</p>
+  <div class="tbl-wrap"><table>
+    <tr><th>Question</th><th class="num">gpt-5 / minimal</th><th class="num">gpt-5.5 / none</th><th class="num">gpt-5.5 / low</th></tr>
+    <tr><td>CQ-026 (excavator, 8mo ABN)</td><td class="num">24.2s</td><td class="num">16.0s</td><td class="num">14.3s</td></tr>
+    <tr><td>CQ-027 (lowest EV rate)</td><td class="num">27.9s</td><td class="num">11.4s</td><td class="num">11.9s</td></tr>
+    <tr><td>CQ-028 ($250k mobile crane)</td><td class="num">9.6s</td><td class="num">7.4s</td><td class="num">12.7s</td></tr>
+    <tr><td>CQ-075 (discharged bankrupt)</td><td class="num">8.2s</td><td class="num">6.3s</td><td class="num">13.1s</td></tr>
+    <tr><td>CQ-093 (highest single-transaction facility)</td><td class="num">23.9s</td><td class="num">16.8s</td><td class="num">19.8s</td></tr>
+    <tr><td>CQ-102 (cheapest $200k primary asset)</td><td class="num">56.7s</td><td class="num">18.7s</td><td class="num">20.5s</td></tr>
+  </table></div>
+  <p><code class="inline">"none"</code> and <code class="inline">"low"</code> produced near-identical answer quality on every question — the real differentiator was speed, where <code class="inline">"none"</code> won or tied in 5/6 cases. <code class="inline">"none"</code> shipped as the like-for-like replacement for <code class="inline">"minimal"</code>'s original intent (cheapest tier for a mostly-yes/no question type), validated rather than assumed.</p>
+</section>
+
+<section id="eval-results">
+  <h2>Evaluation results</h2>
+  <p class="section-dek">The 111-question adversarial stress bank, graded on the CMAP 2026 four-point rubric (4 = completely right, 1 = completely wrong), most recent full run prior to the gpt-5.5 switch.</p>
+  <div class="stat-grid">
+    <div class="stat"><div class="stat-num">3.65<span style="font-size:15px;color:var(--ink3)">/4</span></div><div class="stat-label">Average score</div></div>
+    <div class="stat"><div class="stat-num">88%</div><div class="stat-label">Scored 3 or 4 (correct, or correct with minor mistakes)</div></div>
+    <div class="stat"><div class="stat-num">77%</div><div class="stat-label">Scored a perfect 4</div></div>
+    <div class="stat"><div class="stat-num">111</div><div class="stat-label">Questions in the suite</div></div>
+  </div>
+  <div class="tbl-wrap"><table>
+    <tr><th>Score</th><th>Meaning</th><th class="num">Count</th></tr>
+    <tr><td>4</td><td>Completely right</td><td class="num">86</td></tr>
+    <tr><td>3</td><td>Correct with minor mistakes</td><td class="num">12</td></tr>
+    <tr><td>2</td><td>Incorrect but contains some true information</td><td class="num">12</td></tr>
+    <tr><td>1</td><td>Completely wrong</td><td class="num">1</td></tr>
+  </table></div>
+  <p>Each question also carries a documented "failure mode" — a specific trap it's designed to test (e.g. inventing a CFAL rate by copying Westpac's, since CFAL publishes no public rate card). 19 of 111 questions recorded the model actually falling for its designed trap — the concrete, per-question target for future improvement work, tracked in <code class="inline">tests/complex_grades_run6_final.json</code> alongside the full transcript for spot-checking.</p>
+</section>
+
+<section id="principles">
+  <h2>Engineering principles this codebase follows</h2>
+  <p class="section-dek">Patterns that recur across every module above, worth stating explicitly since they're what to reach for on the next bug or feature.</p>
+  <ul>
+    <li><strong>Structural fixes over more prompting, once prompting has been tried and measured to fail.</strong> The chat-correction fabrication bug wasn't fixed by better wording — it was fixed by restructuring the output contract so the model must produce a checkable artifact (a quote) before it's allowed to reach a verdict. Same story with <code class="inline">table_geometry.py</code>: six model/prompt combinations couldn't reliably read a merged cell from pixels, so the fix was a deterministic code check instead.</li>
+    <li><strong>Narrow, single-purpose LLM calls over one growing mega-prompt.</strong> Follow-up resolution, fan-out effort classification, profile-threshold checks, correction detection, and staleness refresh are each their own small, cheap, well-scoped call — rather than one instruction list in the main answering prompt trying to cover every case.</li>
+    <li><strong>Never trust a fix from one test case.</strong> Every model swap, prompt change, and reasoning-effort tier in this document was validated across multiple varied cases (2–3 minimum, often more) before being adopted — including deliberately re-testing known failure modes, not just the case that originally motivated the change.</li>
+    <li><strong>No auto-promotion into anything a broker sees, except where a human explicitly is the approver.</strong> Chunk drafts always land in a separate directory first; a promotion validates before it writes; an answer-library refresh that can't confidently resolve a staleness check flags for review rather than guessing.</li>
+    <li><strong>Verify visually/directly before asserting a structural claim, especially about tables.</strong> Learned the hard way from an early, wrong "merged cell" correction to a BFS rate table that itself needed correcting — the fix that stuck was building a tool that checks the actual PDF vector geometry rather than trusting a visual read, human or model.</li>
+  </ul>
+</section>
+
+</main>
+</div>
