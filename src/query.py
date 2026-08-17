@@ -518,18 +518,33 @@ Reply with only JSON: {{"broker_stated_value": "..." or null, "is_correction": t
         return None
 
     # Conversation history only carries {question, answer}, not chunk_ids,
-    # so re-retrieve for the ORIGINAL question to snapshot what it's based
-    # on -- retrieval is deterministic and nothing chunk-wise has changed
-    # between the previous turn and now within the same conversation, so
-    # this reproduces the same sources that answer actually drew on.
-    lenders = detect_lenders(prev["question"])
-    nodes = retrieve_nodes(prev["question"], lenders, lambda *a, **k: None)
+    # so re-retrieve to snapshot what prev["answer"] was actually based on --
+    # retrieval is deterministic and nothing chunk-wise has changed between
+    # the previous turn and now within the same conversation, so this
+    # reproduces the same sources that answer actually drew on.
+    #
+    # prev["question"] is whatever the broker literally typed for that turn,
+    # not the resolved standalone question query_policies() actually
+    # retrieved against -- if that turn was itself a follow-up ("what about
+    # westpac?"), running detect_lenders on it directly can find the wrong
+    # lender (or none) and attach the wrong chunk_ids to this correction.
+    # Re-run the same resolution step against the history that was available
+    # at the time (everything before prev) to reconstruct what was actually
+    # retrieved for it -- _resolve_followup is on RESOLVER_MODEL at
+    # temperature=0, already relied on elsewhere in this file as stable
+    # enough to reproduce the same resolution deterministically.
+    prev_question = prev["question"]
+    if len(history) > 1:
+        prev_question, _ = _resolve_followup(prev_question, history[:-1])
+
+    lenders = detect_lenders(prev_question)
+    nodes = retrieve_nodes(prev_question, lenders, lambda *a, **k: None)
     chunk_ids = list(dict.fromkeys(
         node.metadata.get("chunk_id") for node in nodes if node.metadata.get("chunk_id")
     ))
 
     return {
-        "original_question": prev["question"],
+        "original_question": prev_question,
         "corrected_answer": parsed["corrected_answer"],
         "chunk_ids": chunk_ids,
     }

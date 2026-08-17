@@ -25,6 +25,46 @@ VALID_INTENTS = {
 }
 
 
+def split_chunk_blocks(content: str, warnings: list = None):
+    """Split one chunk file's raw text on the '## chunk_id: ...' / '\\n---\\n'
+    convention every chunk file shares. Returns (header, {chunk_id:
+    raw_block_text}, [chunk_id order]).
+
+    This is the one place that knows this format's splitting rules --
+    parse_chunk_file() (below), get_all_chunk_blocks(), and src.api's
+    /chunks/draft+/chunks/promote merge logic all build on this instead of
+    each re-implementing the same regex. Three near-identical copies of this
+    used to exist; if the delimiter/marker format ever changes, there used
+    to be a real risk of updating only some of them, silently desyncing
+    what different parts of the pipeline consider a valid chunk boundary.
+
+    `warnings` (optional) collects a note when a '## chunk_id:' marker is
+    found but its ID can't be parsed out, rather than silently dropping
+    that section.
+    """
+    if warnings is None:
+        warnings = []
+    parts = re.split(r'\n---\n', content)
+    header = ""
+    blocks = {}
+    order = []
+    seen_chunk = False
+    for part in parts:
+        if '## chunk_id:' not in part:
+            if not seen_chunk:
+                header = part
+            continue
+        match = re.search(r'## chunk_id:\s*(\S+)', part)
+        if not match:
+            warnings.append(f"found a '## chunk_id:' marker but couldn't parse an ID from it — section skipped: {part[:80]!r}...")
+            continue
+        seen_chunk = True
+        chunk_id = match.group(1).strip()
+        blocks[chunk_id] = part.strip("\n")
+        order.append(chunk_id)
+    return header, blocks, order
+
+
 def parse_chunk_file(filepath, warnings=None):
     """Parse a markdown chunk file into a list of Document objects.
 
@@ -38,21 +78,14 @@ def parse_chunk_file(filepath, warnings=None):
     with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
 
-    # Split into individual chunks on ## chunk_id:
-    raw_chunks = re.split(r'\n---\n', content)
+    split_warnings = []
+    _, raw_blocks, chunk_order = split_chunk_blocks(content, split_warnings)
+    for w in split_warnings:
+        warnings.append(f"{filename}: {w}")
     documents = []
 
-    for raw in raw_chunks:
-        # Skip file header sections (no chunk_id)
-        if '## chunk_id:' not in raw:
-            continue
-
-        # Extract chunk_id
-        chunk_id_match = re.search(r'## chunk_id:\s*(\S+)', raw)
-        if not chunk_id_match:
-            warnings.append(f"{filename}: found a '## chunk_id:' marker but couldn't parse an ID from it — section skipped: {raw[:80]!r}...")
-            continue
-        chunk_id = chunk_id_match.group(1).strip()
+    for chunk_id in chunk_order:
+        raw = raw_blocks[chunk_id]
 
         # Extract metadata fields
         def get_field(field_name):
@@ -137,10 +170,8 @@ def get_all_chunk_blocks() -> dict:
     for filename in sorted(chunk_files):
         with open(os.path.join(CHUNKS_DIR, filename), "r", encoding="utf-8") as f:
             content = f.read()
-        for raw in re.split(r'\n---\n', content):
-            match = re.search(r'## chunk_id:\s*(\S+)', raw)
-            if match:
-                blocks[match.group(1).strip()] = raw.strip("\n")
+        _, file_blocks, _ = split_chunk_blocks(content)
+        blocks.update(file_blocks)
     return blocks
 
 

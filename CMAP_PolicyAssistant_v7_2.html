@@ -831,6 +831,8 @@ let KB=[
 ];
 let nextId=8,session={api:0,hits:0,cost:0,saved:0,log:[]},busy=false,qaLender='ALL',libFilter='all';
 try{const s=localStorage.getItem('cmap_lender');if(s)qaLender=s;}catch(e){}
+let conversationHistory=[];
+function pushHistory(question,answer){conversationHistory.push({question,answer});if(conversationHistory.length>8)conversationHistory.shift();}
 
 function sim(a,b){
   const wa=new Set(a.toLowerCase().split(/\W+/).filter(w=>w.length>2));
@@ -864,11 +866,11 @@ function sendQ(){
     const ms=4+Math.round(Math.random()*7);
     cached.hits++;session.hits++;session.saved+=API_COST;
     session.log.unshift({q,src:'cache',ms,cost:0,lender:cached.lender,section:cached.section});
-    setTimeout(()=>{addAiMsg(cached.a,cached.lender,cached.section,true,ms);updateAll();busy=false;document.getElementById('send-btn').disabled=false;},ms+80);
+    setTimeout(()=>{addAiMsg(cached.a,cached.lender,cached.section,true,ms);pushHistory(q,cached.a);updateAll();busy=false;document.getElementById('send-btn').disabled=false;},ms+80);
   } else {
     const typing=addTyping();
     const qlender=(qaLender!=='ALL')?qaLender+': '+q:q;
-    fetch(API_BASE+'/query',{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({question:qlender})})
+    fetch(API_BASE+'/query',{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({question:qlender,history:conversationHistory.slice(-3)})})
     .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(data=>{
       typing.remove();
@@ -881,7 +883,8 @@ function sendQ(){
       session.api++;session.cost+=cost;
       session.log.unshift({q,src:'api',ms,cost,lender:lender||'—',section:section||'—'});
       addAiMsg(data.answer,lender,section,false,ms);
-      if(lender)KB.unshift({id:nextId++,q,a:data.answer,lender,section,status:'pending',ts:Date.now(),hits:0});
+      pushHistory(q,data.answer);
+      if(lender&&data.answer_source==='generated')KB.unshift({id:nextId++,q,a:data.answer,lender,section,status:'pending',ts:Date.now(),hits:0});
       updateAll();busy=false;document.getElementById('send-btn').disabled=false;
       const rb=document.getElementById('rev-badge');rb.classList.remove('pulse');void rb.offsetWidth;rb.classList.add('pulse');
     })
@@ -1040,6 +1043,7 @@ function setLenderFromDropdown(sel){
   try{localStorage.setItem('cmap_lender',qaLender);}catch(e){}
 }
 function newChat(){
+  conversationHistory=[];
   document.getElementById('chat-body').innerHTML=`<div class="welcome" id="welcome-state">
     <div class="welcome-icon"><svg style="width:22px;height:22px" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
     <div class="welcome-brand">LifeX Policy Assistant</div>

@@ -1,7 +1,6 @@
 import json
 import math
 import os
-import re
 import sys
 import threading
 import time
@@ -20,7 +19,7 @@ from src.config import (
     QUERY_CACHE_PATH, QUERY_CACHE_SIMILARITY_THRESHOLD,
     QUERY_CACHE_ENABLED, ANSWER_LIBRARY_ENABLED, CHUNKS_DIR, PROJECT_ROOT,
 )
-from src.ingest import parse_chunk_file, ingest_chunks, VALID_LENDERS
+from src.ingest import parse_chunk_file, ingest_chunks, split_chunk_blocks, VALID_LENDERS
 from scripts.draft_chunks import draft_chunks_from_pdfs, VISION_MODEL
 
 app = FastAPI(title="LifeX Policy Assistant API")
@@ -34,9 +33,55 @@ app.add_middleware(
 )
 
 _query_cache_lock = threading.Lock()
-_chunks_lock = threading.Lock()
+_promote_lock = threading.Lock()
 
 LENDERS = ["BFS", "Resimac", "Westpac", "CFAL", "Angle", "Flexi", "Metro"]
+
+
+class _IndexRWLock:
+    """Guards access to the module-level Chroma collection/index in
+    src.query. Plain mutual exclusion (reusing one threading.Lock for both
+    /query and /chunks/promote) would fix the race below at the cost of a
+    worse, far more common regression: every concurrent query would
+    serialize behind every other query, not just behind a promotion, since
+    FastAPI's sync routes each acquire the same lock for their full
+    duration. A promotion is a rare, admin-triggered ~30-40s event, so this
+    only needs writers (promote) to be exclusive against readers (query) --
+    concurrent readers must still run in parallel with each other, which is
+    the actual common case for multiple brokers querying at once.
+
+    ingest_chunks() deletes and recreates the "lifex_policies" Chroma
+    collection through its own client, then reload_index() re-points
+    query.py's module-level globals at the fresh one -- a query that reads
+    those globals mid-rebuild can hit a deleted collection or a
+    half-initialised index. acquire_write() blocks until every in-flight
+    reader has released, and blocks new readers from starting once a writer
+    is waiting, so /chunks/promote never overlaps a live /query call.
+    """
+    def __init__(self):
+        self._readers = 0
+        self._cond = threading.Condition(threading.Lock())
+
+    def acquire_read(self):
+        with self._cond:
+            self._readers += 1
+
+    def release_read(self):
+        with self._cond:
+            self._readers -= 1
+            if self._readers == 0:
+                self._cond.notify_all()
+
+    def acquire_write(self):
+        self._cond.acquire()
+        while self._readers > 0:
+            self._cond.wait()
+
+    def release_write(self):
+        self._cond.release()
+
+
+_index_lock = _IndexRWLock()
 
 # Drafts are never written straight into data/chunks/ -- they land here
 # first and only move to the live file below via an explicit /chunks/promote
@@ -63,32 +108,19 @@ LENDER_CHUNK_FILE = {
     "WESTPAC": "westpac_chunks_v2.md",
 }
 
-_CHUNK_ID_RE = re.compile(r'## chunk_id:\s*(\S+)')
-
-
 def _split_raw_chunks(text: str):
     """Split a chunk .md file's raw text into (header, {chunk_id: block},
     [chunk_id order]) without going through parse_chunk_file -- that
     function returns Document objects built for embedding, discarding the
     original markdown block text. Promotion needs the exact original block
     text so unrelated chunks in the same file are preserved byte-for-byte
-    when only a few chunk_ids are being upserted."""
-    parts = re.split(r'\n---\n', text)
-    header = ""
-    blocks = {}
-    order = []
-    seen_chunk = False
-    for part in parts:
-        match = _CHUNK_ID_RE.search(part)
-        if not match:
-            if not seen_chunk:
-                header = part
-            continue
-        seen_chunk = True
-        chunk_id = match.group(1).strip()
-        blocks[chunk_id] = part.strip("\n")
-        order.append(chunk_id)
-    return header, blocks, order
+    when only a few chunk_ids are being upserted.
+
+    Thin wrapper over src.ingest.split_chunk_blocks -- the actual splitting
+    rules live there now, shared with parse_chunk_file() and
+    get_all_chunk_blocks() (three separate copies of this same regex used to
+    exist, risking silent drift if the chunk-file format ever changed)."""
+    return split_chunk_blocks(text)
 
 
 def _render_chunk_file(header: str, blocks: dict, order: list) -> str:
@@ -254,25 +286,44 @@ def _sources_for_chunk_ids(chunk_ids: list) -> list:
     SentenceSplitter transformation in ingest_chunks() splits each Document
     into node(s), each with its own id -- chunk_id only survives as a
     metadata field, not the primary id), so this has to filter on the
-    chunk_id metadata field via `where`, not collection.get(ids=...)."""
+    chunk_id metadata field via `where`, not collection.get(ids=...). A
+    chunk near the CHUNK_SIZE safety-net threshold can be split into more
+    than one node sharing the same chunk_id, so this also has to dedupe by
+    chunk_id -- otherwise a single chunk can show up twice in the response's
+    sources list."""
     if not chunk_ids:
         return []
     result = query_module._chroma_collection.get(
         where={"chunk_id": {"$in": chunk_ids}}, include=["metadatas"]
     )
-    sources = []
+    seen = {}
     for meta in result["metadatas"]:
-        sources.append(Source(
-            chunk_id=meta.get("chunk_id", "unknown"),
+        cid = meta.get("chunk_id", "unknown")
+        if cid in seen:
+            continue
+        seen[cid] = Source(
+            chunk_id=cid,
             lender=meta.get("lenders", "unknown"),
             intent=meta.get("topic_intent", "unknown"),
             score=1.0,
-        ))
-    return sources
+        )
+    return list(seen.values())
 
 
 @app.post("/query", response_model=QueryResponse)
 def query(request: QueryRequest):
+    # Read-locked for the whole handler (simplest correct boundary, given
+    # the index/collection is touched from several call paths below spread
+    # across this module and query.py) -- see _IndexRWLock's docstring for
+    # why this is a reader lock, not the same lock /chunks/promote uses.
+    _index_lock.acquire_read()
+    try:
+        return _query_impl(request)
+    finally:
+        _index_lock.release_read()
+
+
+def _query_impl(request: QueryRequest):
     start = time.time()
 
     history = [h.model_dump() for h in request.history]
@@ -515,7 +566,12 @@ def promote_chunks(request: PromoteRequest):
     if not selected_ids:
         raise HTTPException(status_code=400, detail="No chunk_ids selected to promote")
 
-    with _chunks_lock:
+    with _promote_lock:
+        # Serializes concurrent promotions against each other (two promotes
+        # racing on the same live_path would otherwise read-modify-write it
+        # unsafely). This does NOT touch the chroma index, so queries can
+        # still run concurrently with the file-merge/validate/write below --
+        # only the actual index rebuild further down needs to lock those out.
         live_path = os.path.join(CHUNKS_DIR, live_filename)
         header, live_blocks, live_order = "", {}, []
         if os.path.exists(live_path):
@@ -545,14 +601,24 @@ def promote_chunks(request: PromoteRequest):
         # Full re-ingest (~30-40s across the whole corpus) plus reloading
         # this process's own in-memory index -- see reload_index()'s
         # docstring for why the reload step is required and not optional.
-        ingest_chunks()
-        query_module.reload_index()
+        # Write-locked against _index_lock specifically for this part (not
+        # the file I/O above) -- see _IndexRWLock's docstring: this is what
+        # actually blocks new /query reads and waits for in-flight ones,
+        # since ingest_chunks() deletes the live Chroma collection before
+        # rebuilding it.
+        _index_lock.acquire_write()
+        try:
+            ingest_chunks()
+            query_module.reload_index()
+        finally:
+            _index_lock.release_write()
 
         # Any saved answer that cited one of the chunks we just changed
         # might now be stating an outdated number -- check just those
         # entries (cheap and precise, since we already know exactly which
         # chunk_ids moved) and auto-update or flag them before anyone else
-        # sees a stale correction.
+        # sees a stale correction. Doesn't touch the chroma index, so this
+        # runs outside the write lock too.
         touched = answer_library.refresh_stale_entries(changed_chunk_ids=set(selected_ids))
 
     return PromoteResponse(
