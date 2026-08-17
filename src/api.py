@@ -178,11 +178,33 @@ def _find_cached(question: str):
 def _append_to_query_cache(question: str, answer: str, sources: list):
     with _query_cache_lock:
         cache = _load_query_cache()
+        q_embedding = _embed(question)
+
+        # Purge any existing entry the gate considers the same question
+        # before adding this fresh one. Without this, asking the same (or a
+        # paraphrased) question across separate runs just keeps appending --
+        # nothing ever dedupes or expires -- so duplicate entries pile up
+        # with no recency signal between them. _find_cached ranks purely by
+        # embedding similarity, so with several near-identical entries it's
+        # essentially arbitrary which one answers a later request. Confirmed
+        # in practice: three duplicate entries for the same question, one of
+        # them a stale wrong answer from an earlier run, sitting alongside
+        # two correct ones with no way to prefer the current generation.
+        # Keeping this to one entry per distinct question removes that
+        # failure mode outright rather than just making it less likely.
+        survivors = []
+        for entry in cache:
+            score = _cosine_similarity(q_embedding, entry["embedding"])
+            if score >= QUERY_CACHE_PREFILTER_THRESHOLD and query_module.questions_require_same_answer(question, entry["question"]):
+                continue  # superseded by the fresh answer being cached now
+            survivors.append(entry)
+        cache = survivors
+
         cache.append({
             "question": question,
             "answer": answer,
             "sources": sources,
-            "embedding": _embed(question),
+            "embedding": q_embedding,
         })
         os.makedirs(os.path.dirname(QUERY_CACHE_PATH), exist_ok=True)
         # Write to a temp file then atomically replace, rather than
