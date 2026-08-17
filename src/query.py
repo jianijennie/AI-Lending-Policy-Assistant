@@ -598,6 +598,59 @@ Reply with only JSON: {{"broker_stated_value": "..." or null, "is_correction": t
     }
 
 
+def _handle_meta_question(question: str, history: list):
+    """Check whether this message is conversational/meta -- a greeting,
+    "are you online?", "what can you help with?", small talk -- rather than
+    an actual policy question, and if so produce the reply directly.
+
+    Returns None if this is a real policy question (fall through to the
+    normal retrieval pipeline). Otherwise a short reply string, ready to
+    return as-is.
+
+    Only ever called when detect_lenders() found no lender (see
+    query_policies) -- any question naming a lender is obviously a real
+    policy question, so this narrow check only needs to run on the rarer
+    branch that would otherwise trigger a full 7-lender fan-out. Before this
+    existed, EVERY no-lender message (including "are you online?") fanned
+    out to all 7 lenders' chunks (~60+), which is why a plain greeting could
+    come back tagged with an essentially-arbitrary lender (whichever chunk
+    scored highest in that dump) and a huge, meaningless source list.
+
+    Combined detect+respond in one small call, same pattern as
+    detect_and_apply_correction -- and just as deliberately conservative in
+    the failure direction: a real policy question wrongly treated as meta
+    would get a useless non-answer instead of the broker's actual answer,
+    so this fails toward "not meta" (returns None, falls through to the
+    normal pipeline) on anything ambiguous or on a classifier error.
+    """
+    recent = ""
+    if history:
+        recent = "\n\nRecent conversation so far (most recent last):\n" + "\n\n".join(
+            f"Broker: {h['question']}\nYou: {h['answer']}" for h in history[-3:]
+        )
+    prompt = f"""You are the pre-check for a lending-policy assistant that covers 7 lenders on its panel: Resimac, BFS, CFAL, Westpac, Angle, Flexi, Metro.
+
+The broker's message: "{question}"{recent}
+
+Decide: is this an actual policy question that needs looking up specific lender content (a rate, an eligibility rule, a document requirement, an exclusion, a comparison, anything concerning lending policy) -- OR is it conversational/meta (a greeting, asking if you're online or working, asking what you can help with or who you are, thanks/acknowledgement, small talk, or something unrelated to lending policy entirely)?
+
+A vague, underspecified, or very short message still counts as a REAL policy question (not meta) if it's actually asking about lending/finance in some way -- e.g. "best rate?" or "BFS?" with nothing else still needs the real pipeline (which already knows how to ask a clarifying question when there's not enough to work with). Only mark something meta when it isn't attempting to ask a lending policy question at all.
+
+If it's a real policy question, or you're not sure, reply is null -- do not attempt to answer it yourself here.
+
+If it's genuinely conversational/meta, write a short, natural one-to-two-sentence reply the way the assistant would actually say it -- friendly, no policy content, no invented numbers. Mention that you're the LifeX Policy Assistant covering the 7 panel lenders above only where that's actually relevant to what was asked (e.g. "are you online?", "what can you help with?") -- a simple "thanks!" just gets an equally simple acknowledgement, not a re-pitch of what you do.
+
+Reply with only JSON: {{"is_meta": true or false, "reply": "..." or null}}"""
+    try:
+        raw = _chat_completion(RESOLVER_MODEL, prompt, max_output_tokens=150, json_mode=True)
+        parsed = json.loads(raw)
+        if not parsed.get("is_meta") or not parsed.get("reply"):
+            return None
+        return parsed["reply"]
+    except Exception:
+        return None
+
+
 def query_policies(question: str, verbose: bool = True, history: list = None):
     def log(*args, **kwargs):
         if verbose:
@@ -625,6 +678,13 @@ def query_policies(question: str, verbose: bool = True, history: list = None):
 
     lenders = detect_lenders(retrieval_question)
     log(f"Detected lender(s): {', '.join(lenders) if lenders else 'None (searching all)'}")
+
+    if not lenders:
+        meta_reply = _handle_meta_question(retrieval_question, history)
+        if meta_reply is not None:
+            log("Detected a conversational/meta message — skipping retrieval")
+            log(f"\nAnswer:\n{meta_reply}")
+            return meta_reply, []
 
     nodes = retrieve_nodes(retrieval_question, lenders, log)
 

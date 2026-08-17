@@ -258,6 +258,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;
 }
 .source-label{font-size:9.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em}
 .src-chip{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500;border:1px solid rgba(0,0,0,.06)}
+.src-chip-toggle{cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:3px;background:var(--bg);color:var(--ink3)}
+.src-chip-toggle:hover{background:var(--rule)}
+.src-chip-toggle svg{width:9px;height:9px;transition:transform .15s}
+.src-chip-toggle.open svg{transform:rotate(180deg)}
+.src-expand{display:none;width:100%;padding:8px 14px 10px;border-top:1px solid var(--rule);background:var(--bg)}
+.src-expand.open{display:block}
+.src-expand-group{margin-bottom:6px}
+.src-expand-group:last-child{margin-bottom:0}
+.src-expand-lender{font-size:9.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.src-expand-chips{display:flex;flex-wrap:wrap;gap:4px}
 
 /* Typing */
 .typing-wrap{padding:14px 16px;display:flex;flex-direction:column;gap:6px}
@@ -829,7 +839,7 @@ let KB=[
   {id:6,q:"Resimac rates for electric vehicles?",a:"Electric Vehicle Interest Rates:\nPremiumPLUS tier: 7.54% p.a.\nPremium, Standard, and Basic tiers: 7.79% p.a.\n\nRisk Loadings — each loading adds +2% to the base rate:\nPrivate sales\nClassic cars\nAssets aged 16+ years at end of term\nPrime movers\n\nImportant: Multiple loadings can apply to the same deal but are capped at a maximum of +4% total per deal.",lender:"Resimac",section:"Commercial Product Guide, p.4 — Interest Rates",status:"cached",ts:Date.now()-86400000*5,hits:8},
   {id:7,q:"Westpac DriveXpress max loan new client?",a:"New Client — Westpac Business Bank:\nRequirements: residential property ownership + minimum $75,000 annual income\nMaximum loan: $150,000\nMaximum total exposure: $250,000\nEligible goods: Categories A, B, and C\n\nExisting Client — 12 Months Current WEF History:\nCategory A: up to $200,000\nCategory B: up to $300,000\nCategory C: up to $500,000\nMaximum total WEF exposure: $750,000\n\nNote: Total exposure across all WEF facilities must not exceed the maximum regardless of category.",lender:"Westpac",section:"Key Financial Policies Q1FY26 — DriveXpress",status:"cached",ts:Date.now()-86400000*5,hits:9},
 ];
-let nextId=8,session={api:0,hits:0,cost:0,saved:0,log:[]},busy=false,qaLender='ALL',libFilter='all';
+let nextId=8,session={api:0,hits:0,cost:0,saved:0,log:[]},busy=false,qaLender='ALL',libFilter='all',srcSeq=0;
 try{const s=localStorage.getItem('cmap_lender');if(s)qaLender=s;}catch(e){}
 let conversationHistory=[];
 function pushHistory(question,answer){conversationHistory.push({question,answer});if(conversationHistory.length>8)conversationHistory.shift();}
@@ -882,7 +892,7 @@ function sendQ(){
       const cost=(AVG_IN*IN_PER_1K+outTokens*OUT_PER_1K)/1000;
       session.api++;session.cost+=cost;
       session.log.unshift({q,src:'api',ms,cost,lender:lender||'—',section:section||'—'});
-      addAiMsg(data.answer,lender,section,false,ms);
+      addAiMsg(data.answer,lender,section,false,ms,data.sources);
       pushHistory(q,data.answer);
       if(lender&&data.answer_source==='generated')KB.unshift({id:nextId++,q,a:data.answer,lender,section,status:'pending',ts:Date.now(),hits:0});
       updateAll();busy=false;document.getElementById('send-btn').disabled=false;
@@ -910,19 +920,63 @@ function addTyping(){
   b.appendChild(d);b.scrollTop=b.scrollHeight;return d;
 }
 
-function addAiMsg(text,lender,section,isHit,ms){
+function prettyChunk(chunkId){return chunkId?chunkId.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()):'';}
+
+// Builds the source footer. sourcesArr (when given) is the real backend
+// sources list ([{chunk_id,lender,...}]) for a fresh /query answer -- used
+// to group chips by lender and, past a few sources, collapse the whole
+// thing behind a single "N lenders · M sources" toggle instead of dumping
+// every chunk_id as one giant string in one chip (what a no-lender-detected
+// fan-out question used to do: 60+ chunk names crammed into one pill). Only
+// a couple of source-less fallback paths (the frontend's own mocked
+// library-cache hits) still pass just lender+section instead.
+function addAiMsg(text,lender,section,isHit,ms,sourcesArr){
   const b=document.getElementById('chat-body'),d=document.createElement('div');d.className='msg ai';
   const lb=LB[lender]||null;
   const lenderTag=lb?`<span class="answer-lender-tag" style="background:${lb.bg};color:${lb.c}">${lender}</span>`:'';
   const fromLib=isHit?`<span class="answer-from-lib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:10px;height:10px"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>From library · ${ms}ms</span>`:'';
   const header=(lenderTag||fromLib)?`<div class="answer-header">${lenderTag}${fromLib}</div>`:'';
 
-  // Format section for display
-  const displaySection=section?section.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()):'';
-  const footer=lender?`<div class="answer-footer"><span class="source-label">Source</span><span class="src-chip" style="background:${lb?lb.bg:'#F1F5F9'};color:${lb?lb.c:'#475569'}">${lender}</span>${displaySection?`<span class="src-chip" style="background:var(--bg);color:var(--ink3)">${displaySection}</span>`:''}</div>`:'';
+  let footer='',expandPanel='';
+  if(sourcesArr&&sourcesArr.length){
+    const byLender={};
+    sourcesArr.forEach(s=>{(byLender[s.lender]=byLender[s.lender]||[]).push(s.chunk_id);});
+    const lenders=Object.keys(byLender).sort();
+    if(lenders.length<=1&&sourcesArr.length<=3){
+      // Small, single-lender answer -- individual chunk chips read fine
+      // inline, no need to collapse anything.
+      const chips=sourcesArr.map(s=>`<span class="src-chip" style="background:var(--bg);color:var(--ink3)">${esc(prettyChunk(s.chunk_id))}</span>`).join('');
+      footer=`<div class="answer-footer"><span class="source-label">Source</span><span class="src-chip" style="background:${lb?lb.bg:'#F1F5F9'};color:${lb?lb.c:'#475569'}">${lender}</span>${chips}</div>`;
+    } else {
+      const sid='src'+(++srcSeq);
+      const lenderWord=lenders.length===1?'lender':'lenders';
+      const srcWord=sourcesArr.length===1?'source':'sources';
+      footer=`<div class="answer-footer"><span class="source-label">Source</span><span class="src-chip src-chip-toggle" id="${sid}-t" onclick="toggleSrcExpand('${sid}')">${lenders.length} ${lenderWord} · ${sourcesArr.length} ${srcWord}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></span></div>`;
+      expandPanel=`<div class="src-expand" id="${sid}">${lenders.map(l=>{
+        const lb2=LB[l]||null;
+        const chips=byLender[l].map(cid=>`<span class="src-chip" style="background:var(--surf);color:var(--ink3)">${esc(prettyChunk(cid))}</span>`).join('');
+        return `<div class="src-expand-group"><div class="src-expand-lender" style="color:${lb2?lb2.c:'var(--ink3)'}">${l}</div><div class="src-expand-chips">${chips}</div></div>`;
+      }).join('')}</div>`;
+    }
+  } else if(sourcesArr){
+    // Explicitly an empty array (e.g. a conversational/meta answer that
+    // skipped retrieval entirely) -- no footer, nothing to cite.
+  } else if(lender){
+    // Legacy fallback: no real sources array given (the frontend's own
+    // mocked library-cache hits), just the old lender + section string.
+    const displaySection=section?section.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()):'';
+    footer=`<div class="answer-footer"><span class="source-label">Source</span><span class="src-chip" style="background:${lb?lb.bg:'#F1F5F9'};color:${lb?lb.c:'#475569'}">${lender}</span>${displaySection?`<span class="src-chip" style="background:var(--bg);color:var(--ink3)">${displaySection}</span>`:''}</div>`;
+  }
 
-  d.innerHTML=`<div class="msg-wrap"><div class="answer-card">${header}<div class="answer-body">${formatAnswer(text)}</div>${footer}</div></div>`;
+  d.innerHTML=`<div class="msg-wrap"><div class="answer-card">${header}<div class="answer-body">${formatAnswer(text)}</div>${footer}${expandPanel}</div></div>`;
   b.appendChild(d);b.scrollTop=b.scrollHeight;
+}
+
+function toggleSrcExpand(sid){
+  const panel=document.getElementById(sid),toggle=document.getElementById(sid+'-t');
+  if(!panel)return;
+  panel.classList.toggle('open');
+  toggle.classList.toggle('open');
 }
 
 // Library
