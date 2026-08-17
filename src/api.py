@@ -16,7 +16,7 @@ from src import query as query_module
 from src import answer_library
 from src.query import query_policies
 from src.config import (
-    QUERY_CACHE_PATH, QUERY_CACHE_SIMILARITY_THRESHOLD,
+    QUERY_CACHE_PATH, QUERY_CACHE_PREFILTER_THRESHOLD, QUERY_CACHE_MAX_CANDIDATES,
     QUERY_CACHE_ENABLED, ANSWER_LIBRARY_ENABLED, CHUNKS_DIR, PROJECT_ROOT,
 )
 from src.ingest import parse_chunk_file, ingest_chunks, split_chunk_blocks, VALID_LENDERS
@@ -153,14 +153,25 @@ def _load_query_cache():
 
 
 def _find_cached(question: str):
+    """Two-stage cache lookup -- see QUERY_CACHE_PREFILTER_THRESHOLD's
+    comment in config.py for why embedding similarity alone isn't a safe
+    gate for this domain. Stage 1 (cheap): embedding similarity narrows the
+    whole cache down to a handful of plausible candidates, ordered best
+    first. Stage 2 (a small LLM call per candidate, capped at
+    QUERY_CACHE_MAX_CANDIDATES): the actual yes/no gate, checked in
+    similarity order so the most plausible match is tried first -- returns
+    on the first candidate that passes, or None if none do."""
     q_embedding = _embed(question)
-    best, best_score = None, 0.0
+    scored = []
     for entry in _load_query_cache():
         score = _cosine_similarity(q_embedding, entry["embedding"])
-        if score > best_score:
-            best, best_score = entry, score
-    if best and best_score >= QUERY_CACHE_SIMILARITY_THRESHOLD:
-        return best
+        if score >= QUERY_CACHE_PREFILTER_THRESHOLD:
+            scored.append((score, entry))
+    scored.sort(key=lambda x: x[0], reverse=True)
+
+    for _, entry in scored[:QUERY_CACHE_MAX_CANDIDATES]:
+        if query_module.questions_require_same_answer(question, entry["question"]):
+            return entry
     return None
 
 

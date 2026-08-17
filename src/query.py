@@ -399,6 +399,54 @@ Reply with only JSON: {{"status": "unchanged" or "updated" or "unclear", "update
         return {"status": "unclear", "updated_answer": None, "note": f"Refresh check failed: {type(e).__name__}"}
 
 
+def questions_require_same_answer(question: str, candidate_question: str) -> bool:
+    """Narrow LLM gate for the query cache: decides whether two questions
+    are close enough to share a cached answer.
+
+    Built after calibrating embedding similarity directly against this
+    domain's questions and finding it isn't reliable enough to gate a cache
+    alone: "BFS Tier 2's minimum credit score" vs "BFS Tier 3's minimum
+    credit score" scored 0.93 cosine similarity on bge-base -- higher than
+    several genuine paraphrase pairs -- despite having different correct
+    answers. Embedding similarity is still used as a cheap pre-filter (its
+    low end cleanly separates unrelated questions, ~0.35-0.40 measured), but
+    the actual yes/no gate is this direct comparison, which can see that
+    "Tier 2" and "Tier 3" are different in a way a cosine score can't.
+
+    Deliberately conservative: only answer true when confident nothing in
+    either question could change the answer. A missed cache hit costs a few
+    seconds and a small API charge; a wrongly-served cached answer costs a
+    broker a wrong financial figure with no indication anything's off.
+    """
+    prompt = f"""Two questions asked of a lending-policy assistant covering 7 lenders:
+
+Question A: "{question}"
+Question B: "{candidate_question}"
+
+Question B already has a saved, trusted answer. Decide whether Question A would get the EXACT SAME correct answer -- not just a similar or related one.
+
+Answer false if there is ANY SUBSTANTIVE difference between the two questions that could change the correct answer -- a different lender, product, tier or plan level, asset class or age, borrower profile (property-backed vs not, ABN/GST age, credit score), loan amount or band, sale type (dealer vs private), term length, or any other detail a lending policy could condition on. Examples that must be answered false: "Tier 2" vs "Tier 3", "primary asset" vs "secondary asset", "property-backed" vs "non-property-backed" -- these look structurally identical but name a different value for something the policy conditions on.
+
+Answer true for genuine paraphrases -- same lender, same product/tier, same asset, same every other detail, just worded differently. This includes ordinary rewording that does NOT change what's being asked:
+- Abbreviations and their expansions ("EVs" = "electric vehicles", "CCR score" = "credit score" when the same lender/tier is named in both -- when a lender is stated, assume "credit score" refers to whatever specific score type that lender actually uses, not a genuinely different metric)
+- A lender's short name vs its full name/brand variant ("Angle" = "Angle Finance", "flexi" = "flexicommercial") -- these name the identical lender, never treat them as possibly different
+- Different verbs for the same capability question ("can X finance Y" = "does X do Y" = "does X fund Y") -- these all ask the same eligibility question, not different ones
+- Synonyms for the same concept ("fund" = "finance", "max" = "maximum", "docs" = "documentation")
+- Reordered clauses, different question phrasing, singular vs plural ("a prime mover" = "prime movers" when asking generally, not about a specific count), formatting of numbers ("$300k" = "$300,000")
+Don't manufacture a substantive difference out of a wording choice like these, even when several appear in the same pair -- multiple simultaneous cosmetic differences are still just cosmetic. If every concrete detail (lender, tier, asset, profile, amount, etc.) is genuinely the same and only the phrasing differs, answer true.
+
+If you are unsure whether a difference is substantive (changes the answer) or just cosmetic (same answer, different words), answer false -- a missed cache hit costs a few seconds re-asking the model; a wrongly-served cached answer hands a broker a confidently wrong financial figure with nothing to flag it. But don't default to false out of caution on a difference you can see is purely cosmetic.
+
+Reply with only JSON: {{"same_answer": true or false}}"""
+    try:
+        raw = _chat_completion(RESOLVER_MODEL, prompt, max_output_tokens=30, json_mode=True)
+        parsed = json.loads(raw)
+        return bool(parsed.get("same_answer"))
+    except Exception:
+        # A failed check must never silently allow a cache hit through.
+        return False
+
+
 def get_retriever(where_filter=None, top_k=TOP_K):
     if where_filter:
         return _index.as_retriever(

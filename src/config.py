@@ -99,29 +99,44 @@ COMPLEX_QUESTION_BANK_PATH = str(PROJECT_ROOT / "ComplexQuestions.xlsx")
 GROUND_TRUTH_PATH = str(PROJECT_ROOT / "data" / "Metadata" / "GroundTruth.xlsx")
 ANSWER_LIBRARY_PATH = str(PROJECT_ROOT / "data" / "answer_library.json")
 QUERY_CACHE_PATH = str(PROJECT_ROOT / "data" / "query_cache.json")
-# Deliberately conservative: bge-small embeddings don't reliably separate
-# genuine paraphrases from same-wording-different-detail questions (e.g.
-# "Tier 2" vs "Tier 3") in the 0.90-0.96 band for this domain's short,
-# structurally similar questions. A wrong cached financial figure is a much
-# worse failure than a missed cache hit, so this trades cache recall for
-# guaranteed precision — see chat history for the calibration data.
-QUERY_CACHE_SIMILARITY_THRESHOLD = 0.97
-# The 0.97 threshold above was calibrated against bge-small embeddings and
-# never recalibrated after the swap to bge-base — an uncalibrated
-# similarity cache can return a *wrong but confident* old answer for a
-# similar-wording-different-detail question, which in a competition is a
-# far worse failure than the few seconds a cache hit saves. Off until/unless
-# it's recalibrated.
-QUERY_CACHE_ENABLED = False
+# Was disabled entirely (threshold 0.97, calibrated against bge-small and
+# never redone after the bge-base swap). Directly calibrated on 2026-08-08
+# against real bge-base scores for this domain's questions -- and found
+# something worse than "needs a new number": genuine paraphrases and
+# dangerous near-misses actually OVERLAP in score. "BFS Tier 2's minimum
+# credit score" vs "BFS Tier 3's minimum credit score" scored 0.93 cosine
+# similarity -- higher than several genuine paraphrase pairs (as low as
+# 0.78) -- despite having different correct answers. No single threshold
+# separates them; a value high enough to exclude the near-misses would also
+# reject nearly every real paraphrase.
+#
+# So embedding similarity is no longer the gate on its own -- it's a cheap
+# PRE-FILTER only (its low end cleanly separates unrelated questions,
+# ~0.35-0.40 measured, so it's reliable for that narrower job). The actual
+# yes/no decision is src.query.questions_require_same_answer(), a direct
+# LLM comparison of the two questions that can see "Tier 2" isn't "Tier 3"
+# in a way a cosine score can't. This constant is that pre-filter floor,
+# not a similarity-is-good-enough threshold -- keep it low and let the LLM
+# gate do the real work.
+QUERY_CACHE_PREFILTER_THRESHOLD = 0.75
+# How many pre-filtered candidates (highest similarity first) get checked
+# against the LLM gate before giving up and answering fresh. Bounds the
+# worst-case extra latency/cost of a cache-miss to a few small classifier
+# calls, not an unbounded scan.
+QUERY_CACHE_MAX_CANDIDATES = 3
+QUERY_CACHE_ENABLED = True
 
-# Unlike the raw semantic query cache above, every answer_library.json entry
-# has already been through a human review/approval step in the frontend's
-# Review tab (and may have been hand-corrected there) before it's ever
-# saved -- that's a fundamentally different trust level than caching every
-# unreviewed LLM output, so it's safe to actually serve these back at query
-# time. Still uses the same conservative threshold as QUERY_CACHE (same
-# uncalibrated-embedding caveat applies), since a wrongly-matched *human
-# correction* served to an unrelated question is just as bad a failure mode.
+# Unlike the query cache above, every answer_library.json entry has already
+# been through a human review/approval step in the frontend's Review tab
+# (or was stated directly by a broker as a correction) before it's ever
+# saved -- a fundamentally different trust level than caching every
+# unreviewed LLM output, so it's safe to serve these back at query time even
+# with a plain similarity gate. That said, the query cache calibration above
+# applies here too in principle (same embedding model, same domain, same
+# overlap risk) -- this hasn't been re-verified with the same rigor, since
+# the human-review step is a real, independent safety net the raw query
+# cache never had. Worth applying the same LLM-gate treatment here too if
+# this threshold is ever revisited.
 ANSWER_LIBRARY_SIMILARITY_THRESHOLD = 0.97
 ANSWER_LIBRARY_ENABLED = True
 
