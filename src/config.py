@@ -126,18 +126,25 @@ QUERY_CACHE_PREFILTER_THRESHOLD = 0.75
 QUERY_CACHE_MAX_CANDIDATES = 3
 QUERY_CACHE_ENABLED = True
 
-# Unlike the query cache above, every answer_library.json entry has already
-# been through a human review/approval step in the frontend's Review tab
-# (or was stated directly by a broker as a correction) before it's ever
-# saved -- a fundamentally different trust level than caching every
-# unreviewed LLM output, so it's safe to serve these back at query time even
-# with a plain similarity gate. That said, the query cache calibration above
-# applies here too in principle (same embedding model, same domain, same
-# overlap risk) -- this hasn't been re-verified with the same rigor, since
-# the human-review step is a real, independent safety net the raw query
-# cache never had. Worth applying the same LLM-gate treatment here too if
-# this threshold is ever revisited.
-ANSWER_LIBRARY_SIMILARITY_THRESHOLD = 0.97
+# Every answer_library.json entry has already been through a human
+# review/approval step in the frontend's Review tab (or was stated directly
+# by a broker as a correction) before it's ever saved -- a fundamentally
+# different trust level than caching every unreviewed LLM output, so it was
+# safe to serve these back at query time even before this got the same
+# two-stage treatment as the query cache above.
+#
+# Checked directly against the query cache's calibration data (2026-08-08)
+# before deciding whether to bother: at the OLD plain threshold (0.97),
+# none of the measured near-miss pairs actually reached it (highest was
+# 0.9685), so this wasn't silently unsafe the way the query cache was.
+# But none of the genuine paraphrase pairs reached 0.97 either (highest was
+# 0.9564) -- meaning the threshold was so conservative it likely almost
+# never fired for anything short of near-identical wording, undermining the
+# actual point of reusing a human-reviewed answer. Same two-stage fix
+# applied for that reason: better recall on real paraphrases, not because
+# the old version was actively serving wrong answers.
+ANSWER_LIBRARY_PREFILTER_THRESHOLD = 0.75
+ANSWER_LIBRARY_MAX_CANDIDATES = 3
 ANSWER_LIBRARY_ENABLED = True
 
 # Each chunk in data/chunks/*.md is already a hand-curated atomic unit with

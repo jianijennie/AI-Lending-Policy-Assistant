@@ -12,13 +12,21 @@ correction would otherwise keep being served with no signal to anyone.
 
 This module is the fix: save_entry() snapshots the exact chunk content an
 answer depended on at approval time; find_best_match() serves matching
-entries back at query time (gated at the same conservative similarity
-threshold as the query cache, since a wrongly-matched *human correction* is
-just as bad a failure as a wrongly-matched raw cache hit); and
-refresh_stale_entries() re-checks snapshots against current chunk content
-whenever chunks change, using a narrow LLM call
-(src.query.refresh_answer_with_new_chunk) to update just the outdated
+entries back at query time; and refresh_stale_entries() re-checks snapshots
+against current chunk content whenever chunks change, using a narrow LLM
+call (src.query.refresh_answer_with_new_chunk) to update just the outdated
 numbers rather than silently keep serving something that no longer holds.
+
+find_best_match()'s matching is two-stage, same as the query cache in
+src/api.py (see QUERY_CACHE_PREFILTER_THRESHOLD's comment in config.py for
+the calibration data behind this): embedding similarity alone doesn't
+reliably separate genuine paraphrases from same-wording-different-detail
+questions in this domain ("BFS Tier 2" vs "BFS Tier 3" scored higher than
+several genuine paraphrase pairs), so it's used only as a cheap pre-filter.
+The actual yes/no gate is src.query.questions_require_same_answer(), a
+direct LLM comparison -- a wrongly-matched *human correction* would be just
+as bad a failure as a wrongly-matched raw cache hit, so this gets the same
+scrutiny even though every entry here already cleared a human review step.
 """
 import json
 import math
@@ -27,7 +35,7 @@ import threading
 
 from llama_index.core import Settings
 
-from src.config import ANSWER_LIBRARY_PATH, ANSWER_LIBRARY_SIMILARITY_THRESHOLD
+from src.config import ANSWER_LIBRARY_PATH, ANSWER_LIBRARY_PREFILTER_THRESHOLD, ANSWER_LIBRARY_MAX_CANDIDATES
 from src.ingest import get_all_chunk_blocks
 
 _lock = threading.Lock()
@@ -66,12 +74,18 @@ def _save_entries(entries: list):
 
 def find_best_match(question: str):
     """Best-matching library entry for this question, or None if nothing
-    clears ANSWER_LIBRARY_SIMILARITY_THRESHOLD. Entries flagged
+    clears the two-stage gate (see module docstring). Entries flagged
     "needs_review" are never served automatically -- a correction already
     known to be possibly-stale is worse to hand back silently than just
     answering fresh from the live chunks."""
+    # Imported here, not at module top -- same reasoning as the deferred
+    # import in refresh_stale_entries() below: avoid paying src.query's
+    # import-time OpenAI client/embedding/Chroma init cost for callers that
+    # only need save_entry().
+    from src.query import questions_require_same_answer
+
     q_embedding = _embed(question)
-    best, best_score = None, 0.0
+    scored = []
     for entry in load_entries():
         if entry.get("status") == "needs_review":
             continue
@@ -79,10 +93,13 @@ def find_best_match(question: str):
         if not embedding:
             continue  # entries saved before this field existed
         score = _cosine_similarity(q_embedding, embedding)
-        if score > best_score:
-            best, best_score = entry, score
-    if best and best_score >= ANSWER_LIBRARY_SIMILARITY_THRESHOLD:
-        return best
+        if score >= ANSWER_LIBRARY_PREFILTER_THRESHOLD:
+            scored.append((score, entry))
+    scored.sort(key=lambda x: x[0], reverse=True)
+
+    for _, entry in scored[:ANSWER_LIBRARY_MAX_CANDIDATES]:
+        if questions_require_same_answer(question, entry["question"]):
+            return entry
     return None
 
 
