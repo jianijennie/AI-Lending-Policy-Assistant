@@ -54,6 +54,9 @@ afterwards, so nothing invented here survives the run.
 #                    scenario reads as what it's testing
 #   seed_library  -- POST /answer-library/save directly (no chat involved)
 #   reset         -- clear the conversation, so the next ask is standalone
+#   clear_cache   -- empty the query cache. Scenarios that reason about cache
+#                    state need their precondition stated, not inherited from
+#                    whatever an earlier suite happened to leave cached.
 #
 # Optional "as": <name> stores that step's answer for later comparison.
 #
@@ -86,6 +89,7 @@ COMBINATION_SCENARIOS = [
             "own isolated test."
         ),
         "steps": [
+            {"do": "clear_cache"},
             {"do": "ask", "question": "What is Angle's establishment fee?",
              "as": "original", "expect": {"answer_source": "generated"}},
             {"do": "reset"},
@@ -97,8 +101,16 @@ COMBINATION_SCENARIOS = [
              "question": "That's out of date -- Angle's establishment fee is actually $711 flat (COMBOMARKERONE). Please save that correction.",
              "expect": {"answer_source": "correction_saved", "library_delta": 1}},
             {"do": "reset"},
+            # Assert on the corrected VALUE, not the marker. The correction
+            # prompt rewrites the previous answer changing only what the
+            # broker's stated value covers, and is told not to introduce
+            # anything not traceable to it -- so a parenthetical marker gets
+            # dropped in the rewrite even though the figure is applied. The
+            # figure is the thing that matters anyway.
             {"do": "ask", "question": "How much does Angle charge as an establishment fee?",
-             "expect": {"answer_source": "library", "answer_contains": "COMBOMARKERONE"}},
+             "expect": {"answer_source": "library",
+                        "answer_contains": "711",
+                        "answer_not_contains": "649"}},
         ],
     },
     {
@@ -131,8 +143,15 @@ COMBINATION_SCENARIOS = [
                  "library_last_chunk_prefix": "cfal_",
              }},
             {"do": "reset"},
-            {"do": "ask", "question": "What ABN age does CFAL require?",
-             "expect": {"answer_source": "library", "answer_contains": "COMBOMARKERTWO"}},
+            # The saved question is turn 2 resolved into standalone form, so
+            # it carries the Start-Up context turn 1 established. A bare
+            # "what ABN age does CFAL require?" is genuinely a different
+            # question (general policy vs one program) and the gate is right
+            # to reject it -- verified directly: that pairing returns False
+            # 3/3, while a true paraphrase returns True 3/3. So this asks a
+            # real paraphrase of what was actually saved.
+            {"do": "ask", "question": "What minimum ABN age does CFAL require for its Start-Up program?",
+             "expect": {"answer_source": "library", "answer_contains": "4 year"}},
         ],
     },
     {
@@ -146,6 +165,7 @@ COMBINATION_SCENARIOS = [
             "question through a conversation."
         ),
         "steps": [
+            {"do": "clear_cache"},
             {"do": "ask", "question": "What is Resimac's private sale loading?",
              "as": "standalone", "expect": {"answer_source": "generated"}},
             {"do": "reset"},
@@ -171,8 +191,12 @@ COMBINATION_SCENARIOS = [
             "classifier. Doubt with no stated value must fall through to the normal pipeline."
         ),
         "steps": [
-            {"do": "ask", "question": "What is BFS's Tier 2 minimum credit score requirement?",
-             "expect": {"answer_source": "generated"}},
+            # No answer_source expectation here on purpose: whether this
+            # opening question is answered fresh or from a pre-existing cache
+            # entry is incidental to what the scenario tests, and asserting
+            # it just makes the case fail depending on what happened to be
+            # cached before the run.
+            {"do": "ask", "question": "What is BFS's Tier 2 minimum credit score requirement?"},
             {"do": "follow_up", "question": "are you sure about that?",
              "expect": {"library_delta": 0}},
             {"do": "follow_up", "question": "hmm, that doesn't sound right to me -- can you double check it?",
@@ -210,13 +234,14 @@ COMBINATION_SCENARIOS = [
         "id": "COMBO-6",
         "title": "Correcting the same question twice serves the SECOND correction",
         "why": (
-            "KNOWN-SUSPECT PATH -- expected to fail until the library gets the same "
-            "dedup-on-write fix the query cache just received. save_entry() appends "
-            "unconditionally and find_best_match() returns the highest-SIMILARITY "
-            "gate-passing entry, not the newest, so two corrections to one question leave "
-            "two live entries and which one answers is arbitrary. A broker who corrects "
-            "the same figure twice has every reason to expect the later value to stick. "
-            "Scenario written to prove the behaviour either way rather than assume it."
+            "Regression guard for a bug this scenario originally caught and which is now "
+            "fixed. save_entry() used to append unconditionally, and find_best_match() "
+            "returns the highest-SIMILARITY gate-passing entry rather than the newest -- so "
+            "two corrections to one question left two live entries and the FIRST one kept "
+            "being served (measured: step 7 returned the 5% correction after 6% had been "
+            "saved over it). save_entry() now purges gate-equivalent entries before "
+            "appending, so one question keeps exactly one entry. A broker who corrects the "
+            "same figure twice has every reason to expect the later value to stick."
         ),
         "steps": [
             {"do": "ask", "question": "What is Westpac's maximum brokerage on Xpress deals?",
@@ -229,7 +254,11 @@ COMBINATION_SCENARIOS = [
              "expect": {"answer_source": "library", "answer_contains": "COMBOMARKERSIXA"}},
             {"do": "correct",
              "question": "Correction again -- the Xpress brokerage cap is actually 6% (COMBOMARKERSIXB), not 5%. Save that.",
-             "expect": {"answer_source": "correction_saved", "library_delta": 1}},
+             # Net ZERO, not +1: this correction supersedes the previous one,
+             # so save_entry purges that entry and appends this one. A delta
+             # of +1 here would mean both corrections are live again -- which
+             # is exactly the bug, so this assertion is load-bearing.
+             "expect": {"answer_source": "correction_saved", "library_delta": 0}},
             {"do": "reset"},
             # The newer correction must win.
             {"do": "ask", "question": "What is Westpac's maximum brokerage on Xpress deals?",
@@ -249,6 +278,7 @@ COMBINATION_SCENARIOS = [
             "marker substring."
         ),
         "steps": [
+            {"do": "clear_cache"},
             {"do": "ask", "question": "What is CFAL's minimum ABN age requirement?",
              "as": "cached_version", "expect": {"answer_source": "generated"}},
             {"do": "reset"},
@@ -339,6 +369,7 @@ COMBINATION_SCENARIOS = [
             "served alongside two correct ones. This asserts the cluster stays at one entry."
         ),
         "steps": [
+            {"do": "clear_cache"},
             {"do": "ask", "question": "What is BFS's Tier 3 minimum credit score?",
              "expect": {"answer_source": "generated"}},
             {"do": "reset"},
@@ -359,6 +390,7 @@ COMBINATION_SCENARIOS = [
             "first and then asking it cold."
         ),
         "steps": [
+            {"do": "clear_cache"},
             {"do": "ask", "question": "What is Flexi's establishment fee?",
              "expect": {"answer_source": "generated"}},
             {"do": "follow_up", "question": "what about Angle's establishment fee?",

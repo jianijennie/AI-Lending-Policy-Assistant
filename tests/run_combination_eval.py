@@ -211,6 +211,23 @@ def run_scenario(scenario: dict) -> dict:
             step_records.append({"step": i, "do": "reset"})
             continue
 
+        if action == "clear_cache":
+            # Makes a scenario's cache precondition explicit instead of
+            # inheriting whatever previous runs happened to leave behind.
+            # Scenarios that reason about cache state (does this hit? did
+            # that get written?) are otherwise unrunnable in isolation: a
+            # question cached by an earlier suite makes "expected generated,
+            # got cache" look like a bug when it's just run history. Safe
+            # because the runner snapshots and restores this file per
+            # scenario anyway.
+            tmp = QUERY_CACHE_PATH + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump([], f)
+            os.replace(tmp, QUERY_CACHE_PATH)
+            step_records.append({"step": i, "do": "clear_cache"})
+            print(f"  [{i}] clear_cache")
+            continue
+
         library_before = len(_load_library())
 
         try:
@@ -299,6 +316,9 @@ def write_transcript(results: list, path: str):
             for s in r["steps"]:
                 if s["do"] == "reset":
                     f.write("--- [conversation reset] ---\n\n")
+                    continue
+                if s["do"] == "clear_cache":
+                    f.write("--- [query cache cleared] ---\n\n")
                     continue
                 f.write(f"[{s['step']}] {s['do'].upper()}: {s.get('question', '')}\n")
                 if s.get("error"):

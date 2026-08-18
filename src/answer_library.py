@@ -106,22 +106,57 @@ def find_best_match(question: str):
 def save_entry(question: str, answer: str, chunk_ids: list) -> dict:
     """Save a (possibly human-corrected) answer. Snapshots the exact current
     content of every chunk_id it depends on -- that snapshot is the baseline
-    refresh_stale_entries() compares against later to detect drift."""
+    refresh_stale_entries() compares against later to detect drift.
+
+    Any existing entry the matching gate considers the SAME question is
+    removed first, so one question keeps exactly one entry: the newest.
+    Without that, correcting the same figure twice left both corrections
+    live, and find_best_match returns the highest-SIMILARITY survivor rather
+    than the most recent one -- so the superseded answer could keep being
+    served, and which one won was effectively arbitrary. A broker who
+    corrects the same number twice has every reason to expect the second
+    correction to stick; this is what makes that true. Same
+    dedupe-on-write rule the query cache uses (_append_to_query_cache in
+    src/api.py), applied here for the same reason.
+
+    needs_review entries are purged alongside current ones. They're already
+    never served, and a fresh human correction supersedes a stale flag --
+    leaving them behind would just accumulate dead rows.
+    """
+    from src.query import questions_require_same_answer
+
     with _lock:
         entries = load_entries()
+        q_embedding = _embed(question)
+
+        survivors = []
+        for existing in entries:
+            embedding = existing.get("question_embedding")
+            if embedding:
+                score = _cosine_similarity(q_embedding, embedding)
+                if score >= ANSWER_LIBRARY_PREFILTER_THRESHOLD and questions_require_same_answer(
+                    question, existing.get("question", "")
+                ):
+                    continue  # superseded by the answer being saved now
+            survivors.append(existing)
+
         all_blocks = get_all_chunk_blocks()
         entry = {
-            "id": len(entries) + 1,
+            # Highest existing id + 1, NOT len(entries) + 1 -- entries can
+            # now be removed above, so a length-based id would collide with
+            # one already in the file and break every id-based reference
+            # (the refresh endpoint's results, the frontend's review list).
+            "id": max((e.get("id", 0) for e in survivors), default=0) + 1,
             "question": question,
             "answer": answer,
             "chunk_ids": chunk_ids,
-            "question_embedding": _embed(question),
+            "question_embedding": q_embedding,
             "chunk_snapshots": {cid: all_blocks[cid] for cid in chunk_ids if cid in all_blocks},
             "status": "current",
             "note": "",
         }
-        entries.append(entry)
-        _save_entries(entries)
+        survivors.append(entry)
+        _save_entries(survivors)
         return entry
 
 
