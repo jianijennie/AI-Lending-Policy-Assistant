@@ -1,0 +1,596 @@
+<title>LifeX Policy Assistant &mdash; Finals Practice Results</title>
+<style>
+:root {
+  --ground:#FCFCFD; --surface:#FFFFFF; --surface-2:#F4F6F8;
+  --ink:#16202B; --ink-2:#3D4A59; --muted:#5F6C7B;
+  --rule:#E1E6EC; --rule-strong:#CBD3DC;
+  --accent:#1F4E79; --accent-soft:#EAF1F8;
+  --pass:#1B6B47; --pass-soft:#E6F2EC;
+  --watch:#8A5A00; --watch-soft:#FBF1DD;
+  --display:Georgia,"Iowan Old Style","Times New Roman",serif;
+  --body:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:#12161B; --surface:#171D24; --surface-2:#1D242C;
+    --ink:#E7ECF1; --ink-2:#C3CCD6; --muted:#94A1B0;
+    --rule:#28313A; --rule-strong:#3A4550;
+    --accent:#84B6E2; --accent-soft:#17242F;
+    --pass:#63C295; --pass-soft:#152620;
+    --watch:#DCA84A; --watch-soft:#2A2213;
+  }
+}
+:root[data-theme="dark"] {
+  --ground:#12161B; --surface:#171D24; --surface-2:#1D242C;
+  --ink:#E7ECF1; --ink-2:#C3CCD6; --muted:#94A1B0;
+  --rule:#28313A; --rule-strong:#3A4550;
+  --accent:#84B6E2; --accent-soft:#17242F;
+  --pass:#63C295; --pass-soft:#152620;
+  --watch:#DCA84A; --watch-soft:#2A2213;
+}
+* { box-sizing:border-box; }
+body {
+  background:var(--ground); color:var(--ink);
+  font-family:var(--body); font-size:16px; line-height:1.6;
+  margin:0; padding:0 20px 96px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap { max-width:860px; margin:0 auto; }
+.masthead { padding:64px 0 32px; border-bottom:2px solid var(--ink); margin-bottom:40px; }
+.eyebrow {
+  font-family:var(--mono); font-size:11px; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--muted); margin:0 0 14px;
+}
+h1 {
+  font-family:var(--display); font-weight:400; font-size:clamp(30px,5vw,44px);
+  line-height:1.14; letter-spacing:-.01em; margin:0 0 16px; text-wrap:balance;
+}
+.standfirst { font-size:17px; color:var(--ink-2); margin:0; max-width:64ch; }
+.scoreline { display:flex; flex-wrap:wrap; gap:28px; margin:32px 0 0; padding:0; list-style:none; }
+.scoreline div { display:flex; flex-direction:column; gap:2px; }
+.score-n { font-family:var(--display); font-size:30px; line-height:1; }
+.score-l {
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--muted);
+}
+h2 {
+  font-family:var(--display); font-weight:400; font-size:25px;
+  margin:56px 0 8px; padding-bottom:9px; border-bottom:1px solid var(--rule-strong);
+  text-wrap:balance;
+}
+.section-note { color:var(--muted); font-size:14.5px; margin:0 0 22px; max-width:66ch; }
+.table-scroll { overflow-x:auto; border:1px solid var(--rule); border-radius:3px; background:var(--surface); }
+table { width:100%; border-collapse:collapse; font-size:14.5px; min-width:520px; }
+th {
+  text-align:left; font-family:var(--mono); font-weight:600; font-size:10.5px;
+  letter-spacing:.09em; text-transform:uppercase; color:var(--muted);
+  padding:11px 14px; border-bottom:1px solid var(--rule-strong); white-space:nowrap;
+}
+td { padding:11px 14px; border-bottom:1px solid var(--rule); vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+.num { text-align:right; font-variant-numeric:tabular-nums; color:var(--muted); }
+.id-cell a { color:var(--accent); text-decoration:none; font-weight:600; }
+.id-cell a:hover, .id-cell a:focus-visible { text-decoration:underline; }
+.mono { font-family:var(--mono); }
+.chip {
+  display:inline-block; font-family:var(--mono); font-size:10.5px;
+  letter-spacing:.05em; padding:3px 9px; border-radius:2px; white-space:nowrap;
+}
+.chip-pass { background:var(--pass-soft); color:var(--pass); }
+.chip-watch { background:var(--watch-soft); color:var(--watch); }
+.group-intro { margin:52px 0 26px; padding-left:16px; border-left:3px solid var(--accent); }
+.group-intro .eyebrow { margin-bottom:7px; color:var(--accent); }
+.group-blurb { margin:0; color:var(--ink-2); font-size:15px; max-width:66ch; }
+.case {
+  background:var(--surface); border:1px solid var(--rule);
+  border-radius:4px; padding:24px; margin:0 0 20px;
+}
+.case-head { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+.case-id {
+  font-size:12px; font-weight:600; color:var(--accent);
+  background:var(--accent-soft); padding:3px 8px; border-radius:2px;
+}
+.case-head h3 {
+  font-family:var(--display); font-weight:400; font-size:19px;
+  margin:0; flex:1 1 260px; line-height:1.3;
+}
+.expected {
+  background:var(--surface-2); border-radius:3px;
+  padding:14px 16px; margin-bottom:20px; font-size:14.5px; color:var(--ink-2);
+}
+.expected p:last-child { margin:0; }
+.expected-label {
+  font-family:var(--mono); font-size:10px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--muted); margin:0 0 6px;
+}
+.turns { display:flex; flex-direction:column; gap:22px; }
+.turn { border-left:2px solid var(--rule-strong); padding-left:16px; }
+.turn-label {
+  font-family:var(--mono); font-size:10px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--muted); margin:0 0 6px;
+}
+.src-tag {
+  color:var(--accent); background:var(--accent-soft);
+  padding:2px 6px; border-radius:2px; letter-spacing:.04em;
+}
+.question {
+  font-family:var(--display); font-size:17px; line-height:1.42;
+  margin:0 0 12px; color:var(--ink);
+}
+.answer { font-size:15px; }
+.answer p { margin:0 0 10px; }
+.answer p:last-child { margin-bottom:0; }
+.answer ul { margin:0 0 10px; padding-left:20px; }
+.answer li { margin-bottom:5px; }
+.answer strong { color:var(--ink); font-weight:600; }
+.fig { font-family:var(--mono); font-size:.93em; font-variant-numeric:tabular-nums; }
+.meta { font-size:11px; color:var(--muted); margin:10px 0 0; letter-spacing:.03em; }
+.assessment {
+  margin:20px 0 0; padding-top:14px; border-top:1px solid var(--rule);
+  font-size:14px; color:var(--ink-2);
+}
+.assessment-label {
+  font-family:var(--mono); font-size:10px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--muted); margin-right:8px;
+}
+.callout {
+  border:1px solid var(--rule-strong); border-left:3px solid var(--watch);
+  background:var(--surface); border-radius:3px; padding:18px 20px; margin:26px 0;
+}
+.callout h3 { font-family:var(--display); font-weight:400; font-size:17px; margin:0 0 8px; }
+.callout p { margin:0 0 10px; font-size:14.5px; color:var(--ink-2); }
+.callout p:last-child { margin:0; }
+footer {
+  margin-top:64px; padding-top:22px; border-top:1px solid var(--rule);
+  font-size:13px; color:var(--muted);
+}
+a { color:var(--accent); }
+:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+@media (max-width:600px) {
+  .masthead { padding-top:44px; }
+  .case { padding:18px; }
+}
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <p class="eyebrow">LifeX Policy Assistant &middot; Evaluation</p>
+    <h1>Finals practice results</h1>
+    <p class="standfirst">
+      Fifteen practice cases built in the same shape as the supplied finals mock, run against
+      the live assistant. Each expected answer was verified directly against the lender policy
+      files before the run &mdash; not written from memory &mdash; so a disagreement points at
+      the system or at the source documents, never at a guess.
+    </p>
+    <div class="scoreline">
+      <div><span class="score-n">14/15</span><span class="score-l">Correct</span></div>
+      <div><span class="score-n">1</span><span class="score-l">With a caveat</span></div>
+      <div><span class="score-n">21</span><span class="score-l">Questions asked</span></div>
+      <div><span class="score-n">7</span><span class="score-l">Lenders covered</span></div>
+    </div>
+  </header>
+
+  <h2>At a glance</h2>
+  <p class="section-note">
+    Cases are grouped by the three capabilities the mock tests. Select a case ID to jump to the
+    full question and answer.
+  </p>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Case</th><th>What it tests</th><th>Turns</th><th>Time</th><th>Result</th></tr></thead>
+      <tbody><tr>
+      <td class="mono id-cell"><a href="#A1">A1</a></td>
+      <td>Lowest rate per lender for an ELECTRIC passenger vehicle</td>
+      <td class="mono num">1</td>
+      <td class="mono num">19.8s</td>
+      <td><span class="chip chip-pass">Correct</span></td>
+    </tr><tr>
+      <td class="mono id-cell"><a href="#A2">A2</a></td>
+      <td>Stacking loadings landing exactly on the 4% cap</td>
+      <td class="mono num">1</td>
+      <td class="mono num">5.7s</td>
+      <td><span class="chip chip-pass">Correct</span></td>
+    </tr><tr>
+      <td class="mono id-cell"><a href="#A3">A3</a></td>
+      <td>Premium tier the client does NOT qualify for</td>
+      <td class="mono num">1</td>
+      <td class="mono num">6.7s</td>
+      <td><span class="chip chip-pass">Correct</span></td>
+    </tr><tr>
+      <td class="mono id-cell"><a href="#A4">A4</a></td>
+      <td>Three independent add-ons on the standard card</td>
+      <td class="mono num">1</td>
+      <td class="mono num">9.8s</td>
+      <td><span class="chip chip-pass">Correct</span></td>
+    </tr><tr>
+      <td class="mono id-cell"><a href="#B1">B1</a></td>
+      <td>Three-turn chain, subject never repeated</td>
+      <td class="mono num">3</td>
+      <td class="mono num">20.0s</td>
+      <td><span class="chip chip-pass">Correct</span></td>
+    </tr><tr>
+      <td class="mono id-cell"><a href="#B2">B2</a></td>
+      <td>Lender switch, then a comparison needing both earlier turns</td>
+      <td class="mono num">3</td>
+      <td class="mono num">28.9s</td>
+      <td><span class="chip chip-pass">Correct</span></td>
+    </tr><tr>
+      <td class="mono id-cell"><a href="#B3">B3</a></td>
+      <td>Mid-chat correction must propagate into later reasoning</td>
+      <td class="mono num">3</td>
+      <td class="mono num">20.3s</td>
+      <td><span class="chip chip-pass">Correct</span></td>
+    </tr><tr>
+      <td class="mono id-cell"><a href="#C1">C1</a></td>
+      <td>Credit score exactly on the tier boundary</td>
+      <td class="mono num">1</td>
+      <td class="mono num">5.3s</td>
+      <td><span class="chip chip-pass">Correct</span></td>
+    </tr><tr>
+      <td class="mono id-cell"><a href="#C2">C2</a></td>
+      <td>Threshold met exactly -- no auto-decline</td>
+      <td class="mono num">1</td>
+      <td class="mono num">4.2s</td>
+      <td><span class="chip chip-pass">Correct</span></td>
+    </tr><tr>
+      <td class="mono id-cell"><a href="#C3">C3</a></td>
+      <td>Allied health vs medical specialist limits</td>
+      <td class="mono num">1</td>
+      <td class="mono num">4.7s</td>
+      <td><span class="chip chip-pass">Correct</span></td>
+    </tr><tr>
+      <td class="mono id-cell"><a href="#C4">C4</a></td>
+      <td>Loan size vs total exposure</td>
+      <td class="mono num">1</td>
+      <td class="mono num">6.6s</td>
+      <td><span class="chip chip-pass">Correct</span></td>
+    </tr><tr>
+      <td class="mono id-cell"><a href="#C5">C5</a></td>
+      <td>Remote area -- which lender actually has the rule</td>
+      <td class="mono num">1</td>
+      <td class="mono num">10.3s</td>
+      <td><span class="chip chip-pass">Correct</span></td>
+    </tr><tr>
+      <td class="mono id-cell"><a href="#C6">C6</a></td>
+      <td>Hard exclusion vs soft condition</td>
+      <td class="mono num">1</td>
+      <td class="mono num">4.5s</td>
+      <td><span class="chip chip-pass">Correct</span></td>
+    </tr><tr>
+      <td class="mono id-cell"><a href="#C7">C7</a></td>
+      <td>A product tier that does not exist</td>
+      <td class="mono num">1</td>
+      <td class="mono num">4.5s</td>
+      <td><span class="chip chip-pass">Correct</span></td>
+    </tr><tr>
+      <td class="mono id-cell"><a href="#C8">C8</a></td>
+      <td>The corpus contradicts itself</td>
+      <td class="mono num">1</td>
+      <td class="mono num">4.6s</td>
+      <td><span class="chip chip-watch">Correct, with a caveat</span></td>
+    </tr></tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <h3>One thing to flag about the mock&rsquo;s own answer key</h3>
+    <p>
+      For Case 3 the supplied key gives BFS a flat &ldquo;20% deposit&rdquo;. The underlying policy file
+      states the New Business Ventures deposit is <strong>20% for Tier 3 and Tier 4</strong> &mdash; tier-dependent,
+      not universal. Our assistant answers the tier-dependent version, which is more precise than the key.
+    </p>
+    <p>
+      Worth agreeing as a team whether to answer precisely or to match the key, in case a judge marks
+      against the flat figure.
+    </p>
+  </div>
+
+  <h2>Case by case</h2>
+  <p class="section-note">
+    Answers below are reproduced exactly as the assistant returned them.
+  </p>
+  <section class="group-intro">
+      <p class="eyebrow">A &middot; Rate accuracy</p>
+      <p class="group-blurb">The mock calls Case 1 “mainly test rate related”, so these press hardest on rate-table selection: picking the right band, applying discounts only where they exist, stacking loadings, and respecting caps.</p>
+    </section><article class="case" id="A1">
+      <header class="case-head">
+        <span class="mono case-id">A1</span>
+        <h3>Lowest rate per lender for an ELECTRIC passenger vehicle</h3>
+        <span class="chip chip-pass">Correct</span>
+      </header>
+      <div class="expected">
+        <p class="expected-label">Expected &mdash; verified against the policy chunk files</p>
+        <p>Westpac <span class="fig">6.75%</span> (7.75 less <span class="fig">1%</span> EV), Resimac <span class="fig">7.54%</span> PP, Metro <span class="fig">7.20%</span> (8.20 less <span class="fig">1%</span> MetroEco), BFS <span class="fig">7.60%</span> with no EV discount, Angle no EV-specific rate, Flexi not fundable (passenger cars excluded), CFAL no public rate card.</p>
+      </div>
+      <div class="turns"><div class="turn">
+        <p class="turn-label">Question</p>
+        <p class="question">I want to finance an electric passenger vehicle. What is the lowest displayed interest rate from each lender?</p>
+        <div class="answer"><p>Lowest displayed rates I’d use for an electric passenger vehicle:</p><ul><li><strong>Westpac:</strong> <strong>6.<span class="fig">75%</span></strong> — Xpress dealer car rate <span class="fig">7.75%</span> less <span class="fig">1%</span> EV discount.</li><li><strong>Metro:</strong> <strong>7.<span class="fig">20%</span></strong> — passenger/commercial vehicle rate <span class="fig">8.20%</span> less <span class="fig">1%</span> MetroEco discount, assuming &gt;<span class="fig">$20k</span> dealer deal.</li><li><strong>Resimac:</strong> <strong>7.<span class="fig">54%</span></strong> — EV PremiumPLUS rate.</li><li><strong>BFS:</strong> <strong>7.<span class="fig">60%</span></strong> — commercial Ultra Prime base rate for new/demo vehicles.</li><li><strong>Angle:</strong> <strong>7.<span class="fig">79%</span></strong> — lowest displayed headline rate for new primary assets, property-backed.</li><li><strong>CFAL:</strong> no displayed public interest rate card — pricing has to come from CFAL Credit Manager.</li><li><strong>Flexi:</strong> not applicable — flexicommercial excludes passenger cars/SUVs.</li></ul></div>
+        <p class="meta mono">63 sources &middot; 19.8s</p>
+      </div></div>
+      <p class="assessment"><span class="assessment-label">Assessment</span> All seven lenders right. Applied the EV discounts that exist and invented none where they don&#x27;t.</p>
+    </article><article class="case" id="A2">
+      <header class="case-head">
+        <span class="mono case-id">A2</span>
+        <h3>Stacking loadings landing exactly on the 4% cap</h3>
+        <span class="chip chip-pass">Correct</span>
+      </header>
+      <div class="expected">
+        <p class="expected-label">Expected &mdash; verified against the policy chunk files</p>
+        <p><span class="fig">8.24%</span> base (&gt;3yr MV, PremiumPLUS column read directly) + <span class="fig">2%</span> classic + <span class="fig">2%</span> private sale = <span class="fig">4%</span>, exactly at the <span class="fig">4%</span> cap -&gt; <span class="fig">12.24%</span>. Balloon must be 0 (classic cars excluded from balloons).</p>
+      </div>
+      <div class="turns"><div class="turn">
+        <p class="turn-label">Question</p>
+        <p class="question">Resimac deal: a PremiumPLUS client buying a classic car, 5 years old, through a private sale. What&#x27;s the all-in rate?</p>
+        <div class="answer"><p>Base rate: PremiumPLUS motor vehicle over 3 years old = <strong>8.<span class="fig">24%</span></strong></p><p>Risk loadings:</p><ul><li>Classic car: <strong>+<span class="fig">2.00%</span></strong></li><li>Private sale: <strong>+<span class="fig">2.00%</span></strong></li><li>Total loading: <strong>+<span class="fig">4.00%</span></strong> — that hits the Resimac cap, so no more than that applies.</li></ul><p>All-in rate = <strong>12.<span class="fig">24%</span> p.a.</strong> before any brokerage loading.</p></div>
+        <p class="meta mono">8 sources &middot; 5.7s</p>
+      </div></div>
+      <p class="assessment"><span class="assessment-label">Assessment</span> Both loadings stacked, cap recognised explicitly as a ceiling that was reached, not exceeded.</p>
+    </article><article class="case" id="A3">
+      <header class="case-head">
+        <span class="mono case-id">A3</span>
+        <h3>Premium tier the client does NOT qualify for</h3>
+        <span class="chip chip-pass">Correct</span>
+      </header>
+      <div class="expected">
+        <p class="expected-label">Expected &mdash; verified against the policy chunk files</p>
+        <p><span class="fig">7.85%</span> standard (<span class="fig">$150,001</span>+ Primary). NOT <span class="fig">7.15%</span> -- flexipremium needs 4+ years ABN/GST asset-backed.</p>
+      </div>
+      <div class="turns"><div class="turn">
+        <p class="turn-label">Question</p>
+        <p class="question">A company with a 3-year-old ABN and GST registration, asset backed, wants $200,000 for a primary asset. What&#x27;s flexicommercial&#x27;s rate?</p>
+        <div class="answer"><p>For <span class="fig">$200,000</span> on a Primary asset, they’re at <strong>7.<span class="fig">85%</span> ex brokerage</strong> with flexicommercial’s standard rate card.</p><p>They meet the basic matrix timing — <strong>ABN and GST both 3 years</strong>, so over the 2-year minimum — and being <strong>asset backed</strong> helps. They wouldn’t qualify for flexipremium yet, because that needs <strong>4 years ABN/GST</strong> even when asset backed.</p></div>
+        <p class="meta mono">8 sources &middot; 6.7s</p>
+      </div></div>
+      <p class="assessment"><span class="assessment-label">Assessment</span> The premium-tier trap. Gave 7.85%, not 7.15%, and named the 4-year requirement as the reason.</p>
+    </article><article class="case" id="A4">
+      <header class="case-head">
+        <span class="mono case-id">A4</span>
+        <h3>Three independent add-ons on the standard card</h3>
+        <span class="chip chip-pass">Correct</span>
+      </header>
+      <div class="expected">
+        <p class="expected-label">Expected &mdash; verified against the policy chunk files</p>
+        <p><span class="fig">8.35%</span> base (<span class="fig">$20,001</span>-<span class="fig">$150,000</span> Primary) + <span class="fig">1.00%</span> private sale + <span class="fig">1.25%</span> term &gt;60mo + <span class="fig">1.50%</span> non-asset-backed = <span class="fig">12.10%</span>. (Also cannot reach flexipremium: non-asset-backed needs 8+ years.)</p>
+      </div>
+      <div class="turns"><div class="turn">
+        <p class="turn-label">Question</p>
+        <p class="question">flexicommercial, non-asset-backed customer, $80,000 primary asset, private sale, 72-month term. Build up the rate.</p>
+        <div class="answer"><p>Base rate for an <span class="fig">$80,000</span> Primary asset: <strong>8.<span class="fig">35%</span></strong></p><p>Add-ons:</p><ul><li>Private sale: <strong>+<span class="fig">1.00%</span></strong></li><li>72-month term / over 60 months: <strong>+<span class="fig">1.25%</span></strong></li><li>Non-asset-backed customer: <strong>+<span class="fig">1.50%</span></strong></li></ul><p>So the built-up rate is:</p><p><strong>8.<span class="fig">35%</span> + <span class="fig">1.00%</span> + <span class="fig">1.25%</span> + <span class="fig">1.50%</span> = <span class="fig">12.10%</span> ex brokerage</strong></p><p>Quick check: 72 months is only okay for a Primary asset if it’s up to 3 years old; otherwise max term is 5 years. Also worth checking trading history, as non-asset-backed needs 8 years.</p></div>
+        <p class="meta mono">8 sources &middot; 9.8s</p>
+      </div></div>
+      <p class="assessment"><span class="assessment-label">Assessment</span> All three add-ons. Volunteered two eligibility conditions the question didn&#x27;t ask for.</p>
+    </article><section class="group-intro">
+      <p class="eyebrow">B &middot; Memory across a conversation</p>
+      <p class="group-blurb">Run as real multi-turn conversations. The final turn in each names neither the lender nor the asset — the context has to survive from earlier turns or the answer is meaningless.</p>
+    </section><article class="case" id="B1">
+      <header class="case-head">
+        <span class="mono case-id">B1</span>
+        <h3>Three-turn chain, subject never repeated</h3>
+        <span class="chip chip-pass">Correct</span>
+      </header>
+      <div class="expected">
+        <p class="expected-label">Expected &mdash; verified against the policy chunk files</p>
+        <p>T1 Resimac only. T2 <span class="fig">8.24%</span> + <span class="fig">2%</span> classic = <span class="fig">10.24%</span>. T3 second +<span class="fig">2%</span> stacks to the <span class="fig">4%</span> cap -&gt; <span class="fig">12.24%</span>.</p>
+      </div>
+      <div class="turns"><div class="turn">
+        <p class="turn-label">Turn 1</p>
+        <p class="question">Which lender supports classic cars?</p>
+        <div class="answer"><p>Resimac supports classic cars — they’re listed under motor vehicles, with a +<span class="fig">2%</span> risk loading.</p><p>For the rest of the panel: Angle, BFS, CFAL, Flexi, Metro and Westpac don’t clearly confirm classic cars in the excerpts.</p></div>
+        <p class="meta mono">63 sources &middot; 6.8s</p>
+      </div><div class="turn">
+        <p class="turn-label">Turn 2</p>
+        <p class="question">What rate would a PremiumPLUS client get on a 5-year-old one?</p>
+        <div class="answer"><p>PremiumPLUS motor vehicle &gt;3 years: <span class="fig">8.24%</span></p><p>Classic car loading: +<span class="fig">2.00%</span></p><p>So for a 5-year-old classic car, the rate would be <strong>10.<span class="fig">24%</span> p.a.</strong></p></div>
+        <p class="meta mono">8 sources &middot; 6.9s</p>
+      </div><div class="turn">
+        <p class="turn-label">Turn 3</p>
+        <p class="question">And if they buy it privately?</p>
+        <div class="answer"><p>PremiumPLUS motor vehicle &gt;3 years: <span class="fig">8.24%</span></p><p>Classic car loading: +<span class="fig">2.00%</span></p><p>Private sale loading: +<span class="fig">2.00%</span></p><p>Risk loadings cap at <span class="fig">4%</span>, and this hits that cap exactly.</p><p>So the rate would be <strong>12.<span class="fig">24%</span> p.a.</strong></p></div>
+        <p class="meta mono">8 sources &middot; 6.3s</p>
+      </div></div>
+      <p class="assessment"><span class="assessment-label">Assessment</span> Turn 3 named nothing. Carried four attributes across two hops and knew the loading stacks.</p>
+    </article><article class="case" id="B2">
+      <header class="case-head">
+        <span class="mono case-id">B2</span>
+        <h3>Lender switch, then a comparison needing both earlier turns</h3>
+        <span class="chip chip-pass">Correct</span>
+      </header>
+      <div class="expected">
+        <p class="expected-label">Expected &mdash; verified against the policy chunk files</p>
+        <p>T1 <span class="fig">$100k</span>. T2 <span class="fig">$150k</span> incl brokerage. T3 Angle only -- <span class="fig">$120k</span> exceeds BFS&#x27;s <span class="fig">$100k</span> cap but fits Angle&#x27;s <span class="fig">$150k</span>, subject to 3 months trading and <span class="fig">20%</span> deposit.</p>
+      </div>
+      <div class="turns"><div class="turn">
+        <p class="turn-label">Turn 1</p>
+        <p class="question">What&#x27;s the maximum loan under BFS New Business Ventures?</p>
+        <div class="answer"><p>BFS New Business Ventures is capped at <strong>$100,000 total exposure</strong>.</p><p>That’s the maximum loan size for that pathway — it’s not just a per-deal cap, it’s the customer’s total BFS exposure limit under New Business Ventures.</p></div>
+        <p class="meta mono">11 sources &middot; 6.8s</p>
+      </div><div class="turn">
+        <p class="turn-label">Turn 2</p>
+        <p class="question">What about Angle&#x27;s Start-Up product?</p>
+        <div class="answer"><p>Angle’s Start-Up product is capped at <strong>$150,000</strong>, including brokerage.</p><p>That’s for businesses with an <strong>ABN under 2 years</strong>. Key qualifiers are <strong>minimum 3 months trading</strong>, <strong>20% deposit</strong>, <strong>previous industry experience</strong>, and bank statements showing serviceability.</p></div>
+        <p class="meta mono">10 sources &middot; 8.4s</p>
+      </div><div class="turn">
+        <p class="turn-label">Turn 3</p>
+        <p class="question">So for a $120,000 deal, which one works?</p>
+        <div class="answer"><p>For a <strong>$120,000 deal</strong>, <strong>Angle Start-Up works</strong> and <strong>BFS New Business Ventures doesn’t</strong>.</p><ul><li><strong>Angle Start-Up:</strong> cap is <strong>$150,000 including brokerage</strong>, so <span class="fig">$120k</span> fits.</li><li><strong>BFS New Business Ventures:</strong> capped at <strong>$100,000 total exposure</strong>, so <span class="fig">$120k</span> is over the limit.</li></ul><p>So between those two, I’d be looking at <strong>Angle Start-Up</strong>, assuming the customer meets the start-up criteria.</p></div>
+        <p class="meta mono">63 sources &middot; 13.7s</p>
+      </div></div>
+      <p class="assessment"><span class="assessment-label">Assessment</span> Held figures from two separate turns and compared both against a number introduced only in turn 3.</p>
+    </article><article class="case" id="B3">
+      <header class="case-head">
+        <span class="mono case-id">B3</span>
+        <h3>Mid-chat correction must propagate into later reasoning</h3>
+        <span class="chip chip-pass">Correct</span>
+      </header>
+      <div class="expected">
+        <p class="expected-label">Expected &mdash; verified against the policy chunk files</p>
+        <p>T3 must use the corrected <span class="fig">$700</span> (not <span class="fig">$649</span>): <span class="fig">$10,000</span> deposit + <span class="fig">$700</span> establishment fee. NOTE: <span class="fig">$700</span> is a fabricated test value, restored away after the run.</p>
+      </div>
+      <div class="turns"><div class="turn">
+        <p class="turn-label">Turn 1</p>
+        <p class="question">What&#x27;s Angle&#x27;s establishment fee?</p>
+        <div class="answer"><p>Angle’s establishment fee is <strong>$649</strong>.</p><p>It applies to <strong>dealer or private sale</strong> deals, and can be either <strong>financed into the loan</strong> or <strong>paid by direct debit at settlement</strong>.</p></div>
+        <p class="meta mono">10 sources &middot; 3.4s</p>
+      </div><div class="turn">
+        <p class="turn-label">Turn 2 <span class="src-tag">correction saved</span></p>
+        <p class="question">That&#x27;s out of date, it&#x27;s actually $700 now.</p>
+        <div class="answer"><p>Got it — I&#x27;ve corrected that and saved it, so future questions like this will get the updated answer.</p></div>
+        <p class="meta mono">10 sources &middot; 1.7s</p>
+      </div><div class="turn">
+        <p class="turn-label">Turn 3</p>
+        <p class="question">So what&#x27;s the total upfront cost with a 20% deposit on a $50,000 ute?</p>
+        <div class="answer"><p><span class="fig">20%</span> deposit on a <span class="fig">$50,000</span> ute = <strong>$10,000</strong>.</p><p>If Angle’s establishment fee is paid upfront:</p><p><strong>$10,000 deposit + <span class="fig">$700</span> establishment fee = <span class="fig">$10,700</span> upfront.</strong></p><p>If the establishment fee is financed into the loan instead, the upfront cash is just <strong>$10,000</strong>.</p></div>
+        <p class="meta mono">63 sources &middot; 15.2s</p>
+      </div></div>
+      <p class="assessment"><span class="assessment-label">Assessment</span> The corrected fee propagated into later arithmetic, not just into a repeat of the same question.</p>
+    </article><section class="group-intro">
+      <p class="eyebrow">C &middot; Policy edge cases</p>
+      <p class="group-blurb">Threshold boundaries, exclusions that can’t be bought out, a product tier that doesn’t exist, and one question the source documents answer two different ways.</p>
+    </section><article class="case" id="C1">
+      <header class="case-head">
+        <span class="mono case-id">C1</span>
+        <h3>Credit score exactly on the tier boundary</h3>
+        <span class="chip chip-pass">Correct</span>
+      </header>
+      <div class="expected">
+        <p class="expected-label">Expected &mdash; verified against the policy chunk files</p>
+        <p>600 = Tier 2 (meets the minimum, no mandatory deposit). 599 = Tier 3 (550+), which carries a mandatory <span class="fig">20%</span> deposit on EVERY application, not conditional on contract type.</p>
+      </div>
+      <div class="turns"><div class="turn">
+        <p class="turn-label">Question</p>
+        <p class="question">A BFS commercial applicant has an Experian CCR score of exactly 600. Another has 599. What changes between them?</p>
+        <div class="answer"><p>At <strong>600</strong>, they qualify for <strong>BFS PRIME Tier 2</strong>.</p><p>At <strong>599</strong>, they don’t reach Tier 2, but they still meet <strong>PRIME Tier 3</strong> because Tier 3 starts at <strong>550</strong>.</p><p>So the key change is: <strong>600 = Tier 2, 599 = Tier 3</strong>.</p><p>Practical differences:</p><ul><li><strong>Tier 2</strong> gets full PRIME access and no automatic tier deposit.</li><li><strong>Tier 3</strong> still sits in PRIME, but needs a <strong>20% deposit on every application</strong>.</li><li>Tier 3 can still do commercial used vehicles; the used commercial restriction only kicks in at <strong>Tier 4</strong>.</li></ul></div>
+        <p class="meta mono">11 sources &middot; 5.3s</p>
+      </div></div>
+      <p class="assessment"><span class="assessment-label">Assessment</span> Treated 600 as the qualifying minimum. Also caught that the used-vehicle limit is Tier 4, not Tier 3.</p>
+    </article><article class="case" id="C2">
+      <header class="case-head">
+        <span class="mono case-id">C2</span>
+        <h3>Threshold met exactly -- no auto-decline</h3>
+        <span class="chip chip-pass">Correct</span>
+      </header>
+      <div class="expected">
+        <p class="expected-label">Expected &mdash; verified against the policy chunk files</p>
+        <p>No -- the trigger is income BELOW <span class="fig">$2,318</span>. At exactly <span class="fig">$2,318</span> it does not fire. Other auto-decline triggers still apply independently.</p>
+      </div>
+      <div class="turns"><div class="turn">
+        <p class="turn-label">Question</p>
+        <p class="question">A BFS consumer applicant has net monthly income of exactly $2,318. Is that an automatic decline?</p>
+        <div class="answer"><p>No — exactly <span class="fig">$2,318</span> net monthly income is not an automatic decline.</p><p>BFS auto-declines consumer applicants only when net monthly income is <strong>less than <span class="fig">$2,318</span>/month</strong>. So if they’re exactly at <span class="fig">$2,318,</span> they pass that particular threshold — assuming no other auto-decline issue applies.</p></div>
+        <p class="meta mono">11 sources &middot; 4.2s</p>
+      </div></div>
+      <p class="assessment"><span class="assessment-label">Assessment</span> Read it as a threshold, not a memorised association. Exactly at the floor is not a decline.</p>
+    </article><article class="case" id="C3">
+      <header class="case-head">
+        <span class="mono case-id">C3</span>
+        <h3>Allied health vs medical specialist limits</h3>
+        <span class="chip chip-pass">Correct</span>
+      </header>
+      <div class="expected">
+        <p class="expected-label">Expected &mdash; verified against the policy chunk files</p>
+        <p>No. Physio = Allied Health = single combined &lt;<span class="fig">$150k</span> cap across MV/office/medical equipment; cumulative &lt;<span class="fig">$250k</span>. The &lt;<span class="fig">$350k</span> medical-equipment figure is Specialist/GP/Dental/Vet only. The 5 years&#x27; experience is a red herring (&gt;3yr requirement is satisfied).</p>
+      </div>
+      <div class="turns"><div class="turn">
+        <p class="turn-label">Question</p>
+        <p class="question">A physiotherapist with 5 years&#x27; experience wants $200,000 of new medical equipment under Westpac Medical. Does it fit?</p>
+        <div class="answer"><p>No — not under Westpac Medical for that amount.</p><p>A physiotherapist is eligible as Allied Health, and 5 years’ experience clears the &gt;3 years requirement. But for Allied Health, new medical equipment sits inside the single combined Medical cap of <strong>&lt;<span class="fig">$150,000</span></strong>.</p><p>So <strong>$200,000 of new medical equipment is over the Allied Health Medical channel limit</strong>.</p></div>
+        <p class="meta mono">9 sources &middot; 4.7s</p>
+      </div></div>
+      <p class="assessment"><span class="assessment-label">Assessment</span> Avoided the $350k figure sitting in the same table, and named the experience detail as satisfied.</p>
+    </article><article class="case" id="C4">
+      <header class="case-head">
+        <span class="mono case-id">C4</span>
+        <h3>Loan size vs total exposure</h3>
+        <span class="chip chip-pass">Correct</span>
+      </header>
+      <div class="expected">
+        <p class="expected-label">Expected &mdash; verified against the policy chunk files</p>
+        <p>No -- false premise. Max LOAN SIZE with 12 months history is <span class="fig">$300k</span> (dealer); exposure <span class="fig">$500k</span> is a separate aggregate ceiling. Both must be cleared. Prime movers excluded; private sale caps <span class="fig">$250k</span>.</p>
+      </div>
+      <div class="turns"><div class="turn">
+        <p class="turn-label">Question</p>
+        <p class="question">A Metro customer with 12 months of good repayment history wants a single $400,000 truck. Their maximum exposure is $500,000 — so this fits, right?</p>
+        <div class="answer"><p>Not under Metro’s truck streamlined policy, no.</p><p>You’re right that 12 months good Metro repayment history can give them up to <strong>$500,000 total Metro exposure</strong> — but the <strong>single truck loan size cap</strong> is separate, and for that customer it’s <strong>$300,000</strong> under the streamlined truck/trailer/wheeled equipment product.</p><p>So a <strong>single <span class="fig">$400,000</span> truck</strong> is over the streamlined max loan size, even if their overall exposure limit is <span class="fig">$500,000</span>. You’d need to look at a non-streamlined/full assessment route or another structure.</p></div>
+        <p class="meta mono">9 sources &middot; 6.6s</p>
+      </div></div>
+      <p class="assessment"><span class="assessment-label">Assessment</span> Rejected the premise and separated the per-deal cap from the aggregate exposure ceiling.</p>
+    </article><article class="case" id="C5">
+      <header class="case-head">
+        <span class="mono case-id">C5</span>
+        <h3>Remote area -- which lender actually has the rule</h3>
+        <span class="chip chip-pass">Correct</span>
+      </header>
+      <div class="expected">
+        <p class="expected-label">Expected &mdash; verified against the policy chunk files</p>
+        <p>BFS PRIME: <span class="fig">20%</span> deposit for non-asset-backed in remote areas. CFAL: no such rule exists -- it was traced to Resimac&#x27;s/BFS&#x27;s guides and removed. Do not apply a geography rule to CFAL.</p>
+      </div>
+      <div class="turns"><div class="turn">
+        <p class="turn-label">Question</p>
+        <p class="question">My client is in a Remote area and is non-asset-backed. What deposit will BFS want, and what about CFAL?</p>
+        <div class="answer"><p>BFS will want a <span class="fig">20%</span> deposit under PRIME for a non-asset-backed customer in a Remote area.</p><p>Just watch the carve-outs:</p><ul><li>If it’s “Very Remote”, BFS won’t do it at all.</li><li>BFS Plus won’t lend in Remote areas at all, so no deposit workaround there.</li></ul><p>For CFAL, there’s no Remote-area deposit rule shown in the policy excerpts. CFAL is commercial equipment only, so we’d need to fit their normal commercial/asset policy rather than apply the BFS remote rule.</p></div>
+        <p class="meta mono">19 sources &middot; 10.3s</p>
+      </div></div>
+      <p class="assessment"><span class="assessment-label">Assessment</span> Surfaced two carve-outs the reference answer had missed. Both verified correct against policy.</p>
+    </article><article class="case" id="C6">
+      <header class="case-head">
+        <span class="mono case-id">C6</span>
+        <h3>Hard exclusion vs soft condition</h3>
+        <span class="chip chip-pass">Correct</span>
+      </header>
+      <div class="expected">
+        <p class="expected-label">Expected &mdash; verified against the policy chunk files</p>
+        <p>No. Passenger cars/SUVs are a hard asset exclusion at flexicommercial -- deposit and trading history cannot satisfy it. Commercial vehicles (utes/vans/4WDs) ARE fundable as primary assets.</p>
+      </div>
+      <div class="turns"><div class="turn">
+        <p class="turn-label">Question</p>
+        <p class="question">My client wants flexicommercial to fund a passenger car for their business. They can put down a 50% deposit and they&#x27;ve been trading 10 years. Does that get it over the line?</p>
+        <div class="answer"><p>No — flexicommercial won’t fund passenger cars, even with a <span class="fig">50%</span> deposit and 10 years trading.</p><p>The deposit and time in business help with credit strength, but they don’t override the asset exclusion. SUVs and passenger cars are specifically excluded for flexicommercial.</p></div>
+        <p class="meta mono">8 sources &middot; 4.5s</p>
+      </div></div>
+      <p class="assessment"><span class="assessment-label">Assessment</span> Held the line that a hard asset exclusion is not a credit condition a deposit can satisfy.</p>
+    </article><article class="case" id="C7">
+      <header class="case-head">
+        <span class="mono case-id">C7</span>
+        <h3>A product tier that does not exist</h3>
+        <span class="chip chip-pass">Correct</span>
+      </header>
+      <div class="expected">
+        <p class="expected-label">Expected &mdash; verified against the policy chunk files</p>
+        <p>CFAL has NO Low Doc option -- reject the premise. Documentation scales with transaction size; financial statements must be no more than 18 months old, for all related companies and trusts.</p>
+      </div>
+      <div class="turns"><div class="turn">
+        <p class="turn-label">Question</p>
+        <p class="question">What are CFAL&#x27;s Low Doc requirements for a $150,000 transaction?</p>
+        <div class="answer"><p>CFAL doesn’t have a Low Doc option.</p><p>For a <span class="fig">$150,000</span> standard transaction, you’d be in the ≤<span class="fig">$250k</span> document band. CFAL would need the usual full-doc pack, including:</p><ul><li>Client info</li><li>Brief background on the business/directors</li><li>ABN for 2+ years and GST registered</li><li>Full asset description and reason for purchase</li><li>Signed privacy forms for all individuals</li><li>Last 2 years financial statements and tax returns</li><li>Current A&amp;L for all directors/guarantors</li><li>Commitment schedule</li></ul><p>If it fits DriveXpress fast-track criteria, financials may not be needed — but that’s not “Low Doc” as such; it’s a separate fast-track pathway.</p></div>
+        <p class="meta mono">8 sources &middot; 4.5s</p>
+      </div></div>
+      <p class="assessment"><span class="assessment-label">Assessment</span> Rejected the false premise, then gave the correct document band in full.</p>
+    </article><article class="case" id="C8">
+      <header class="case-head">
+        <span class="mono case-id">C8</span>
+        <h3>The corpus contradicts itself</h3>
+        <span class="chip chip-watch">Caveat</span>
+      </header>
+      <div class="expected">
+        <p class="expected-label">Expected &mdash; verified against the policy chunk files</p>
+        <p>Flag the conflict: rate sheet says <span class="fig">$91,661,</span> MetroEco booklet says <span class="fig">$91,387</span>. Surface BOTH and say to confirm with Metro. Silently picking one (or averaging) is the failure.</p>
+      </div>
+      <div class="turns"><div class="turn">
+        <p class="turn-label">Question</p>
+        <p class="question">What&#x27;s the maximum vehicle price for Metro&#x27;s MetroEco electric vehicle discount?</p>
+        <div class="answer"><p>Metro’s MetroEco EV discount applies up to roughly <strong>$91k vehicle finance</strong>, but there’s a figure mismatch in Metro’s docs:</p><ul><li>MetroEco booklet says <strong>up to <span class="fig">$91,387</span></strong></li><li>Newer rate sheet says <strong>up to <span class="fig">$91,661</span></strong></li></ul><p>I’d flag it as <strong>confirm with Metro before quoting</strong> — but practically, treat the cap as around <strong>$91.4k–<span class="fig">$91.7k</span></strong> for eligible new/demo plug-in battery electric vehicles.</p></div>
+        <p class="meta mono">9 sources &middot; 4.6s</p>
+      </div></div>
+      <p class="assessment"><span class="assessment-label">Assessment</span> Flagged both conflicting figures and said to confirm — then added a working range. Defensible for a broker, but it softens the &#x27;don&#x27;t quote until confirmed&#x27; line.</p>
+    </article>
+
+  <footer>
+    <p>
+      Generated from <span class="mono">tests/finals_practice_results.json</span>. Cases and verified
+      reference answers live in <span class="mono">docs/Finals_Practice_Cases.md</span>; rerun any time
+      with <span class="mono">python tests/run_finals_practice.py</span>.
+    </p>
+  </footer>
+</div>

@@ -1,5 +1,12 @@
 # LifeX Policy Assistant — Technical Documentation (Week 4)
 
+> **Historical record — superseded by [`Technical_Documentation.md`](Technical_Documentation.md).**
+> This describes the system as it stood at the end of Week 4 and is kept for the design
+> history it carries (notably §3, the automated chunk-extraction pipeline and why it was
+> rolled back). For how the system behaves **now** — the two answer caches, correction
+> handling, reasoning-effort routing, and current evaluation results — read the current
+> document instead.
+
 This document covers three things: (1) how the current RAG system works end to end, (2) the technical changes made this week, and (3) the automated chunk-extraction pipeline that was designed, built, piloted, and then rolled back this week.
 
 ---
