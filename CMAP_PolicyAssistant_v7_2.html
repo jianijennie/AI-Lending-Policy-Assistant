@@ -1171,7 +1171,7 @@ function renderDraftResults(data){
         </div>`;
     return `<div class="chunk-item" data-chunk-id="${esc(c.chunk_id)}">
       <div class="chunk-item-head">
-        <label><input type="checkbox" class="chunk-select" data-chunk-id="${esc(c.chunk_id)}" checked><span class="chunk-id-label">${esc(c.chunk_id)}</span></label>
+        <label><input type="checkbox" class="chunk-select" data-chunk-id="${esc(c.chunk_id)}" onchange="updateChunkSelection()"><span class="chunk-id-label">${esc(c.chunk_id)}</span></label>
         ${newBadge}
       </div>
       ${diff}
@@ -1180,11 +1180,11 @@ function renderDraftResults(data){
 
   box.innerHTML = `
     <div class="draft-summary">
-      <div><div class="draft-summary-title">${data.chunks.length} chunk${data.chunks.length!==1?'s':''} drafted from ${esc(data.source_filename)}</div><div class="draft-summary-sub">Review each one below — uncheck anything that looks wrong before promoting.</div></div>
+      <div><div class="draft-summary-title">${data.chunks.length} chunk${data.chunks.length!==1?'s':''} drafted from ${esc(data.source_filename)}</div><div class="draft-summary-sub">Nothing is selected yet. Read each chunk below against the live version, then tick the ones you want to make live.</div></div>
       <div class="draft-actions">
         <button class="btn" onclick="selectAllChunks(false)">Deselect all</button>
         <button class="btn" onclick="selectAllChunks(true)">Select all</button>
-        <button class="btn btn-promote" id="btn-promote-chunks" onclick="promoteSelected()">Promote selected</button>
+        <button class="btn btn-promote" id="btn-promote-chunks" onclick="promoteSelected()" disabled>Promote selected</button>
       </div>
     </div>
     ${warnings}
@@ -1195,6 +1195,23 @@ function renderDraftResults(data){
 
 function selectAllChunks(checked){
   document.querySelectorAll('.chunk-select').forEach(cb=>{cb.checked=checked;});
+  updateChunkSelection();
+}
+
+// Chunks start UNSELECTED. Promoting rewrites the live policy file the
+// assistant answers from, and this review step is the only thing standing
+// between a drafted chunk and production -- so the safe state has to be the
+// default, and selecting has to be the deliberate act. When every box
+// arrived pre-ticked, clicking "Promote selected" without scrolling shipped
+// every chunk, which quietly turned the review gate into a rubber stamp.
+// "Select all" is still there for someone who genuinely has read them all.
+function updateChunkSelection(){
+  const boxes=[...document.querySelectorAll('.chunk-select')];
+  const n=boxes.filter(cb=>cb.checked).length;
+  const btn=document.getElementById('btn-promote-chunks');
+  if(!btn)return;
+  btn.disabled=(n===0);
+  btn.textContent=n?`Promote ${n} of ${boxes.length}`:'Promote selected';
 }
 
 function promoteSelected(){
@@ -1215,7 +1232,6 @@ function promoteSelected(){
       return r.json();
     })
     .then(data=>{
-      btn.disabled=false;
       const alUpdates=(data.answer_library_updates||[]);
       const alBlock=alUpdates.length
         ? `<div class="al-update-note">Also refreshed ${alUpdates.length} saved answer${alUpdates.length!==1?'s':''} that depended on ${alUpdates.length!==1?'these':'this'} chunk${alUpdates.length!==1?'s':''}: ${alUpdates.map(u=>esc(u.question)+' → '+esc(u.status)).join('; ')}</div>`
@@ -1231,9 +1247,15 @@ function promoteSelected(){
       document.querySelectorAll('.chunk-select').forEach(cb=>{
         if(selected.includes(cb.dataset.chunkId)){cb.checked=false;cb.disabled=true;}
       });
+      // Recompute rather than blanket re-enabling: the promoted chunks were
+      // just unticked above, so with nothing left selected the button should
+      // stay disabled instead of inviting an empty second promote.
+      updateChunkSelection();
     })
     .catch(err=>{
-      btn.disabled=false;
+      // Selection is untouched by a failure, so this restores the button to
+      // whatever the current ticks warrant -- ready to retry.
+      updateChunkSelection();
       resultEl.innerHTML=`<div class="draft-error">Promotion failed: ${esc(err.message||String(err))}. Nothing was changed — safe to try again.</div>`;
     });
 }
