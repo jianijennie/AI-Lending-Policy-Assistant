@@ -586,7 +586,24 @@ def promote_chunks(request: PromoteRequest):
 
     draft_path = os.path.join(CHUNKS_DRAFT_DIR, f"{request.draft_id}.md")
     if not os.path.exists(draft_path):
-        raise HTTPException(status_code=404, detail=f"Draft '{request.draft_id}' not found — it may already be promoted, or the backend restarted since it was created")
+        raise HTTPException(status_code=404, detail=f"Draft '{request.draft_id}' not found — check the draft id, or re-upload the PDF to create a new draft")
+
+    # draft_id and lender arrive as independent fields, so nothing stopped a
+    # caller pairing one lender's draft with another lender's name -- which
+    # would merge, say, Angle's chunks straight into westpac_chunks_v2.md.
+    # /chunks/draft builds the id as "<lender>_<uuid>", so the draft already
+    # carries which lender it was made for; trust that over the request. No
+    # lender code contains an underscore, so the prefix split is unambiguous.
+    # The frontend always sends a matching pair, so this guards direct API
+    # use and any future UI bug rather than a live failure.
+    draft_lender = request.draft_id.split("_")[0].upper()
+    if draft_lender != lender_code:
+        raise HTTPException(
+            status_code=400,
+            detail=(f"Draft '{request.draft_id}' was drafted for {draft_lender}, but this request asks to "
+                    f"promote it into {lender_code}'s chunk file. Promote it as {draft_lender}, or re-draft "
+                    f"the PDF under {lender_code}."),
+        )
 
     with open(draft_path, "r", encoding="utf-8") as f:
         draft_text = f.read()

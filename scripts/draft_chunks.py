@@ -233,6 +233,24 @@ def draft_chunks_from_pdfs(
     response = _openai_client.chat.completions.create(**kwargs)
     choice = response.choices[0]
     print(f"model={model} finish_reason={choice.finish_reason}, usage={response.usage}")
+
+    # Refuse a truncated draft rather than returning it. finish_reason
+    # "length" means the output hit the token cap mid-write, so the tail of
+    # the draft is cut off -- but the VALID PREFIX still parses, and the
+    # partial final chunk can look structurally complete (all schema fields
+    # present, a Content section that simply stops early). That is the worst
+    # shape this failure could take: a chunk that passes validation and gets
+    # promoted with policy content silently missing from the end of it.
+    # Better to fail loudly and have the operator split the PDF -- a missing
+    # draft is recoverable, a quietly incomplete rate table is not.
+    if choice.finish_reason == "length":
+        raise ValueError(
+            f"the model hit its {kwargs.get('max_completion_tokens') or kwargs.get('max_tokens')}-token "
+            "output limit and the draft was cut off part-way through. Nothing was drafted, because a "
+            "truncated draft can still look complete and would be unsafe to promote. Try splitting the "
+            "PDF into smaller files (for example one section or rate card at a time) and uploading them "
+            "separately."
+        )
     # No second-pass merged-cell recheck needed anymore -- that was a
     # workaround for the model guessing at merges from pixels. Now that
     # scripts/table_geometry.py hands it the actual answer as deterministic
