@@ -256,8 +256,8 @@ Reply with only JSON: {{"standalone_question": "...", "wants_more_detail": true 
 
 def _classify_fanout_effort(question: str) -> str:
     """For a fan-out question (no lender named), decide whether it needs
-    genuine cross-lender ranking/comparison (REASONING_EFFORT, "low") or is a
-    simple yes/no eligibility scan (FANOUT_REASONING_EFFORT, "minimal").
+    careful step-by-step reasoning (REASONING_EFFORT, "low") or is a
+    straightforward category lookup (FANOUT_REASONING_EFFORT, "none").
 
     Same rationale as _resolve_followup just above: a keyword list
     ("cheapest", "lowest"...) misses phrasings like "which one's the better
@@ -271,22 +271,50 @@ def _classify_fanout_effort(question: str) -> str:
     showing up in cross-lender ranking instead. A/B tested 2026-07-27: at
     "low" effort the model correctly excluded a lender whose discount only
     applied at a shorter term than asked for; at "minimal" it didn't always.
+
+    BROADENED 2026-08-18 beyond ranking, after the ranking-only split
+    produced a confirmed wrong answer on an ELIGIBILITY question. "Carpenter
+    registered ABN and GST last week, wants a ute, which lender can he
+    choose?" classified as a simple eligibility scan -> "none", and came back
+    recommending the one lender the client is actually ineligible for (Angle
+    Start-Up needs 3 months' trading) while dismissing the one that fits (BFS
+    New Business Ventures explicitly covers "less than 12 months ABN").
+    Controlled A/B on that exact question with identical retrieval (63
+    chunks) and effort as the only variable: "none" answered Angle, "low"
+    answered BFS and correctly ruled Angle out on the 3-month rule. The
+    "none" answer even quoted BFS's "less than 12 months ABN" requirement --
+    which one week satisfies -- and then concluded the opposite, which is
+    what insufficient reasoning depth looks like rather than missing data.
+
+    So the real axis was never ranking-vs-eligibility: it's whether a
+    specific customer figure has to be tested against each lender's own
+    threshold. Working out which side of a threshold "last week" falls on is
+    as demanding as picking a cheapest rate, and now gets the same effort.
+    Pure category lookups ("which lenders finance trucks") stay on the cheap
+    path -- that's what preserves the fan-out latency win this constant
+    exists for; see FANOUT_REASONING_EFFORT's comment in config.py.
     """
     classify_prompt = f"""A finance broker asked a policy assistant this question, with no specific lender named — the assistant will scan across all 7 lenders on the panel to answer it:
 
 "{question}"
 
-Does answering this correctly require comparing a specific number (a rate, a fee, a cap, an age limit, an exposure limit) across multiple lenders and picking one out as the best/cheapest/highest/lowest — even if words like "cheapest" or "best" aren't used literally (e.g. "which one's the better deal", "who should I go with for this")? Or is it a simple yes/no eligibility scan (can lender X do this, which lenders allow Y) that doesn't require ranking anything?
+Decide whether answering it correctly needs careful step-by-step reasoning, or whether it's a straightforward lookup across the lenders.
 
-Reply with only JSON: {{"needs_ranking": true or false}}"""
+Answer TRUE (needs careful reasoning) if EITHER applies:
+1. It requires comparing a specific number across lenders and picking one out as the best/cheapest/highest/lowest — even if words like "cheapest" or "best" aren't used literally (e.g. "which one's the better deal", "who should I go with for this").
+2. The question gives a SPECIFIC customer detail or figure — an ABN/GST age, a credit score, a loan amount, an asset age, a term length, a deposit, an income — that has to be tested against each lender's own threshold to work out who actually qualifies. Deciding which side of a threshold a customer falls on is exactly where a quick scan goes wrong: e.g. "ABN registered last week" has to be checked against one lender's "minimum 3 months trading" (fails it) and another's "less than 12 months ABN" (passes it) — those cut in opposite directions and are easy to get backwards.
+
+Answer FALSE (straightforward) only when it's a pure category lookup with no customer-specific figure to test against thresholds — e.g. "which lenders finance trucks", "who can do software", "which lenders offer balloon payments".
+
+Reply with only JSON: {{"needs_deeper_reasoning": true or false}}"""
     try:
         raw = _chat_completion(RESOLVER_MODEL, classify_prompt,
                                max_output_tokens=60, json_mode=True)
         parsed = json.loads(raw)
-        return REASONING_EFFORT if parsed.get("needs_ranking") else FANOUT_REASONING_EFFORT
+        return REASONING_EFFORT if parsed.get("needs_deeper_reasoning") else FANOUT_REASONING_EFFORT
     except Exception:
         # Fail toward correctness, not speed, on a classifier hiccup — an
-        # occasional slow answer is a smaller cost than a wrong ranking.
+        # occasional slow answer is a smaller cost than a wrong answer.
         return REASONING_EFFORT
 
 
