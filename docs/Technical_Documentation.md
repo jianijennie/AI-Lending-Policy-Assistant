@@ -334,7 +334,7 @@ content, so there's no way to tell which are stale.
 | Suite | What it covers |
 |---|---|
 | `tests/run_quick_regression.py` | 14-question smoke test — every complexity type, every lender |
-| `tests/run_complex_questions.py` | Full 111-question adversarial bank |
+| `tests/run_complex_questions.py` | Full 125-question adversarial bank |
 | `tests/run_full_eval.py` | 43 questions + follow-ups, corrections, cache, library |
 | `tests/run_combination_eval.py` | 12 scenarios testing how those mechanisms **interact** |
 | `tests/run_finals_practice.py` | 15 competition-style cases (see `Finals_Practice_Cases.md`) |
