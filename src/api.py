@@ -568,6 +568,46 @@ def refresh_answer_library():
     )
 
 
+class CacheStatsResponse(BaseModel):
+    cached_answers: int
+    library_answers: int
+
+
+@app.get("/query-cache/stats", response_model=CacheStatsResponse)
+def query_cache_stats():
+    """Current size of both answer stores, for the UI to show before offering
+    to clear one of them."""
+    return CacheStatsResponse(
+        cached_answers=len(_load_query_cache()),
+        library_answers=len(answer_library.load_entries()),
+    )
+
+
+class ClearCacheResponse(BaseModel):
+    status: str
+    cleared: int
+
+
+@app.post("/query-cache/clear", response_model=ClearCacheResponse)
+def clear_query_cache():
+    """Empty the query cache (unreviewed AI answers only).
+
+    Deliberately scoped to the cache and NOT the answer library: the cache is
+    fully regenerable, so clearing it costs one slow answer per question,
+    whereas the library holds human corrections that nothing else can
+    reconstruct. Losing those to a mis-click during a demo is not a
+    recoverable mistake, so this endpoint simply cannot do it.
+
+    Useful when chunks or prompts have changed and you want every answer
+    regenerated rather than served from before the change -- chunk
+    promotions invalidate affected entries automatically (see
+    _invalidate_query_cache_for_chunks), but a code or prompt change leaves
+    the cache technically valid and semantically stale.
+    """
+    cleared = _clear_query_cache()
+    return ClearCacheResponse(status="cleared", cleared=cleared)
+
+
 @app.post("/chunks/draft", response_model=DraftResponse)
 def draft_chunks(lender: str = Form(...), file: UploadFile = File(...)):
     """Upload a single lender policy PDF and have it auto-drafted into

@@ -428,6 +428,45 @@ textarea#qa-in::placeholder{color:var(--ink3)}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--ink);color:#fff;font-size:12px;font-weight:500;padding:8px 16px;border-radius:20px;display:flex;align-items:center;gap:7px;opacity:0;transition:all .25s ease;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:999}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* Reset-cache control (Usage & Cost topbar) */
+.btn-reset-cache{
+  margin-left:auto;font-size:11.5px;font-weight:500;
+  padding:5px 11px;border-radius:var(--r-sm);cursor:pointer;
+  background:var(--surf);color:var(--ink2);border:1.5px solid var(--rule2);
+  transition:border-color .15s,color .15s;white-space:nowrap;
+}
+.btn-reset-cache:hover:not(:disabled){border-color:var(--lifex);color:var(--lifex)}
+.btn-reset-cache:disabled{opacity:.55;cursor:default}
+.cache-note{font-size:11.5px;border-radius:var(--r-sm);padding:9px 12px;margin-bottom:14px;line-height:1.5}
+.cache-note.ok{background:var(--grn-lt);color:var(--grn)}
+.cache-note.err{background:var(--red-lt);color:var(--red)}
+
+/* Wide tables must scroll inside their own box, never widen the page. */
+.log-wrap{overflow-x:auto}
+.log-table{min-width:520px}
+
+/* ── Portrait / vertical-screen layout ──────────────────────────────────
+   The competition runs three groups side by side on three portrait
+   displays. A panel like that is tall and column-shaped even when its
+   pixel width is nominally "desktop" (a 1080x1920 screen is 1080 wide but
+   reads as a narrow column), so these rules key off ORIENTATION rather
+   than waiting for a phone-sized width breakpoint. Anything that assumes
+   a landscape amount of horizontal room gets a column-friendly form. */
+@media (orientation:portrait){
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .chunk-diff{grid-template-columns:1fr}
+  .chunk-diff-col+.chunk-diff-col{border-left:none;border-top:1px solid var(--rule)}
+  .msg{max-width:94%}
+  .upload-card{max-width:none}
+}
+/* Tall AND genuinely narrow: also drop the lender pill row for the
+   dropdown, which the 1000px rule below would otherwise miss on a
+   portrait panel wider than 1000px. */
+@media (orientation:portrait) and (max-width:900px){
+  .lender-pills-wrap{display:none!important}
+  .lender-dropdown-wrap{display:flex!important}
+}
+
 /* Mobile */
 @media(max-width:640px){
   .sidebar{position:fixed;top:0;left:0;height:100%;z-index:100;transform:translateX(-100%);transition:transform .2s ease;width:240px;min-width:240px}
@@ -435,6 +474,10 @@ textarea#qa-in::placeholder{color:var(--ink3)}
   .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99}
   .sidebar-overlay.show{display:block}
   .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .topbar{flex-wrap:wrap;gap:8px}
+  .btn-reset-cache{margin-left:0}
+  .chat-scroll{padding:14px}
+  .welcome-title{font-size:18px}
 }
 @media(min-width:641px){.sidebar-overlay{display:none!important}}
 </style>
@@ -631,8 +674,10 @@ textarea#qa-in::placeholder{color:var(--ink3)}
     </div>
     <div class="topbar">
       <span class="topbar-title">Usage & Cost</span>
+      <button class="btn-reset-cache" id="btn-reset-cache" onclick="resetQueryCache()" title="Clear stored AI answers so the next questions are answered fresh. Reviewed corrections are not affected.">Reset cache</button>
     </div>
     <div class="cost-scroll">
+      <div id="reset-cache-result"></div>
       <div class="kpi-grid">
         <div class="kpi"><div class="kpi-lbl">Total queries</div><div class="kpi-val" id="k-total">0</div><div class="kpi-sub">this session</div></div>
         <div class="kpi"><div class="kpi-lbl">API calls</div><div class="kpi-val" id="k-api">0</div><div class="kpi-sub" id="k-api-sub">—% of queries</div></div>
@@ -1030,6 +1075,35 @@ function approveEntry(id){
 function rejectEntry(id){KB=KB.filter(x=>x.id!==id);const c=document.getElementById('rc-'+id);if(c){c.style.opacity='.35';c.style.pointerEvents='none';}setTimeout(()=>{renderReview();renderLib();updateAll();},700);toast('Entry rejected');}
 
 // Costs
+// Clears the query cache (stored AI answers) only. Reviewed corrections in
+// the answer library are never touched -- the cache regenerates itself for
+// the price of one slow answer, whereas a correction someone typed is gone
+// for good. The confirm step is here because during a live demo this button
+// sits next to the numbers it resets.
+function resetQueryCache(){
+  const btn=document.getElementById('btn-reset-cache');
+  const out=document.getElementById('reset-cache-result');
+  if(!confirm('Clear all stored AI answers?\n\nThe next few questions will be slower while they are answered fresh. Reviewed corrections in the Answer library are NOT affected.'))return;
+  btn.disabled=true;btn.textContent='Clearing…';
+  fetch(API_BASE+'/query-cache/clear',{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'}})
+    .then(async r=>{if(!r.ok){const b=await r.json().catch(()=>({}));throw new Error(b.detail||('HTTP '+r.status));}return r.json();})
+    .then(d=>{
+      btn.disabled=false;btn.textContent='Reset cache';
+      out.innerHTML=`<div class="cache-note ok">Cleared ${d.cleared} stored answer${d.cleared!==1?'s':''}. The next questions will be answered fresh.</div>`;
+      // The frontend keeps its own separate list for the Review tab; clear
+      // the cached entries there too so the two don't disagree about what
+      // is stored. Pending/approved review items are left alone.
+      KB=KB.filter(e=>e.status!=='cached');
+      session.hits=0;session.saved=0;
+      updateAll();
+      toast('Cache cleared');
+    })
+    .catch(err=>{
+      btn.disabled=false;btn.textContent='Reset cache';
+      out.innerHTML=`<div class="cache-note err">Could not clear the cache: ${esc(err.message||String(err))}</div>`;
+    });
+}
+
 function renderCosts(){
   const total=session.api+session.hits;
   document.getElementById('k-total').textContent=total;
