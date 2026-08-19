@@ -14,6 +14,31 @@ boundaries and merged cells, which gets fed to the LLM alongside the page
 images as ground truth to read from -- turning "guess whether this is
 merged" into "here's what's actually merged, transcribe accordingly."
 
+KNOWN LIMITATION -- tables drawn as filled blocks are not detected.
+This finds tables whose borders are STROKED (thin filled rects acting as
+line segments). Some rate cards draw no strokes at all: every cell is a
+filled rectangle and the "border" is just where two fills meet. Measured
+2026-08-19: the Angle rate card has 98 drawings, all filled, yielding 0
+horizontal and 1 vertical line; the Westpac rate chart, 26 drawings and
+likewise nothing. Both return "" here -- and they are two of the most
+rate-critical documents in the corpus.
+
+Deriving grid lines from those blocks' EDGES was tried and REVERTED, not
+left undone. It does find grids, but the wrong ones: gated only on size it
+produced a 31x40 "table" of almost entirely empty cells on the Angle card;
+gated additionally on cells containing text it still produced 19x22 with
+negative coordinates, and on the Westpac chart it collapsed a rate table
+into one column reading "Term 48 Months Term 60 Months Term 24-36 Months
+9.97% 9.97% 10.17%" -- term-to-rate association destroyed, which is the
+exact failure this module exists to prevent. Since the drafting prompt
+tells the model to trust this output OVER its own reading of the page,
+plausible-but-wrong structure is worse than no output: with none, the model
+reads the rendered image, which it does correctly on these cards today.
+
+If revisiting: the bar is recovering true column structure, not merely
+detecting that a grid exists. Text-column clustering (x-positions of text
+spans) is likely a better signal than block edges.
+
 Usage as a library: `describe_tables_on_page(page) -> str`
 """
 import fitz
