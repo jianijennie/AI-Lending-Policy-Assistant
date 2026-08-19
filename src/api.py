@@ -175,6 +175,74 @@ def _find_cached(question: str):
     return None
 
 
+def _invalidate_query_cache_for_chunks(changed_chunk_ids: set) -> int:
+    """Drop every cached answer that cited one of these chunk_ids, and return
+    how many were removed.
+
+    Chunk edits used to leave the query cache completely untouched, so after
+    a rate change the cache kept serving the OLD figure indefinitely: ask a
+    question, update the chunk, ask again -- cache hit, superseded number,
+    no signal that anything was stale. Nothing expired it either; entries
+    carry no timestamp, so age isn't even knowable.
+
+    Dropping is the right move here, and deliberately different from what
+    the answer library does with the same event. Library entries are human
+    corrections worth preserving, so those get individually re-checked and
+    rewritten or flagged. A query-cache entry is just an unreviewed LLM
+    answer with nothing worth salvaging -- regenerating it costs one
+    question's latency and is guaranteed to reflect the new chunk.
+
+    Precise rather than blunt because entries record the sources they drew
+    on, so "did this answer depend on what changed?" is answerable directly.
+    """
+    if not changed_chunk_ids:
+        return 0
+    with _query_cache_lock:
+        cache = _load_query_cache()
+        survivors = [
+            entry for entry in cache
+            if not any(s.get("chunk_id") in changed_chunk_ids for s in (entry.get("sources") or []))
+        ]
+        removed = len(cache) - len(survivors)
+        if removed:
+            _write_query_cache(survivors)
+        return removed
+
+
+def _clear_query_cache() -> int:
+    """Empty the cache wholesale, returning how many entries were dropped.
+
+    For the path where chunks were edited by hand and re-ingested outside
+    /chunks/promote: nothing recorded which chunk_ids moved, and cache
+    entries don't snapshot chunk content the way library entries do, so
+    there's no way to tell which are stale. Clearing everything is the only
+    honest option, and a cheap one -- the cache is fully regenerable and the
+    cost is one slow answer per question afterwards.
+    """
+    with _query_cache_lock:
+        cache = _load_query_cache()
+        if cache:
+            _write_query_cache([])
+        return len(cache)
+
+
+def _write_query_cache(cache: list):
+    """Atomic write, shared by every cache mutation (append, invalidate, clear).
+
+    Writes a temp file then replaces, rather than truncating the real file in
+    place. FastAPI's sync endpoints run in a thread pool, so a concurrent
+    request's unlocked _load_query_cache read could otherwise land mid-write
+    and hit half-written, invalid JSON. os.replace is atomic on both Windows
+    and POSIX, so a concurrent reader always sees either the old file or the
+    new one, whole.
+    """
+    os.makedirs(os.path.dirname(QUERY_CACHE_PATH), exist_ok=True)
+    tmp_path = QUERY_CACHE_PATH + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        json.dump(cache, f, indent=2)
+    os.replace(tmp_path, QUERY_CACHE_PATH)
+
+
 def _append_to_query_cache(question: str, answer: str, sources: list):
     with _query_cache_lock:
         cache = _load_query_cache()
@@ -206,17 +274,7 @@ def _append_to_query_cache(question: str, answer: str, sources: list):
             "sources": sources,
             "embedding": q_embedding,
         })
-        os.makedirs(os.path.dirname(QUERY_CACHE_PATH), exist_ok=True)
-        # Write to a temp file then atomically replace, rather than
-        # truncating QUERY_CACHE_PATH in place. FastAPI's sync endpoints run
-        # in a thread pool, so a concurrent request's unlocked _load_query_cache
-        # read could otherwise land mid-write and hit a half-written/invalid
-        # JSON file. os.replace is atomic on both Windows and POSIX, so any
-        # concurrent reader always sees either the old or the new file whole.
-        tmp_path = QUERY_CACHE_PATH + ".tmp"
-        with open(tmp_path, "w", encoding="utf-8") as f:
-            json.dump(cache, f, indent=2)
-        os.replace(tmp_path, QUERY_CACHE_PATH)
+        _write_query_cache(cache)
 
 
 class HistoryTurn(BaseModel):
@@ -307,6 +365,11 @@ class PromoteResponse(BaseModel):
     # and were auto-updated or flagged needs_review as a result -- surfaces
     # the ripple effect of this promotion instead of it happening silently.
     answer_library_updates: list[AnswerLibraryUpdate]
+    # How many unreviewed cached answers cited a promoted chunk and were
+    # dropped. The other half of that ripple: without it, stale cached
+    # answers would keep being served with nothing to indicate they predate
+    # the change. Additive field -- existing frontend code can ignore it.
+    query_cache_invalidated: int = 0
 
 
 def _sources_for_chunk_ids(chunk_ids: list) -> list:
@@ -486,9 +549,16 @@ def refresh_answer_library():
     chunks it changed. This endpoint exists for the other path: chunks
     edited by hand and re-ingested outside the promote flow (e.g. via
     `python -m src.ingest`), where nothing recorded which chunk_ids moved --
-    call this once afterwards to catch anything that needs it."""
+    call this once afterwards to catch anything that needs it.
+
+    Also empties the query cache. On this path nothing recorded which chunks
+    moved, and cache entries don't snapshot chunk content the way library
+    entries do, so there's no way to tell which cached answers are now stale
+    -- clearing all of them is the only honest option. Cheap, since the cache
+    is fully regenerable; the cost is one slow answer per question after."""
     entries = answer_library.load_entries()
     touched = answer_library.refresh_stale_entries()
+    _clear_query_cache()
     return RefreshResponse(
         checked=len(entries),
         updated=[
@@ -671,6 +741,15 @@ def promote_chunks(request: PromoteRequest):
         # runs outside the write lock too.
         touched = answer_library.refresh_stale_entries(changed_chunk_ids=set(selected_ids))
 
+        # The same event has to reach the OTHER store too. The library gets
+        # entries re-checked and rewritten or flagged above (they're human
+        # corrections, worth preserving); the query cache just gets the
+        # affected entries dropped, since an unreviewed answer built on
+        # superseded chunk content has nothing worth salvaging. Without this
+        # the cache kept serving pre-update figures indefinitely -- update a
+        # rate, ask the same question, get the old number back from cache.
+        invalidated = _invalidate_query_cache_for_chunks(set(selected_ids))
+
     return PromoteResponse(
         status="promoted",
         lender=lender_code,
@@ -681,4 +760,5 @@ def promote_chunks(request: PromoteRequest):
             AnswerLibraryUpdate(id=e["id"], question=e["question"], status=e["status"], note=e.get("note", ""))
             for e in touched
         ],
+        query_cache_invalidated=invalidated,
     )

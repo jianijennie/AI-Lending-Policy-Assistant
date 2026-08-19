@@ -302,10 +302,28 @@ rebuilding the index, so a query can never read a half-rebuilt collection. Cache
 library writes are atomic (temp file + `os.replace`), so a concurrent reader never sees a
 half-written file.
 
-**Answer staleness.** Saved library answers snapshot the chunk content they were based on.
-When a chunk changes, `refresh_stale_entries` re-checks affected answers and either
-auto-updates them or flags them `needs_review`. Entries flagged `needs_review` are **never
-served automatically**.
+**Answer staleness — both stores, handled differently.** A chunk change has to reach every
+answer already built on the old content, and the two stores get opposite treatment because
+they're worth different amounts:
+
+- **Answer library:** entries snapshot the chunk content they were based on, so
+  `refresh_stale_entries` re-checks each affected one and either auto-updates it or flags it
+  `needs_review`. Flagged entries are **never served automatically**. These are human
+  corrections, so the effort to preserve them is justified.
+- **Query cache:** entries citing a changed chunk are **deleted outright**
+  (`_invalidate_query_cache_for_chunks`). Cache entries record their source chunk_ids, so
+  this is precise rather than a blanket wipe. They're unreviewed LLM output, so there's
+  nothing to salvage and regenerating costs one question's latency.
+
+`/chunks/promote` does both and reports the counts. `/answer-library/refresh` (the manual
+path, used after editing chunks by hand) refreshes the library the same way but **clears the
+cache entirely** — nothing recorded which chunks moved, and cache entries don't snapshot
+content, so there's no way to tell which are stale.
+
+> **Operational note:** running `python src/ingest.py` while the backend is up deletes and
+> recreates the Chroma collection out from under the running process, which then 500s until
+> restarted. `/chunks/promote` avoids this by re-ingesting in-process and calling
+> `reload_index()`. If you re-ingest by hand, restart the backend afterwards.
 
 ---
 
@@ -374,10 +392,14 @@ way to tell whether an answer came from current policy or a memorised old versio
 retrieval, updating a policy is editing a markdown file and re-running ingest — and the
 answer cites which chunk it used.
 
-**"What happens when a lender changes a rate?"**
-Edit the chunk, re-run `python src/ingest.py`. Saved answers that depended on that chunk
-are re-checked automatically and either updated or flagged for human review. The Metro and
-Flexi rate changes in §10.4 went through exactly this path.
+**"What happens when a lender changes a rate? Don't the old answers stick around?"**
+Both stores are handled, and differently on purpose. Saved *corrections* are re-checked
+one by one: each snapshotted the chunk text it was based on, so a narrow LLM call decides
+whether it still holds, and it's either updated or flagged `needs_review` (flagged entries
+are never served). *Cached* answers that cited a changed chunk are simply **dropped** —
+they're unreviewed, so there's nothing worth preserving and regenerating costs one
+question. Promoting through the UI does both automatically and reports the counts. The
+Metro and Flexi rate changes in §10.4 went through exactly this path.
 
 **"What if two source documents disagree?"**
 It surfaces both and says to confirm, rather than silently picking one. Metro's EV cap
