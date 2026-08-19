@@ -436,7 +436,25 @@ documented and reproducible rather than unknown.
 
 ---
 
-## 12. Running it
+## 12. Operating it live — see also
+
+For driving the assistant in front of an audience (what to expect by question
+shape, how to trigger follow-ups and corrections, what to do when something
+breaks, and a Q&A answer bank), see **`Demo_Operator_Guide.md`**. It covers the
+operational details this document deliberately leaves out.
+
+Two mechanics from it are worth repeating here, because they surprise people:
+
+- **A correction only saves when the message states the replacement value.**
+  "That's wrong, it's actually 7.15%" saves; "are you sure?" deliberately does
+  not, because the system will not invent a figure from vague doubt (§8.2).
+- **The Reset cache control does not clear corrections.** It empties the query
+  cache only. Corrections are human work that nothing else can reconstruct, so
+  they are protected from an accidental wipe (§6).
+
+---
+
+## 13. Running it
 
 ```bash
 python src/ingest.py                          # rebuild the vector DB after any chunk edit
