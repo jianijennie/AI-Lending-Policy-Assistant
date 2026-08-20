@@ -1,6 +1,6 @@
 # LifeX Policy Assistant — Technical Documentation
 
-**Current state of the system as at 2026-08-18.** This supersedes
+**Current state of the system as at 2026-08-20.** This supersedes
 `Week4_Technical_Documentation.md`, which stays in place as the historical record of
 that week's work — this document describes how the system behaves *now*.
 
@@ -16,12 +16,12 @@ the question concerns, pulls **every** policy chunk belonging to those lenders o
 vector database, and hands that material to GPT-5.5 with instructions to answer only from
 what it was given. Before generating anything it checks two stores of previous answers —
 one of human-reviewed corrections, one of prior AI answers — and serves a stored answer if
-one genuinely matches. Answers are grounded in 63 hand-curated policy chunks extracted
-from 25 lender PDFs; the model is never asked to recall lending policy from its own
-training.
+one genuinely matches. Answers are grounded in 63 policy chunks extracted from 25 lender
+PDFs, every one of them human-approved before going live; the model is never asked to
+recall lending policy from its own training.
 
 **The one-sentence version for a judge:** *"It's retrieval-augmented generation over a
-hand-curated policy corpus, with a two-layer answer cache and a human correction loop —
+human-approved policy corpus, with a two-layer answer cache and a human correction loop —
 the model only ever reasons over policy text we put in front of it."*
 
 ---
@@ -30,7 +30,7 @@ the model only ever reasons over policy text we put in front of it."*
 
 ```
 25 lender PDFs
-      │  (manual, verified extraction — see §3)
+      │  (AI-drafted, human-approved — see §3)
       ▼
 data/chunks/*.md ──ingest──► ChromaDB "lifex_policies" (63 chunks, bge-base embeddings)
                                         │
@@ -51,6 +51,8 @@ Broker question ─────────────────────�
 | Retrieval + generation | `src/query.py` | Lender detection, retrieval, prompting, all classifiers |
 | API | `src/api.py` | FastAPI endpoints, both caches, concurrency locks |
 | Config | `src/config.py` | Every tunable, each with the reasoning behind its value |
+| Chunk drafting | `scripts/draft_chunks.py` | PDF → draft chunks (see §3.3) |
+| Table extraction | `scripts/table_geometry.py` | Deterministic table structure from PDF vector data |
 | Frontend | `CMAP_PolicyAssistant_v7_2.html` | Single self-contained file, no build step |
 
 **Models in use:**
@@ -59,29 +61,108 @@ Broker question ─────────────────────�
 |---|---|---|
 | `BAAI/bge-base-en-v1.5` | embeddings | Runs locally, no API cost; upgraded from bge-small for better recall |
 | `gpt-5.5` | writing the answer | Benchmarked head-to-head; see §10.3 |
-| `gpt-4o-mini` | 5 narrow classifiers | Supports `temperature=0`, so its decisions are stable run to run |
+| `gpt-4o-mini` | 5 narrow classifiers | Supports `temperature=0`, so its decisions are stable run to run (see §14) |
+| `gpt-5` (vision) | drafting chunks from PDFs | Offline authoring step only — never in the answer path (§3.3) |
 
 ---
 
-## 3. Data layer — why chunks are hand-curated
+## 3. Data layer — how policy chunks are made
 
 Each lender has one markdown file. A chunk is an atomic policy unit with a stable
 `chunk_id`, structured metadata (lender, intent, asset class, doc type, trigger words),
 and the actual policy content as prose and tables.
 
-**Why hand-curated rather than automated PDF extraction?** An automated extraction
-pipeline was built, piloted, and **rolled back** in Week 4 — it silently corrupted figures
-during extraction. For a system whose entire purpose is quoting exact financial figures, a
-silent corruption is the worst possible failure, so extraction stayed manual and verified.
-This is a deliberate trade of scalability for correctness.
+`chunk_id` must never change once assigned — it is the key ChromaDB and every saved answer
+references.
 
 **Chunks carry their own provenance and known conflicts.** Where two lender documents
 disagree, the chunk records both figures and instructs that the conflict be surfaced rather
 than silently resolved — e.g. Metro's EV price cap is $91,661 on the rate sheet and
 $91,387 in the MetroEco booklet. The correct answer flags both.
 
-`chunk_id` must never change once assigned — it is the key ChromaDB and every saved answer
-references.
+### 3.1 Two generations of extraction pipeline — read this before §3.3
+
+This has a history, and the history is the reason the current design looks the way it does.
+
+**Generation 1 (Week 4) — built, piloted, and rolled back.** A straight automated PDF
+extraction pipeline. It **silently corrupted figures** during extraction. For a system whose
+entire purpose is quoting exact financial figures, silent corruption is the worst possible
+failure — a wrong number that looks exactly like a right one. It was rolled back and
+extraction went manual.
+
+**Generation 2 (current) — AI drafts, a human approves.** The lesson from Gen 1 was not
+"automation can't do this." It was **"automation must not be the last step."** The current
+pipeline keeps the speed benefit and removes the failure mode by making a human the gate
+rather than the typist.
+
+So: *chunks are no longer hand-typed, but no chunk has ever gone live unread.* Both halves
+of that sentence matter, and a judge may well probe the seam between them.
+
+### 3.2 What a chunk file looks like going in
+
+Ingest is deliberately dumb: `src/ingest.py` parses the markdown, embeds each chunk, and
+rebuilds the collection. There is no cleverness at ingest time — everything that determines
+answer quality happens upstream, at authoring, where a person can see it.
+
+### 3.3 The current pipeline — draft, review, promote
+
+```
+lender PDFs ──► 3 views per page ──► gpt-5 vision ──► draft chunks
+                                                          │
+                                              side-by-side diff in the UI
+                                                          │
+                                          human ticks what they approve
+                                                          │
+                                    validate ──► merge ──► re-ingest ──► live
+```
+
+**Endpoints:** `POST /chunks/draft` produces the draft; `POST /chunks/promote` applies the
+approved subset.
+
+**The model gets three views of every page**, because any one alone is insufficient:
+
+| View | What it contributes | Why it alone isn't enough |
+|---|---|---|
+| Rendered page image (2.5× zoom) | Layout, and figures printed *inside* graphics | A vision model cannot reliably tell a 2-row merge from a 3-row merge from pixels |
+| Vector table geometry | Exact row/column boundaries and merged cells, read from the PDF's own line data | Only works on tables with *stroked* borders — see limitation below |
+| Exact digital text layer | Character-for-character verification of every digit | Carries no structure — a text layer doesn't say which column a number is in |
+
+The table-geometry step exists because of a measured failure: across **six** different
+model/config combinations, an LLM could not reliably read merged-cell structure off a real
+BFS rate table from pixels. Reading it from the PDF's vector data turns *"guess whether
+this is merged"* into *"here is what is actually merged, transcribe accordingly."*
+
+**Known limitation, and it is a real one.** `table_geometry.py` detects tables whose borders
+are **stroked** (thin filled rectangles acting as line segments). Some rate cards draw no
+strokes at all — every cell is a filled block and the "border" is just where two fills meet.
+Measured 2026-08-19: the **Angle rate card** (98 drawings, all filled) yields 0 horizontal
+and 1 vertical line; the **Westpac rate chart** (26 drawings) likewise yields nothing. Both
+return empty — and both are among the most rate-critical documents in the corpus. On those
+pages the model falls back to image + text only, which is exactly where human review earns
+its keep.
+
+A fix for this was implemented and **reverted**: it produced phantom 31×40 grids and
+destroyed column association on Westpac. Because the prompt tells the model to *trust* the
+geometry report, a wrong report is worse than no report. Shipping nothing beat shipping
+noise.
+
+**Three safeguards in the pipeline:**
+
+- **Truncation is refused, not returned.** If the drafting call comes back with
+  `finish_reason == "length"`, `draft_chunks.py` raises rather than handing back a draft
+  that silently stops mid-table.
+- **Drafted chunks arrive unticked.** The review UI defaults every checkbox to *off*, so
+  approving is a positive act. Nothing can reach the live file by someone clicking through
+  a dialog.
+- **Validation before replacement.** A malformed draft cannot leave the live chunk file
+  broken.
+
+**Audit result.** A full audit of all 63 live chunks against their source PDFs produced 11
+flags, every one of which was explained on inspection, and **zero transcription errors**.
+One flag nearly went the wrong way: `$91,661` is absent from Metro's text layer, and the
+chunk was almost reported as fabricated — until the page was rendered and the figure was
+found inside a green MetroEco graphic. The chunk was right and the audit was wrong. That
+false-positive mode is now documented in `scripts/audit_chunks_vs_pdfs.py`.
 
 ---
 
@@ -112,7 +193,9 @@ soon as one lender matched, which silently dropped a second lender mentioned onl
 product name. That was the single largest source of failures in the 111-question eval.
 
 **If no lender is named**, the question fans out across all 7 lenders (~63 chunks). This is
-the expensive path and is handled specially — see §7.
+the expensive path and is handled specially — see §7. Note the failure direction: an
+undetected lender means *more* chunks are read, never fewer. The worst case is slow, not
+wrong-lender.
 
 ---
 
@@ -191,28 +274,57 @@ fraction of a cent; a wrongly-served cached answer hands a broker a confidently 
 financial figure with nothing to flag it. It also returns "no match" on any internal error,
 so a failure can never *open* the gate.
 
-### 6.2 Deduplication
+### 6.2 Deduplication — both stores, now
 
-`_append_to_query_cache` now **purges any gate-equivalent entry before appending**, so
-there is exactly one entry per distinct question — always the newest.
+Both stores **purge any gate-equivalent entry before appending**, so there is exactly one
+entry per distinct question — always the newest.
 
-Without this, repeated evaluation runs accumulated several entries for the same question
-with no recency signal, and ranking picked between them essentially at random. This was not
-theoretical: three entries existed for one question, one of them a stale wrong answer from
-before a rate update, and it was being served roughly a third of the time.
+For the query cache, this was not theoretical: repeated evaluation runs accumulated several
+entries for the same question with no recency signal, and ranking picked between them
+essentially at random. Three entries existed for one question, one of them a stale wrong
+answer from before a rate update, and it was being served roughly a third of the time.
 
-> **Known open issue:** the answer library does **not** yet have this dedup. Correcting the
-> same question twice leaves two entries and serves the *first* correction, because
-> `find_best_match` returns the highest-*similarity* entry rather than the newest. This is
-> confirmed and reproducible (scenario COMBO-6, deliberately left failing). Fix is the same
-> pattern already applied to the query cache.
+The answer library had the same bug in mirror image — correcting the same question twice
+left two entries and served the **first** correction, because `find_best_match` returns the
+highest-*similarity* entry rather than the newest. **Fixed 2026-08-19** by applying the same
+dedup-on-write pattern (`save_entry` in `src/answer_library.py`). Scenario COMBO-6, which
+was previously left deliberately failing to document the bug, now passes.
 
-### 6.3 Operational note
+One subtlety worth knowing: both stores assign new ids as `max(existing ids) + 1`, not
+`len() + 1`. With dedup removing entries, those two diverge, and `len()+1` would eventually
+reissue a live id.
 
-The cache was **cleared on 2026-08-18** because it held answers generated *before* that
-day's reasoning fix — every pre-fix entry was stale by construction. It is safe to clear at
-any time: it is purely regenerable, and the only cost is that the next ask of each question
-pays full latency once. Consider pre-warming it from the question bank before a demo.
+### 6.3 Cache lifetime — what clears it and what doesn't
+
+**The query cache survives backend restarts.** The server holds no cache state in memory at
+all: `_find_cached` calls `_load_query_cache()` inside the lookup, so the JSON file is
+re-read from disk on **every query**. The file *is* the cache. Restarting the process, or
+rebooting the machine, does not touch it.
+
+| Action | Effect on query cache |
+|---|---|
+| Restart backend / reboot | **Nothing** — persists |
+| **Reset cache** button (Usage & cost view) | Clears all entries |
+| `POST /query-cache/clear` | Same |
+| `/chunks/promote` | Clears **only** entries citing changed chunks |
+| `/answer-library/refresh` | Clears **all** (nothing records which chunks moved) |
+
+Note the deliberate asymmetry: **the Reset control does not clear corrections.** There is no
+button in the UI that can destroy the answer library — that requires editing
+`data/answer_library.json` by hand. Corrections are human work nothing else can reconstruct.
+
+Writes are atomic (temp file + `os.replace`), so a concurrent reader never sees a
+half-written file — which matters when several people query at once.
+
+**Scaling note:** because the file is re-read and re-parsed per query, lookup cost grows
+with cache size. At ~130 entries / 3.4 MB this costs roughly 50–100 ms per query — invisible
+against an 8 s generate. It would become worth revisiting somewhere north of 10 MB.
+
+**Operational history:** the cache was cleared on 2026-08-18 because it held answers
+generated *before* that day's reasoning fix — every pre-fix entry was stale by construction.
+It is safe to clear at any time: it is purely regenerable, and the only cost is that the
+next ask of each question pays full latency once. Consider pre-warming it from the question
+bank before a demo.
 
 ---
 
@@ -282,6 +394,11 @@ Two safeguards worth knowing:
 Verified 2026-08-18: a correction propagates into **later reasoning in the same
 conversation**, not just into a repeat of the same question.
 
+**A correction does not edit the chunk.** It is stored as an answer-level override in the
+answer library. The underlying policy file is unchanged — updating that is the
+draft/review/promote path in §3.3. This is a common point of confusion: the two mechanisms
+sit at different layers and have different trust models.
+
 ---
 
 ## 9. Other behaviours worth knowing
@@ -296,6 +413,9 @@ question like *"best rate?"* still goes through the full pipeline.
 **The source display collapses.** The frontend shows `N lenders · M sources` with a
 per-lender expandable list, instead of every chunk id concatenated into one unreadable
 string.
+
+**Portrait layout is supported.** The frontend adapts via `@media (orientation: portrait)`,
+for the competition's three vertical displays.
 
 **Concurrency.** `/query` takes a read lock; `/chunks/promote` takes a write lock while
 rebuilding the index, so a query can never read a half-rebuilt collection. Cache and
@@ -348,10 +468,54 @@ answer was reproduced verbatim.
 
 ### 10.2 Current results
 
-- **Finals practice cases: 15/15** correct (one with a minor caveat)
-- **Combination eval: 8/12** — 1 real confirmed bug (the library dedup issue in §6.2),
-  3 were flaws in the test assertions themselves, since corrected
-- **Quick regression: 14/14**
+| Suite | Result |
+|---|---|
+| 125-question adversarial bank | **92/125 fully correct · 3.70 / 4 average** |
+| Finals practice cases | **15/15** (one with a minor caveat) |
+| Combination eval | **12/12** |
+| Quick regression | **14/14** |
+
+**The 125-question bank in detail.** Graded 1–4 against a reference, then every low score
+re-checked by hand against the source policy documents:
+
+| Score | As graded | After reference errors corrected |
+|---|---|---|
+| 4 — fully correct | 84 | **92** |
+| 3 — minor issues | 29 | 28 |
+| 2 — partly wrong | 9 | 5 |
+| 1 — incorrect | 3 | **0** |
+| **Average** | 3.55 | **3.70** |
+
+The right-hand column reflects 8 questions where the *reference answer* was verified wrong
+against the source policy and the system was right (§10.4).
+
+**The most useful number is not the average.** Of the 125, **7% had errors, and none were
+fabricated figures.** Every remaining failure is a judgement call — excess caution, or
+answering when it should have asked a clarifying question.
+
+**Strongest and weakest question types** (corrected basis):
+
+| Complexity type | Avg | n |
+|---|---|---|
+| Negative / trap constraint | **4.00** | 11 |
+| Calculation / arithmetic | **3.92** | 12 |
+| Multi-filter (single lender) | 3.87 | 15 |
+| Contradiction detection | 3.82 | 11 |
+| … | | |
+| Cross-lender comparison (2) | 3.47 | 15 |
+| Cross-lender comparison (3+) | **3.43** | 7 |
+| Ambiguous / needs clarification | **3.40** | 5 |
+
+It is strongest exactly where being wrong costs most — traps and rate arithmetic — and
+weakest on multi-lender synthesis and knowing when to ask a clarifying question.
+
+**The 5 remaining sub-3 answers** are CQ-028 (best-fit), CQ-076 (ambiguous), CQ-083
+(policy-interaction edge case), CQ-088 and CQ-089 (cross-lender). All scored 2; none scored
+1. The clustering is consistent with the table above rather than scattered.
+
+> **Caveat on the judge's `fell_for_trap` flag:** it marked 15 questions, but **6 of those
+> were reference errors, not model errors**. The genuine count is 9. The flag inherits the
+> judge's mistakes, so don't quote the raw 15.
 
 ### 10.3 Model selection
 
@@ -365,12 +529,19 @@ or less") that appear nowhere in the source.
 **Decision: stay on gpt-5.5.** A coin-flip on the cheapest-rate question is disqualifying
 regardless of speed, and rate accuracy is what the competition emphasises.
 
+That 4-run comparison doubles as the system's **run-to-run repeatability measurement** on
+the hardest question type — see §14.
+
 ### 10.4 Reference data goes stale — a real lesson
 
 The 111-question reference bank was frozen around 2026-07-22, but the policy chunks were
-corrected three times afterwards. By 2026-08-18, **9 reference answers were wrong** while
-the system was right — Flexi's rate dropped 7.30%→7.15%, Metro's rate sheet changed, and a
-CFAL rule turned out to belong to a different lender entirely.
+corrected several times afterwards. Reference answers have now been found wrong **17 times
+in total** while the system was right:
+
+- **9 found 2026-08-18** — Flexi's rate dropped 7.30%→7.15%, Metro's rate sheet changed, and
+  a CFAL rule turned out to belong to a different lender entirely
+- **8 more found during the 125-question grading** — CQ-007, 013, 030, 032, 043, 093, 104,
+  107
 
 **Practical rule: when the system disagrees with a reference answer, check the chunk file
 before assuming the system is wrong.**
@@ -385,12 +556,20 @@ every figure in it. Retrieval can't miss relevant chunks because we pass the len
 entire chunk set, not a top-k slice. And every answer returns the exact chunk ids it drew
 on, so any figure is traceable back to a source document. It's also explicitly instructed
 that if the excerpts don't contain a figure, it should say so rather than produce one.
+Across 125 adversarial questions, **not one error was an invented figure**.
 
 **"Why not fine-tune a model on the policies?"**
 Policies change. A rate card update would need retraining, and a fine-tuned model gives no
 way to tell whether an answer came from current policy or a memorised old version. With
 retrieval, updating a policy is editing a markdown file and re-running ingest — and the
 answer cites which chunk it used.
+
+**"Is the chunk extraction automated or manual?"**
+Both, in sequence — and the order is the whole point. A vision model drafts chunks from the
+PDF; a person reviews a side-by-side diff and ticks what they approve; only then does it go
+live. We built a fully automated pipeline first, in Week 4, and rolled it back because it
+silently corrupted figures. The lesson wasn't "don't automate" — it was "don't let
+automation be the last step." **Automation drafts, people approve.**
 
 **"What happens when a lender changes a rate? Don't the old answers stick around?"**
 Both stores are handled, and differently on purpose. Saved *corrections* are re-checked
@@ -401,6 +580,12 @@ they're unreviewed, so there's nothing worth preserving and regenerating costs o
 question. Promoting through the UI does both automatically and reports the counts. The
 Metro and Flexi rate changes in §10.4 went through exactly this path.
 
+**"When a broker corrects it, does that change the policy document?"**
+No — and deliberately. A correction is an answer-level override stored in the answer
+library; the policy chunk is untouched. Changing policy goes through draft/review/promote.
+Different layers, different trust models: a correction is one broker's fix to one answer,
+a chunk change is a change to the source of truth for everyone.
+
 **"What if two source documents disagree?"**
 It surfaces both and says to confirm, rather than silently picking one. Metro's EV cap
 appears as $91,661 on the rate sheet and $91,387 in the booklet; Angle's Start-Up minimum
@@ -408,14 +593,18 @@ credit score is 550 on the flyer and 500 on the rate card. Both are handled this
 both are tested.
 
 **"How accurate is it?"**
-15/15 on competition-style practice cases, 14/14 on the regression suite. But the more
-useful answer is that we track *specific failure modes* rather than a single accuracy
-number — the test bank is built around traps this system has actually failed before.
+3.70 out of 4 across 125 adversarial questions, 92 fully correct; 15/15 on competition-style
+practice cases; 14/14 on the regression suite; 12/12 on the interaction suite. But the more
+useful answer is that we track *specific failure modes* rather than a single number — it is
+strongest on traps (4.00) and rate arithmetic (3.92), weakest on multi-lender synthesis
+(3.43) and knowing when to ask a clarifying question (3.40).
 
 **"How do you know it isn't just memorising the test set?"**
 The reference answers were verified against source chunks independently of what the system
-outputs — and when they disagreed, the *references* turned out wrong 9 times. We also
+outputs — and when they disagreed, the *references* turned out wrong **17 times**. We also
 routinely find and fix errors the test bank didn't contain.
+
+**"Will it give the same answer twice?"** — see §14.
 
 **"Why does it sometimes take 15–20 seconds?"**
 Only when no lender is named, so it reads all 7 lenders' policies (~63 chunks) and does
@@ -428,11 +617,13 @@ Roughly $0.01–$0.05 for a generated answer; cached and library answers are eff
 free. Embeddings run locally at no API cost.
 
 **"What's the weakest part?"**
-Chunk curation is manual, so adding a lender is real work — that's a deliberate trade after
-the automated pipeline silently corrupted figures. The correction-matching gate is
-deliberately conservative, so it sometimes misses a genuine paraphrase and answers fresh
-instead. And there's a known duplicate-correction bug in the answer library (§6.2) that's
-documented and reproducible rather than unknown.
+Three honest ones. **Multi-lender synthesis** is the weakest measured category (3.43) — the
+more lenders in play, the more room to drop a constraint. **Knowing when to ask a clarifying
+question** is weakest of all (3.40); it errs toward answering. And **table geometry can't
+read block-drawn tables** (§3.3), which affects two of the most rate-critical documents in
+the corpus — human review is what covers that gap, so the pipeline is only as good as the
+person at the diff. The correction-matching gate is also deliberately conservative, so it
+sometimes misses a genuine paraphrase and answers fresh instead.
 
 ---
 
@@ -450,7 +641,7 @@ Two mechanics from it are worth repeating here, because they surprise people:
   not, because the system will not invent a figure from vague doubt (§8.2).
 - **The Reset cache control does not clear corrections.** It empties the query
   cache only. Corrections are human work that nothing else can reconstruct, so
-  they are protected from an accidental wipe (§6).
+  they are protected from an accidental wipe (§6.3).
 
 ---
 
@@ -462,10 +653,59 @@ uvicorn src.api:app --port 8000               # start the backend
 python tests/run_quick_regression.py          # 14-question smoke test
 python tests/run_finals_practice.py           # competition-style cases
 python scripts/build_finals_report.py         # regenerate the shareable results page
+python scripts/build_technical_doc_html.py    # regenerate the HTML version of this doc
 ```
+
+**Public tunnel** (only needed when presenting from another machine):
+
+```powershell
+ngrok http --url=https://frying-june-evict.ngrok-free.dev 8000
+```
+
+> **Run ngrok from PowerShell, not Git Bash.** The Store install lives at
+> `%LOCALAPPDATA%\Microsoft\WindowsApps\ngrok.exe`, which is an App Execution Alias — a
+> reparse point Windows shells resolve but Bash cannot execute. From Bash it fails with
+> `Permission denied` (exit 126), which looks like a permissions problem and isn't.
 
 Frontend: open `CMAP_PolicyAssistant_v7_2.html` — no build step. Point `API_BASE` at the
 ngrok URL for a shared demo, or `127.0.0.1:8000` for local.
 
 **Before a demo:** confirm `/health` returns 7 lenders and 63 chunks, and consider
-pre-warming the query cache so the first questions aren't slow.
+pre-warming the query cache so the first questions aren't slow. The cache persists across
+restarts (§6.3), so anything already warmed stays warmed.
+
+---
+
+## 14. Determinism — will it give the same answer twice?
+
+A likely judge question, and the honest answer has two halves.
+
+**Three of the four answer paths are byte-identical every time.** Corrections, answer-library
+hits and query-cache hits all replay stored text — that's why a repeat returns in ~1–2s
+instead of 8–25s. Only path 4 re-runs the model.
+
+**Fresh generation is not deterministic, and cannot be made so.** GPT-5 family models
+**ignore `temperature`** — there is no determinism dial to set. Ask a genuinely new question
+twice and the wording will differ.
+
+**But what varies is the phrasing, not the inputs.** Everything that decides *what the model
+sees* is deterministic by design:
+
+- **Retrieval has no ranking cutoff.** Every chunk for the detected lenders goes in, every
+  time. There is no top-k boundary for run-to-run variation to move something across.
+- **The classifiers are pinned.** Lender detection and the follow-up resolver run on
+  `gpt-4o-mini` at `temperature=0` — chosen deliberately for exactly this reason. A
+  differently-worded rewrite could change which lenders get retrieved at all, so that step
+  is not allowed to drift. (`config.py` documents this at `RESOLVER_MODEL`.)
+
+So the model receives an identical prompt each run and re-words the answer from it.
+
+**The measurement:** in the §10.3 bake-off, the same question was run 4 times per model.
+`gpt-5.5` answered correctly **4/4**; the cheaper model **2/4**. That 4/4 is the
+repeatability figure, and it was taken on the hardest question type — cheapest-rate across
+the whole panel, no lender named.
+
+> **Demo honesty note.** If someone asks the same question twice to "test consistency," the
+> second answer comes from cache — identical, in about a second, proving nothing about the
+> model. Say so, and offer the real test instead: ask it a *different way* and check whether
+> the figures match.
